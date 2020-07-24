@@ -1,16 +1,9 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import *
 import pandas as pd
 import os
-
-# # Compute the x and y coordinates for points on a sine curve
-# x = np.arange(0, 3 * np.pi, 0.1)
-# y = np.sin(x)
-# plt.title("sine wave form")
-#
-# # Plot the points using matplotlib
-# plt.plot(x, y)
-# plt.show()
+import time
+from tkinter import *
 
 # a = np.array([[1,2],[3,4]])
 # print(a)
@@ -53,7 +46,53 @@ import os
 #
 # print(data_three.fillna(method='pad'))
 
-new_data = pd.read_csv("/media/csdunham/0E24340D2433F675/Gimzewski Lab/Stem Cells/Data Sets/chip10002.txt",
-                       sep='\t', lineterminator='\n', names=list(range(120)))
+# Python functions don't take in variables in the same way... they take in some # of arguments, whatever you want them
+# to be referred to as.  This differs from Matlab where everything needs to be declared outside of the function.
+def dataImport():
+    new_data = pd.read_csv("/media/csdunham/0E24340D2433F675/Gimzewski Lab/Stem Cells/Data Sets/chip10002.txt",
+                       sep='\t', lineterminator='\n', names=list(range(121)), skiprows=3,
+                       encoding='iso-8859-15', low_memory=False)
+    new_data_size = np.shape(new_data)
+    titorun = time.process_time()
+    print(new_data_size)
+    print(titorun)
+    return new_data
 
-print(new_data[0:5])
+# adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
+# by colons
+# mea_data = dataImport()
+
+#print(mea_data.iloc[2:17, 15:25])
+
+class ElecGUI60(Frame):
+    def __init__(self, parent=None):
+        Frame.__init__(self, parent)
+        self.parent = parent
+        self.pack()
+        self.make_widgets()
+
+    def make_widgets(self):
+        self.winfo_toplevel().title("Elec GUI 60 - Prototype")
+        # label = Entry(self, font=('Times New Roman', 20))
+        # label.pack(side="top", fill="x")
+        # gui_size = Canvas(self)
+        # gui_size.pack()
+
+
+root = Tk()
+# Dimensions width x height, distance position from right of screen + from top of screen
+root.geometry("1600x900+900+900")
+# root.title('Prototyping: 7/23/2020')
+
+elecGUI60 = ElecGUI60(root)
+
+# mea60_window = Canvas(root, width=1600, height=900)
+# mea60_window.pack()
+#
+# mea60_title = Label(root, text='60 electrode GUI prototyping')
+# mea60_title.config(font=('Times New Roman', 20))
+
+# fig.title("GUI Demo 1")
+# fig.geometry("400x400")
+
+root.mainloop()
