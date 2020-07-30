@@ -3,7 +3,9 @@ from matplotlib import *
 import pandas as pd
 import os
 import time
-from tkinter import *
+# from tkinter import *
+import tkinter as tk
+from tkinter import filedialog
 
 # a = np.array([[1,2],[3,4]])
 # print(a)
@@ -48,42 +50,54 @@ from tkinter import *
 
 # Python functions don't take in variables in the same way... they take in some # of arguments, whatever you want them
 # to be referred to as.  This differs from Matlab where everything needs to be declared outside of the function.
-def dataImport():
-    new_data = pd.read_csv("/media/csdunham/0E24340D2433F675/Gimzewski Lab/Stem Cells/Data Sets/chip10002.txt",
-                       sep='\t', lineterminator='\n', names=list(range(121)), skiprows=3,
-                       encoding='iso-8859-15', low_memory=False)
+def data_import():
+    data_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
+                                               filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+    new_data = pd.read_csv(data_filename,
+                           sep='\t', lineterminator='\n', names=list(range(121)), skiprows=3,
+                           encoding='iso-8859-15', low_memory=False)
+    # new_data = pd.read_csv("/media/csdunham/0E24340D2433F675/Gimzewski Lab/Stem Cells/Data Sets/chip10002.txt",
+    #                    sep='\t', lineterminator='\n', names=list(range(121)), skiprows=3,
+    #                    encoding='iso-8859-15', low_memory=False)
     new_data_size = np.shape(new_data)
-    titorun = time.process_time()
+    time_to_run = time.process_time()
     print(new_data_size)
-    print(titorun)
+    print(time_to_run)
+    print(new_data.iloc[2:17, 15:25])
     return new_data
+
 
 # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
 # by colons
-# mea_data = dataImport()
+# mea_data = data_import()
 
-#print(mea_data.iloc[2:17, 15:25])
+# print(mea_data.iloc[2:17, 15:25])
 
-class ElecGUI60(Frame):
+class ElecGUI60(tk.Frame):
     def __init__(self, parent=None):
-        Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent)
         self.parent = parent
-        self.pack()
+        self.grid()
         self.make_widgets()
 
     def make_widgets(self):
         self.winfo_toplevel().title("Elec GUI 60 - Prototype")
+        import_data_button = tk.Button(self, text="Import Data", width=15, height=3, bg="skyblue", command=data_import)
+        import_data_button.grid(row=0, column=0, padx=2, pady=2)
+        save_data_button = tk.Button(self, text="Save Data", width=15, height=3, bg="lightgreen")
+        save_data_button.grid(row=1, column=0, padx=2, pady=2)
         # label = Entry(self, font=('Times New Roman', 20))
         # label.pack(side="top", fill="x")
         # gui_size = Canvas(self)
         # gui_size.pack()
 
 
-root = Tk()
+root = tk.Tk()
 # Dimensions width x height, distance position from right of screen + from top of screen
 root.geometry("1600x900+900+900")
 # root.title('Prototyping: 7/23/2020')
 
+# Calls class to create the GUI window. *********
 elecGUI60 = ElecGUI60(root)
 
 # mea60_window = Canvas(root, width=1600, height=900)
