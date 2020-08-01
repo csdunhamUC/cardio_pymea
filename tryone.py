@@ -1,24 +1,14 @@
 import numpy as np
-from matplotlib import *
+import matplotlib
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
+import seaborn as seab
 import os
 import time
-# from tkinter import *
 import tkinter as tk
 from tkinter import filedialog
 
-root = tk.Tk()
-# Dimensions width x height, distance position from right of screen + from top of screen
-root.geometry("1600x900+900+900")
-
-# a = np.array([[1,2],[3,4]])
-# print(a)
-#
-# b = np.array([1, 2, 3, 4, 5], ndmin=2)
-# print(b)
-#
-# c = np.array([1, 2, 3], dtype=complex)
-# print(c)
 #
 # data = np.array(['a', 'b', 'c', 'd'])
 # s = pd.Series(data)
@@ -52,6 +42,21 @@ root.geometry("1600x900+900+900")
 #
 # print(data_three.fillna(method='pad'))
 
+# Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
+# integrate this into a GUI.
+vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
+              "potato", "wheat", "barley"]
+farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
+           "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
+
+harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
+                    [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
+                    [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
+                    [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
+                    [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
+                    [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
+                    [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
+
 # Python functions don't take in variables in the same way... they take in some # of arguments, whatever you want them
 # to be referred to as.  This differs from Matlab where everything needs to be declared outside of the function.
 def data_import():
@@ -65,17 +70,42 @@ def data_import():
     print(time_to_run)
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    print(new_data.iloc[2:17, 15:25])
+    print(new_data.iloc[0:3, 0:10])
     return new_data
 
+def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
+    # imshow() is the key heatmap function here.
+    im = axis1.imshow(harvest, interpolation="nearest", aspect="auto")
+
+    cbar = axis1.figure.colorbar(im)
+    cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
+
+    axis1.set_xticks(np.arange(len(farmers)))
+    axis1.set_yticks(np.arange(len(vegetables)))
+    axis1.set_xticklabels(farmers)
+    axis1.set_yticklabels(vegetables)
+    plt.setp(axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+
+    for i in range(len(vegetables)):
+        for j in range(len(farmers)):
+            text = axis1.text(j, i, harvest[i, j], ha="center", va="center", color="w")
+    axis1.set_title("Harvest Demo from Matplotlib Website")
+    heat_map.tight_layout()
+    heat_map.canvas.draw()
+    # heat_map.get_tk_widget().grid(row=0, column=0)
+    return
+
+
+heat_map = plt.Figure(figsize=(10, 6), dpi=120)
+axis1 = heat_map.add_subplot(111)
 
 # mea_data = data_import()
 # print(mea_data.iloc[2:17, 15:25])
 
+
 class ElecGUI60(tk.Frame):
-    def __init__(self, parent=None):
-        tk.Frame.__init__(self, parent)
-        self.parent = parent
+    def __init__(self, master, heat_map):
+        tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
         # where the relation is with other widgets.  If you have 3 widgets you can have 3 rows or 3 columns and
@@ -95,17 +125,26 @@ class ElecGUI60(tk.Frame):
         import_data_button.grid(row=0, column=0, padx=2, pady=2)
         save_data_button = tk.Button(import_data_frame, text="Save Data", width=15, height=3, bg="lightgreen")
         save_data_button.grid(row=1, column=0, padx=2, pady=2)
+        graph_heatmap_button = tk.Button(import_data_frame, text="Graph Heatmap", width=15, height=3, bg="red",
+                                         command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
+        graph_heatmap_button.grid(row=2, column=0, padx=2, pady=2)
 
+        # Eventually this function will house the widgets necessary to display heat maps generated for MEAs.
     def mea_array_widgets(self):
-        mea_array_frame = tk.Frame(self, width=800, height=800, bg="white")
+        mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
         mea_array_frame.grid(row=0, column=1, padx=10, pady=10)
         mea_array_frame.grid_propagate(False)
-        tk.Label(mea_array_frame, text="Microelectrode Array Representation").grid(row=0, column=0, padx=240, pady=2,
-                                                                                   sticky="e")
-        tk.Label(mea_array_frame, text="MEA 1").grid(row=0, column=0, padx=5, pady=2, sticky="w")
 
+        gen_figure = FigureCanvasTkAgg(heat_map, mea_array_frame)
+        gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
+        # tk.Label(mea_array_frame, text="Microelectrode Array Representation").grid(row=0, column=0, padx=240, pady=2,
+        #                                                                            sticky="e")
+        # tk.Label(mea_array_frame, text="MEA 1").grid(row=0, column=0, padx=5, pady=2, sticky="w")
 
+root = tk.Tk()
+# Dimensions width x height, distance position from right of screen + from top of screen
+root.geometry("1600x900+900+900")
 # Calls class to create the GUI window. *********
-elecGUI60 = ElecGUI60(root)
+elecGUI60 = ElecGUI60(root, heat_map)
 root.mainloop()
