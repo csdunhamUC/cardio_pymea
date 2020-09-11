@@ -9,6 +9,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog
 
+
 #
 # data = np.array(['a', 'b', 'c', 'd'])
 # s = pd.Series(data)
@@ -42,28 +43,80 @@ from tkinter import filedialog
 #
 # print(data_three.fillna(method='pad'))
 
-# Python functions don't take in variables in the same way... they take in some # of arguments, whatever you want them
-# to be referred to as.  This differs from Matlab where everything needs to be declared outside of the function.
-def data_import():
+# Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
+# one function to another.  Classes are generated for ImportedData (where the raw data will go), PaceMakerData
+# (where PM data will go), UpstrokeVelData (where dV/dt data will go), LocalATData (where LAT data will go), and
+# CondVelData, where CV data will go.
+class ImportedData:
+    pass
+
+
+class PacemakerData:
+    pass
+
+
+class UpstrokeVelData:
+    pass
+
+
+class LocalATData:
+    pass
+
+
+class CondVelData:
+    pass
+
+
+def data_import(raw_data):
     data_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                                filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
-    global raw_data
-    raw_data = (pd.read_csv(data_filename,
-                           sep='\t', lineterminator='\n', skiprows=3, encoding='iso-8859-15', low_memory=False))
-    new_data_size = np.shape(raw_data)
+
+    print("Memory - raw_data, pre-fill: " + str(id(raw_data)))
+
+    raw_data.imported = (pd.read_csv(data_filename,
+                                     sep='\t', lineterminator='\n', skiprows=3, encoding='iso-8859-15',
+                                     low_memory=False))
+
+    new_data_size = np.shape(raw_data.imported)
     time_to_run = time.process_time()
+    print("Memory - raw_data, post-fill: " + str(id(raw_data)))
+    print("Memory - raw_data.imported, post-fill: " + str(id(raw_data.imported)))
     print(new_data_size)
     print(time_to_run)
 
-    print("In function, Raw data reference: " + str(id(raw_data)))
+    return raw_data.imported
 
-    return raw_data
+
+# Original data_import function
+# def data_import():
+#     data_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
+#                                                filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+#     global raw_data
+#     print(id(raw_data))
+#     raw_data = (pd.read_csv(data_filename,
+#                            sep='\t', lineterminator='\n', skiprows=3, encoding='iso-8859-15', low_memory=False))
+#     new_data_size = np.shape(raw_data)
+#     time_to_run = time.process_time()
+#     print(new_data_size)
+#     print(time_to_run)
+#
+#     print("In function, Raw data reference: " + str(id(raw_data)))
+#
+#     return raw_data
+
 
 def data_print(raw_data):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    print(id(raw_data))
-    print(raw_data.iloc[15:27, 0:15])
+    print(id(raw_data.imported))
+    print(raw_data.imported.iloc[15:27, 0:15])
+
+
+# def data_print(raw_data):
+#     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
+#     # by colons
+#     print(id(raw_data))
+#     print(raw_data.iloc[15:27, 0:15])
 
 def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
     # imshow() is the key heatmap function here.
@@ -86,29 +139,27 @@ def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
     heat_map.canvas.draw()
     return
 
-heat_map = plt.Figure(figsize=(10, 6), dpi=120)
-axis1 = heat_map.add_subplot(111)
-
 
 class ElecGUI60(tk.Frame):
-    def __init__(self, master):
+    def __init__(self, master, raw_data):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
         # where the relation is with other widgets.  If you have 3 widgets you can have 3 rows or 3 columns and
         # organize accordingly.  If you have 2 widgets you can only have 2 rows or 2 columns.
         self.grid()
-        self.file_management_widgets()
+        self.file_management_widgets(raw_data)
         self.mea_array_widgets()
 
-    def file_management_widgets(self):
+    def file_management_widgets(self, raw_data):
         self.winfo_toplevel().title("Elec GUI 60 - Prototype")
         file_operations = tk.Frame(self, width=100, height=800, bg="white")
         file_operations.grid(row=0, column=0, padx=10, pady=10, sticky="nw")
+
         # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change mouse-over color effects.
         # A class can be set up for the sole purpose of handling these events.
         import_data_button = tk.Button(file_operations, text="Import Data", width=15, height=3, bg="skyblue",
-                                       command=lambda: data_import())
+                                       command=lambda: data_import(raw_data))
         import_data_button.grid(row=0, column=0, padx=2, pady=2)
 
         # to save data; not implemented.
@@ -139,6 +190,7 @@ class ElecGUI60(tk.Frame):
         #                                                                            sticky="e")
         # tk.Label(mea_array_frame, text="MEA 1").grid(row=0, column=0, padx=5, pady=2, sticky="w")
 
+
 def main():
     # Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
     # integrate this into a GUI.
@@ -146,9 +198,11 @@ def main():
     global vegetables
     vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
                   "potato", "wheat", "barley"]
+
     global farmers
     farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
                "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
+
     global harvest
     harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
                         [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
@@ -158,13 +212,23 @@ def main():
                         [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
                         [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
 
-    root = tk.Tk()
+    global heat_map
+    heat_map = plt.Figure(figsize=(10, 6), dpi=120)
+    global axis1
+    axis1 = heat_map.add_subplot(111)
 
+    raw_data = ImportedData()
+
+    # import_raw_data = pd.DataFrame()
+    # print("Import data memory reference: " + str(id(import_raw_data)))
+
+    root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from top of screen
     root.geometry("1600x900+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root)
+    elecGUI60 = ElecGUI60(root, raw_data)
     root.mainloop()
+
 
 main()
