@@ -11,13 +11,6 @@ from tkinter import filedialog
 from scipy.signal import find_peaks
 
 
-#
-# data = np.array(['a', 'b', 'c', 'd'])
-# s = pd.Series(data)
-# pd.DataFrame(s)
-#
-# print(s)
-#
 # data_two = {'Name':['Tom', 'Jack', 'Steve', 'Ricky'],'Age':[28,34,29,42]}
 # df = pd.DataFrame(data_two, index=['rank 1', 'rank 2', 'rank 3', 'rank 4'])
 #
@@ -76,7 +69,7 @@ def data_import(raw_data):
     data_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                                filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 
-    print("Memory - raw_data, pre-fill: " + str(id(raw_data)))
+    start_time = time.process_time()
 
     # Checks whether data was previously imported into program.  If True, the previous data is deleted.
     if hasattr(raw_data, 'imported') is True:
@@ -88,63 +81,79 @@ def data_import(raw_data):
                                      low_memory=False))
 
     new_data_size = np.shape(raw_data.imported)
-    time_to_run = time.process_time()
-    print("Memory - raw_data, post-fill: " + str(id(raw_data)))
-    print("Memory - raw_data.imported, post-fill: " + str(id(raw_data.imported)))
     print(new_data_size)
-    print(time_to_run)
-
+    end_time = time.process_time()
+    print(end_time - start_time)
     return raw_data.imported
 
 
 def determine_beats(raw_data, cm_beats):
     print("Finding beats...\n")
+    start_time = time.process_time()
+
+    if hasattr(cm_beats, 'x_axis') is True:
+        print("Beat data are not empty; clearing before finding peaks.")
+        delattr(cm_beats, 'x_axis')
+        delattr(cm_beats, 'dist_beats')
+        delattr(cm_beats, 'prom_beats')
+        delattr(cm_beats, 'width_beats')
+        delattr(cm_beats, 'thresh_beats')
+
     cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
     print(cm_beats.x_axis)
     print("\n")
-    # As of 9/12/2020 @ 10:31pm: No idea if find peaks works yet.
-    cm_beats.dist_beats = find_peaks(raw_data.imported.iloc[0:, 1], distance=1000)[0]
+
+    cm_beats.dist_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, distance=1000)[0]
     dist_beats_size = np.shape(cm_beats.dist_beats)
     print("Shape of cm_beats.dist_beats: " + str(dist_beats_size) + ".\n")
     print(cm_beats.dist_beats)
     print(type(cm_beats.dist_beats))
 
-    cm_beats.prom_beats = find_peaks(raw_data.imported.iloc[0:, 1], prominence=100)[0]
-    #print(cm_beats.prom_beats)
+    cm_beats.prom_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, prominence=100)[0]
+    prom_beats_size = np.shape(cm_beats.prom_beats)
+    print("Shape of cm_beats.prom_beats: " + str(prom_beats_size) + ".\n")
+    print(cm_beats.prom_beats)
+    print(type(cm_beats.prom_beats))
 
-    cm_beats.width_beats = find_peaks(raw_data.imported.iloc[0:, 1], width=5)[0]
-    #print(cm_beats.width_beats)
+    cm_beats.width_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, width=3)[0]
+    width_beats_size = np.shape(cm_beats.width_beats)
+    print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
+    print(cm_beats.width_beats)
+    print(type(cm_beats.width_beats))
 
-    cm_beats.thresh_beats = find_peaks(raw_data.imported.iloc[0:, 1], threshold=100)[0]
-    #print(cm_beats.thresh_beats)
+    cm_beats.thresh_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, threshold=50)[0]
+    thresh_beats_size = np.shape(cm_beats.thresh_beats)
+    print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
+    print(cm_beats.thresh_beats)
+    print(type(cm_beats.thresh_beats))
 
-    time_to_run = time.process_time()
     print("Finished.")
-    print(time_to_run)
+    end_time = time.process_time()
+    print(end_time - start_time)
     print("Plotting...")
     graph_peaks(raw_data, cm_beats)
 
+
 def graph_peaks(raw_data, cm_beats):
-
-    #     cm_beats.axis1 = cm_beats.comp_plot.add_subplot(221)
-    #     cm_beats.axis2 = cm_beats.comp_plot.add_subplot(222)
-    #     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
-    #     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
-    # I need the amplitudes that correspond to the given indices
-    # I need the amplitudes from raw_data.imported.iloc, column 2 that correspond to the given indices
-    # How do I achieve this?
-    place_holder = raw_data.imported.iloc[0:, 1]
-
     cm_beats.axis1.plot(cm_beats.dist_beats, raw_data.imported.iloc[0:, 1][cm_beats.dist_beats], "xr")
     cm_beats.axis1.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
-    cm_beats.axis1.legend(['distance'])
+    cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
 
-    # cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.dist_beats, "xr")
-    # cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.prom_beats, "ob")
-    # cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.width_beats, "vg")
-    # cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.thresh_beats, "xk")
+    cm_beats.axis2.plot(cm_beats.prom_beats, raw_data.imported.iloc[0:, 1][cm_beats.prom_beats], "ob")
+    cm_beats.axis2.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
+
+    cm_beats.axis3.plot(cm_beats.width_beats, raw_data.imported.iloc[0:, 1][cm_beats.width_beats], "vg")
+    cm_beats.axis3.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis3.legend(['width = 3'], loc='lower left')
+
+    cm_beats.axis4.plot(cm_beats.thresh_beats, raw_data.imported.iloc[0:, 1][cm_beats.thresh_beats], "xk")
+    cm_beats.axis4.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
+
     cm_beats.comp_plot.canvas.draw()
-    print("Did it work?")
+    print("Plotting complete.")
+
 
 def data_print(raw_data):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
