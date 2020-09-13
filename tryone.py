@@ -73,6 +73,11 @@ def data_import(raw_data):
 
     print("Memory - raw_data, pre-fill: " + str(id(raw_data)))
 
+    # Checks whether data was previously imported into program.  If True, the previous data is deleted.
+    if hasattr(raw_data, 'imported') is True:
+        print("Raw data is not empty; clearing before reading file.")
+        delattr(raw_data, 'imported')
+
     raw_data.imported = (pd.read_csv(data_filename,
                                      sep='\t', lineterminator='\n', skiprows=3, encoding='iso-8859-15',
                                      low_memory=False))
