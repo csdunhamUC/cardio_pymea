@@ -100,55 +100,93 @@ def determine_beats(raw_data, cm_beats):
         delattr(cm_beats, 'thresh_beats')
 
     cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
-    print(cm_beats.x_axis)
-    print("\n")
+    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
+    print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
+    print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
 
-    cm_beats.dist_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, distance=1000)[0]
-    dist_beats_size = np.shape(cm_beats.dist_beats)
-    print("Shape of cm_beats.dist_beats: " + str(dist_beats_size) + ".\n")
+    #cm_beats.dist_beats = {}
+    cm_beats.dist_beats = pd.DataFrame()
+
+    for column in range(len(cm_beats.y_axis.columns)):
+        #cm_beats.dist_beats[column] = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
+        dist_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
+        cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
+
+        cm_beats.prom_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, prominence=100)[0]
+
+        cm_beats.width_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, width=3)[0]
+
+        cm_beats.thresh_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, threshold=50)[0]
+
+    dist_beats_size = len(cm_beats.dist_beats)
+    print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
     print(cm_beats.dist_beats)
-    print(type(cm_beats.dist_beats))
+    print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
+    #print(cm_beats.dist_beats[0])
+    #print("Data type of cm_beats.dist_beats[0]: " + str(type(cm_beats.dist_beats)) + "\n")
 
-    cm_beats.prom_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, prominence=100)[0]
     prom_beats_size = np.shape(cm_beats.prom_beats)
-    print("Shape of cm_beats.prom_beats: " + str(prom_beats_size) + ".\n")
+    print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
     print(cm_beats.prom_beats)
-    print(type(cm_beats.prom_beats))
+    print(str(type(cm_beats.prom_beats)) + "\n")
 
-    cm_beats.width_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, width=3)[0]
     width_beats_size = np.shape(cm_beats.width_beats)
     print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
     print(cm_beats.width_beats)
     print(type(cm_beats.width_beats))
 
-    cm_beats.thresh_beats = find_peaks(raw_data.imported.iloc[0:, 1], height=100, threshold=50)[0]
     thresh_beats_size = np.shape(cm_beats.thresh_beats)
     print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
     print(cm_beats.thresh_beats)
     print(type(cm_beats.thresh_beats))
 
+    # Backups, saving in case I screw this up royally.
+    # cm_beats.dist_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, distance=1000)[0]
+    # dist_beats_size = np.shape(cm_beats.dist_beats)
+    # print("Shape of cm_beats.dist_beats: " + str(dist_beats_size) + ".\n")
+    # print(cm_beats.dist_beats)
+    # print(type(cm_beats.dist_beats))
+    #
+    # cm_beats.prom_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, prominence=100)[0]
+    # prom_beats_size = np.shape(cm_beats.prom_beats)
+    # print("Shape of cm_beats.prom_beats: " + str(prom_beats_size) + ".\n")
+    # print(cm_beats.prom_beats)
+    # print(type(cm_beats.prom_beats))
+    #
+    # cm_beats.width_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, width=3)[0]
+    # width_beats_size = np.shape(cm_beats.width_beats)
+    # print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
+    # print(cm_beats.width_beats)
+    # print(type(cm_beats.width_beats))
+    #
+    # cm_beats.thresh_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, threshold=50)[0]
+    # thresh_beats_size = np.shape(cm_beats.thresh_beats)
+    # print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
+    # print(cm_beats.thresh_beats)
+    # print(type(cm_beats.thresh_beats))
+
     print("Finished.")
     end_time = time.process_time()
     print(end_time - start_time)
-    print("Plotting...")
-    graph_peaks(raw_data, cm_beats)
+    # print("Plotting...")
+    # graph_peaks(raw_data, cm_beats)
 
 
 def graph_peaks(raw_data, cm_beats):
-    cm_beats.axis1.plot(cm_beats.dist_beats, raw_data.imported.iloc[0:, 1][cm_beats.dist_beats], "xr")
-    cm_beats.axis1.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis1.plot(cm_beats.dist_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.dist_beats], "xr")
+    cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
     cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
 
-    cm_beats.axis2.plot(cm_beats.prom_beats, raw_data.imported.iloc[0:, 1][cm_beats.prom_beats], "ob")
-    cm_beats.axis2.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis2.plot(cm_beats.prom_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.prom_beats], "ob")
+    cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
     cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
 
-    cm_beats.axis3.plot(cm_beats.width_beats, raw_data.imported.iloc[0:, 1][cm_beats.width_beats], "vg")
-    cm_beats.axis3.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis3.plot(cm_beats.width_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.width_beats], "vg")
+    cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
     cm_beats.axis3.legend(['width = 3'], loc='lower left')
 
-    cm_beats.axis4.plot(cm_beats.thresh_beats, raw_data.imported.iloc[0:, 1][cm_beats.thresh_beats], "xk")
-    cm_beats.axis4.plot(cm_beats.x_axis, raw_data.imported.iloc[0:, 1])
+    cm_beats.axis4.plot(cm_beats.thresh_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.thresh_beats], "xk")
+    cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
     cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
 
     cm_beats.comp_plot.canvas.draw()
@@ -288,7 +326,7 @@ def main():
 
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from top of screen
-    root.geometry("2700x900+900+900")
+    root.geometry("2700x1200+900+900")
 
     # Calls class to create the GUI window. *********
     elecGUI60 = ElecGUI60(root, raw_data, cm_beats)
