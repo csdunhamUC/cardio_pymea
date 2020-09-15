@@ -49,6 +49,10 @@ class ImportedData:
     pass
 
 
+class InputParameters:
+    pass
+
+
 class BeatAmplitudes:
     pass
 
@@ -91,7 +95,7 @@ def data_import(raw_data):
     return raw_data.imported
 
 
-def determine_beats(raw_data, cm_beats):
+def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
     print("Finding beats...\n")
     start_time = time.process_time()
 
@@ -108,26 +112,23 @@ def determine_beats(raw_data, cm_beats):
     print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
     print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
 
-    # cm_beats.dist_beats = {} ; if choice is made to return to dictionary, uncomment this and apply to for loop
+    input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get())
+
     cm_beats.dist_beats = pd.DataFrame()
     cm_beats.prom_beats = pd.DataFrame()
     cm_beats.width_beats = pd.DataFrame()
     cm_beats.thresh_beats = pd.DataFrame()
 
     for column in range(len(cm_beats.y_axis.columns)):
-        # cm_beats.dist_beats[column] = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
         dist_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
         cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
 
-        # cm_beats.prom_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, prominence=100)[0]
         prom_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
         cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
 
-        # cm_beats.width_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, width=3)[0]
         width_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
         cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
 
-        # cm_beats.thresh_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, threshold=50)[0]
         thresh_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
         cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
 
@@ -135,8 +136,6 @@ def determine_beats(raw_data, cm_beats):
     print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
     print(cm_beats.dist_beats)
     print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
-    #print(cm_beats.dist_beats[0])
-    #print("Data type of cm_beats.dist_beats[0]: " + str(type(cm_beats.dist_beats)) + "\n")
 
     prom_beats_size = np.shape(cm_beats.prom_beats)
     print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
@@ -153,88 +152,49 @@ def determine_beats(raw_data, cm_beats):
     print(cm_beats.thresh_beats)
     print("Data type of cm_beats.thresh_beats: " + str(type(cm_beats.thresh_beats)) + "\n")
 
-    # Backups, saving in case I screw this up royally.
-    # cm_beats.dist_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, distance=1000)[0]
-    # dist_beats_size = np.shape(cm_beats.dist_beats)
-    # print("Shape of cm_beats.dist_beats: " + str(dist_beats_size) + ".\n")
-    # print(cm_beats.dist_beats)
-    # print(type(cm_beats.dist_beats))
-    #
-    # cm_beats.prom_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, prominence=100)[0]
-    # prom_beats_size = np.shape(cm_beats.prom_beats)
-    # print("Shape of cm_beats.prom_beats: " + str(prom_beats_size) + ".\n")
-    # print(cm_beats.prom_beats)
-    # print(type(cm_beats.prom_beats))
-    #
-    # cm_beats.width_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, width=3)[0]
-    # width_beats_size = np.shape(cm_beats.width_beats)
-    # print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
-    # print(cm_beats.width_beats)
-    # print(type(cm_beats.width_beats))
-    #
-    # cm_beats.thresh_beats = find_peaks(cm_beats.y_axis.iloc[0:, 0], height=100, threshold=50)[0]
-    # thresh_beats_size = np.shape(cm_beats.thresh_beats)
-    # print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
-    # print(cm_beats.thresh_beats)
-    # print(type(cm_beats.thresh_beats))
-
     print("Finished.")
     end_time = time.process_time()
     print(end_time - start_time)
     print("Plotting...")
-    graph_peaks(cm_beats)
+    graph_peaks(cm_beats, input_param)
 
 
-def graph_peaks(cm_beats):
-    column_to_plot = 1
+def graph_peaks(cm_beats, input_param):
+    cm_beats.axis1.cla()
+    cm_beats.axis2.cla()
+    cm_beats.axis3.cla()
+    cm_beats.axis4.cla()
 
-    cm_beats.axis1.plot(cm_beats.dist_beats.iloc[0:, column_to_plot].values,
-                        cm_beats.y_axis.iloc[0:, column_to_plot].values[cm_beats.dist_beats.iloc[0:, column_to_plot].values], "xr")
-    cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, column_to_plot].values)
+    cm_beats.axis1.plot(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values,
+                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values], "xr")
+    cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
     cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
 
-    cm_beats.axis2.plot(cm_beats.prom_beats.iloc[0:, column_to_plot].values,
-                        cm_beats.y_axis.iloc[0:, column_to_plot].values[cm_beats.prom_beats.iloc[0:, column_to_plot].values], "ob")
-    cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, column_to_plot].values)
+    cm_beats.axis2.plot(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values,
+                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values], "ob")
+    cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
     cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
 
-    cm_beats.axis3.plot(cm_beats.width_beats.iloc[0:, column_to_plot].values,
-                        cm_beats.y_axis.iloc[0:, column_to_plot].values[cm_beats.width_beats.iloc[0:, column_to_plot].values], "vg")
-    cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, column_to_plot].values)
+    cm_beats.axis3.plot(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values,
+                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.width_beats.iloc[0:, input_param.elec_choice].values], "vg")
+    cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
     cm_beats.axis3.legend(['width = 3'], loc='lower left')
 
-    cm_beats.axis4.plot(cm_beats.thresh_beats.iloc[0:, column_to_plot],
-                        cm_beats.y_axis.iloc[0:, column_to_plot].values[cm_beats.thresh_beats.iloc[0:, column_to_plot].values], "xk")
-    cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, column_to_plot].values)
+    cm_beats.axis4.plot(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice],
+                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values], "xk")
+    cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
     cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
-
-    # Backups, saving just in case.
-    # cm_beats.axis1.plot(cm_beats.dist_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.dist_beats], "xr")
-    # cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
-    # cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
-    #
-    # cm_beats.axis2.plot(cm_beats.prom_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.prom_beats], "ob")
-    # cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
-    # cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
-    #
-    # cm_beats.axis3.plot(cm_beats.width_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.width_beats], "vg")
-    # cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
-    # cm_beats.axis3.legend(['width = 3'], loc='lower left')
-    #
-    # cm_beats.axis4.plot(cm_beats.thresh_beats, cm_beats.y_axis.iloc[0:, 0][cm_beats.thresh_beats], "xk")
-    # cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 0])
-    # cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
 
     cm_beats.comp_plot.canvas.draw()
     print("Plotting complete.")
 
 
-def data_print(raw_data):
+def data_print(elecGUI60, raw_data):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    # print(id(raw_data.imported))
-    print(chosen_electrode_val)
-    # print(raw_data.imported.iloc[15:27, 0:15])
+    print(id(raw_data.imported))
+    print(elecGUI60.elec_to_plot_val.get())
+    print(raw_data.imported.iloc[15:27, 0:15])
 
 
 def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
@@ -260,7 +220,7 @@ def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
 
 
 class ElecGUI60(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats):
+    def __init__(self, master, raw_data, cm_beats, input_param):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
@@ -283,11 +243,11 @@ class ElecGUI60(tk.Frame):
 
         # prints data from import; eventually test to specify columns and rows.
         self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
-                                           command=lambda: data_print(raw_data))
+                                           command=lambda: data_print(self, raw_data))
         self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
 
         self.calc_peaks_button = tk.Button(self.file_operations, text="Find Peaks", width=15, height=3, bg="orange",
-                                           command=lambda: determine_beats(raw_data, cm_beats))
+                                           command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
 
         # to generate heatmap; currently only generates for Matplotlib demo data.
@@ -304,6 +264,7 @@ class ElecGUI60(tk.Frame):
         self.elec_to_plot_val = tk.StringVar()
         self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
         self.elec_to_plot_val.set("1")
+        self.elec_to_plot_val.get()
         self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val)
         self.elec_to_plot_entry.grid(row=1, column=0, padx=5,pady=5)
 
@@ -321,9 +282,11 @@ class ElecGUI60(tk.Frame):
         self.gen_beats = FigureCanvasTkAgg(cm_beats.comp_plot, self.beat_detect_frame)
         self.gen_beats.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
+        print(dir(self))
+
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
-        global chosen_electrode_val
+        # global chosen_electrode_val
         try:
             chosen_electrode_val = int(self.elec_to_plot_val.get())
             print(type(chosen_electrode_val))
@@ -334,7 +297,6 @@ class ElecGUI60(tk.Frame):
 def main():
     # Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
     # integrate this into a GUI.
-
     global vegetables
     vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
                   "potato", "wheat", "barley"]
@@ -359,6 +321,7 @@ def main():
 
     raw_data = ImportedData()
     cm_beats = BeatAmplitudes()
+    input_param = InputParameters()
 
     cm_beats.comp_plot = plt.Figure(figsize=(10, 7), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
@@ -375,9 +338,10 @@ def main():
     root.geometry("2700x1200+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root, raw_data, cm_beats)
-    # print(vars(elecGUI60))
+    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, input_param)
+    # print(vars(ElecGUI60))
     # print(dir(elecGUI60))
+    # print(hasattr(elecGUI60, "elec_to_plot_entry"))
     root.mainloop()
 
 
