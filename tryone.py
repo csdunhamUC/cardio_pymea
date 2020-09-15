@@ -37,15 +37,15 @@ from scipy.signal import find_peaks
 #
 # print(data_three.fillna(method='pad'))
 
+# Limited list of globals, purely out of necessity, for those functions (like the trace_add callback) for which it's
+# impossible, at least at my current level of expertise, to get a damn value out of it.
+
+
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
 # one function to another.  Classes are generated for ImportedData (where the raw data will go), PaceMakerData
 # (where PM data will go), UpstrokeVelData (where dV/dt data will go), LocalATData (where LAT data will go), and
 # CondVelData, where CV data will go.
 class ImportedData:
-    pass
-
-
-class InputParameters:
     pass
 
 
@@ -232,8 +232,9 @@ def graph_peaks(cm_beats):
 def data_print(raw_data):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    print(id(raw_data.imported))
-    print(raw_data.imported.iloc[15:27, 0:15])
+    # print(id(raw_data.imported))
+    print(chosen_electrode_val)
+    # print(raw_data.imported.iloc[15:27, 0:15])
 
 
 def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
@@ -258,81 +259,76 @@ def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
     return
 
 
-def column_to_plot_parameter():
-    print()
-
-
 class ElecGUI60(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats, column_select):
+    def __init__(self, master, raw_data, cm_beats):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
         # where the relation is with other widgets.  If you have 3 widgets you can have 3 rows or 3 columns and
         # organize accordingly.  If you have 2 widgets you can only have 2 rows or 2 columns.
         self.grid()
-        self.file_management_widgets(raw_data, cm_beats)
-        self.mea_array_widgets(cm_beats, column_select)
-
-    def file_management_widgets(self, raw_data, cm_beats):
         self.winfo_toplevel().title("Elec GUI 60 - Prototype")
-        file_operations = tk.Frame(self, width=100, height=800, bg="white")
-        file_operations.grid(row=1, column=0, padx=10, pady=10, sticky="nw")
+
+        self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
+        self.file_operations.grid(row=1, column=0, padx=10, pady=10, sticky="nw")
 
         # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change mouse-over color effects.
-        # A class can be set up for the sole purpose of handling these events.
-        import_data_button = tk.Button(file_operations, text="Import Data", width=15, height=3, bg="skyblue",
-                                       command=lambda: data_import(raw_data))
-        import_data_button.grid(row=0, column=0, padx=2, pady=2)
+        self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
+                                            command=lambda: data_import(raw_data))
+        self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
 
         # to save data; not implemented.
-        save_data_button = tk.Button(file_operations, text="Save Data", width=15, height=3, bg="lightgreen")
-        save_data_button.grid(row=1, column=0, padx=2, pady=2)
+        self.save_data_button = tk.Button(self.file_operations, text="Save Data", width=15, height=3, bg="lightgreen")
+        self.save_data_button.grid(row=1, column=0, padx=2, pady=2)
 
         # prints data from import; eventually test to specify columns and rows.
-        print_data_button = tk.Button(file_operations, text="Print Data", width=15, height=3, bg="yellow",
-                                      command=lambda: data_print(raw_data))
-        print_data_button.grid(row=2, column=0, padx=2, pady=2)
+        self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
+                                           command=lambda: data_print(raw_data))
+        self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
 
-        calc_peaks_button = tk.Button(file_operations, text="Find Peaks", width=15, height=3, bg="orange",
-                                      command=lambda: determine_beats(raw_data, cm_beats))
-        calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
+        self.calc_peaks_button = tk.Button(self.file_operations, text="Find Peaks", width=15, height=3, bg="orange",
+                                           command=lambda: determine_beats(raw_data, cm_beats))
+        self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
 
         # to generate heatmap; currently only generates for Matplotlib demo data.
-        graph_heatmap_button = tk.Button(file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
-                                         command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
-        graph_heatmap_button.grid(row=4, column=0, padx=2, pady=2)
+        self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
+                                              command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
+        self.graph_heatmap_button.grid(row=4, column=0, padx=2, pady=2)
 
-        # Eventually this function will house the widgets necessary to display heat maps generated for MEAs.
+        self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
+        self.mea_parameters_frame.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
+        self.mea_parameters_frame.grid_propagate(False)
 
-    def mea_array_widgets(self, cm_beats, column_select):
-        mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
-        mea_parameters_frame.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
-        mea_parameters_frame.grid_propagate(False)
+        self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white")
+        self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=5)
+        self.elec_to_plot_val = tk.StringVar()
+        self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
+        self.elec_to_plot_val.set("1")
+        self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val)
+        self.elec_to_plot_entry.grid(row=1, column=0, padx=5,pady=5)
 
-        elec_to_plot_label = tk.Label(mea_parameters_frame, text="Electrode Plotted", bg="white")
-        elec_to_plot_label.grid(row=0, column=0, padx=5, pady=5)
-        elec_to_plot_entry = tk.Entry(mea_parameters_frame)
-        elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=5)
+        self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
+        self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
+        self.mea_array_frame.grid_propagate(False)
 
-        mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
-        mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
-        mea_array_frame.grid_propagate(False)
+        self.beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
+        self.beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
+        self.beat_detect_frame.grid_propagate(False)
 
-        beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
-        beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
-        beat_detect_frame.grid_propagate(False)
+        self.gen_figure = FigureCanvasTkAgg(heat_map, self.mea_array_frame)
+        self.gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
-        gen_figure = FigureCanvasTkAgg(heat_map, mea_array_frame)
-        gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
+        self.gen_beats = FigureCanvasTkAgg(cm_beats.comp_plot, self.beat_detect_frame)
+        self.gen_beats.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
-        gen_beats = FigureCanvasTkAgg(cm_beats.comp_plot, beat_detect_frame)
-        gen_beats.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
-
-        #gen_beat_figure = FigureCanvasTkAgg
-
-        # tk.Label(mea_array_frame, text="Microelectrode Array Representation").grid(row=0, column=0, padx=240, pady=2,
-        #                                                                            sticky="e")
-        # tk.Label(mea_array_frame, text="MEA 1").grid(row=0, column=0, padx=5, pady=2, sticky="w")
+    def col_sel_callback(self, *args):
+        print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
+        global chosen_electrode_val
+        try:
+            chosen_electrode_val = int(self.elec_to_plot_val.get())
+            print(type(chosen_electrode_val))
+        except ValueError:
+            print("Only numbers are allowed.  Please try again.")
 
 
 def main():
@@ -363,7 +359,6 @@ def main():
 
     raw_data = ImportedData()
     cm_beats = BeatAmplitudes()
-    column_select = InputParameters()
 
     cm_beats.comp_plot = plt.Figure(figsize=(10, 7), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
@@ -380,7 +375,9 @@ def main():
     root.geometry("2700x1200+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, column_select)
+    elecGUI60 = ElecGUI60(root, raw_data, cm_beats)
+    # print(vars(elecGUI60))
+    # print(dir(elecGUI60))
     root.mainloop()
 
 
