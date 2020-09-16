@@ -10,36 +10,11 @@ import tkinter as tk
 from tkinter import filedialog
 from scipy.signal import find_peaks
 
-
-# data_two = {'Name':['Tom', 'Jack', 'Steve', 'Ricky'],'Age':[28,34,29,42]}
-# df = pd.DataFrame(data_two, index=['rank 1', 'rank 2', 'rank 3', 'rank 4'])
-#
-# print(df)
-
-# Panel has been deprecated in pandas, so this operation must be done using dataframes.
-# data_three = {'Item 1': pd.DataFrame(np.random.randn(4, 3)),
-#               'Item 2': pd.DataFrame(np.random.randn(4, 2))}
-# thing_one = pd.Panel()
-#
-# print(thing_one)
-
-# data_three = pd.DataFrame(np.random.randn(5,3), index=['a', 'c', 'e', 'f', 'h'], columns=['one', 'two', 'three'])
-#
-# data_three = data_three.reindex(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'])
-#
-# print(data_three)
-# prints true/false list for the given column if they satisfy the condition isnull = true (or isnull = 1)
-# print(data_three['one'].isnull())
-
 # Fills in NaN values with whatever you specify
 # print("NaN replaced with 0.0123456")
 # print(data_three.fillna(0.123456))
 #
 # print(data_three.fillna(method='pad'))
-
-# Limited list of globals, purely out of necessity, for those functions (like the trace_add callback) for which it's
-# impossible, at least at my current level of expertise, to get a damn value out of it.
-
 
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
 # one function to another.  Classes are generated for ImportedData (where the raw data will go), PaceMakerData
@@ -85,8 +60,8 @@ def data_import(raw_data):
         delattr(raw_data, 'imported')
 
     raw_data.imported = (pd.read_csv(data_filename,
-                                     sep='\t', lineterminator='\n', skiprows=3, encoding='iso-8859-15',
-                                     low_memory=False))
+                                     sep='\s+', lineterminator='\n', skiprows=3, header=0,
+                                     encoding='iso-8859-15', skipinitialspace=True, low_memory=False))
 
     new_data_size = np.shape(raw_data.imported)
     print(new_data_size)
@@ -108,7 +83,8 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         delattr(cm_beats, 'thresh_beats')
 
     cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
-    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
+    # y_axis indexing ends at column -1, or second to last column, to remove the columns containing only \r
+    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
     print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
     print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
 
@@ -120,16 +96,16 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
     cm_beats.thresh_beats = pd.DataFrame()
 
     for column in range(len(cm_beats.y_axis.columns)):
-        dist_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
+        dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
         cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
 
-        prom_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
+        prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
         cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
 
-        width_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
+        width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
         cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
 
-        thresh_beats = find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0]
+        thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
         cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
 
     dist_beats_size = len(cm_beats.dist_beats)
@@ -195,6 +171,7 @@ def data_print(elecGUI60, raw_data):
     print(id(raw_data.imported))
     print(elecGUI60.elec_to_plot_val.get())
     print(raw_data.imported.iloc[15:27, 0:15])
+    print(raw_data.imported.iloc[15:27, 110:])
 
 
 def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
@@ -226,13 +203,12 @@ class ElecGUI60(tk.Frame):
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
         # where the relation is with other widgets.  If you have 3 widgets you can have 3 rows or 3 columns and
         # organize accordingly.  If you have 2 widgets you can only have 2 rows or 2 columns.
+        # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change mouse-over color effects.
         self.grid()
         self.winfo_toplevel().title("Elec GUI 60 - Prototype")
 
         self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
         self.file_operations.grid(row=1, column=0, padx=10, pady=10, sticky="nw")
-
-        # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change mouse-over color effects.
         self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
                                             command=lambda: data_import(raw_data))
         self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
@@ -246,6 +222,7 @@ class ElecGUI60(tk.Frame):
                                            command=lambda: data_print(self, raw_data))
         self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
 
+        # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
         self.calc_peaks_button = tk.Button(self.file_operations, text="Find Peaks", width=15, height=3, bg="orange",
                                            command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
@@ -258,7 +235,6 @@ class ElecGUI60(tk.Frame):
         self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
         self.mea_parameters_frame.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
-
         self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white")
         self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=5)
         self.elec_to_plot_val = tk.StringVar()
@@ -271,25 +247,22 @@ class ElecGUI60(tk.Frame):
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
         self.mea_array_frame.grid_propagate(False)
+        self.gen_figure = FigureCanvasTkAgg(heat_map, self.mea_array_frame)
+        self.gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
         self.beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
         self.beat_detect_frame.grid_propagate(False)
-
-        self.gen_figure = FigureCanvasTkAgg(heat_map, self.mea_array_frame)
-        self.gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
-
         self.gen_beats = FigureCanvasTkAgg(cm_beats.comp_plot, self.beat_detect_frame)
         self.gen_beats.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
-        print(dir(self))
+        # print(dir(self))
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
-        # global chosen_electrode_val
         try:
             chosen_electrode_val = int(self.elec_to_plot_val.get())
-            print(type(chosen_electrode_val))
+            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -330,7 +303,6 @@ def main():
     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
 
-    # import_raw_data = pd.DataFrame()
     # print("Import data memory reference: " + str(id(import_raw_data)))
 
     root = tk.Tk()
