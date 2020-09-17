@@ -48,6 +48,7 @@ class CondVelData:
     pass
 
 
+# Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
 def data_import(raw_data):
     data_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                                filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
@@ -59,6 +60,7 @@ def data_import(raw_data):
         print("Raw data is not empty; clearing before reading file.")
         delattr(raw_data, 'imported')
 
+    print("Importing data...")
     raw_data.imported = (pd.read_csv(data_filename,
                                      sep='\s+', lineterminator='\n', skiprows=3, header=0,
                                      encoding='iso-8859-15', skipinitialspace=True, low_memory=False))
@@ -67,9 +69,11 @@ def data_import(raw_data):
     print(new_data_size)
     end_time = time.process_time()
     print(end_time - start_time)
+    print("Import complete.")
     return raw_data.imported
 
 
+# Finds peaks based on given input parameters.
 def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
     print("Finding beats...\n")
     start_time = time.process_time()
@@ -99,13 +103,13 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
         cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
 
-        prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
+        prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000, prominence=100)[0])
         cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
 
-        width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
+        width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000, width=3)[0])
         cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
 
-        thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
+        thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000, threshold=50)[0])
         cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
 
     cm_beats.dist_beats.astype('Int64')
@@ -137,46 +141,48 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
     end_time = time.process_time()
     print(end_time - start_time)
     print("Plotting...")
-    graph_peaks(cm_beats, input_param)
+    graph_beats(elecGUI60, cm_beats, input_param)
 
 
-def graph_peaks(cm_beats, input_param):
-    cm_beats.axis1.cla()
-    cm_beats.axis2.cla()
-    cm_beats.axis3.cla()
-    cm_beats.axis4.cla()
+# Produces 4-subplot plot of peak finder data and graphs it.  Can be called via button.
+# Will throw exception of data does not exist.
+def graph_beats(elecGUI60, cm_beats, input_param):
+    try:
+        cm_beats.axis1.cla()
+        cm_beats.axis2.cla()
+        cm_beats.axis3.cla()
+        cm_beats.axis4.cla()
 
-    mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
-    dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
-    print(dist_without_nan.dtype)
+        input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get())
 
-    cm_beats.axis1.plot(dist_without_nan,
-                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
-    cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
+        mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
+        dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
+        cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
+        cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
 
-    # cm_beats.axis1.plot(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values,
-    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values], "ob")
-    # cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    # cm_beats.axis1.legend(['distance = 100'], loc='lower left')
+        mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values)
+        prom_without_nan = cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values[mask_prom].astype('int64')
+        cm_beats.axis2.plot(prom_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[prom_without_nan], "ob")
+        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
 
-    # cm_beats.axis2.plot(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values,
-    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values], "ob")
-    # cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    # cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
-    #
-    # cm_beats.axis3.plot(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values,
-    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.width_beats.iloc[0:, input_param.elec_choice].values], "vg")
-    # cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    # cm_beats.axis3.legend(['width = 3'], loc='lower left')
-    #
-    # cm_beats.axis4.plot(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice],
-    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values], "xk")
-    # cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    # cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
+        mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values)
+        width_without_nan = cm_beats.width_beats.iloc[0:, input_param.elec_choice].values[mask_width].astype('int64')
+        cm_beats.axis3.plot(width_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[width_without_nan], "vg")
+        cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis3.legend(['width = 3'], loc='lower left')
 
-    cm_beats.comp_plot.canvas.draw()
-    print("Plotting complete.")
+        mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values)
+        thresh_without_nan = cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values[mask_thresh].astype('int64')
+        cm_beats.axis4.plot(thresh_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[thresh_without_nan], "xk")
+        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
+
+        cm_beats.comp_plot.canvas.draw()
+        print("Plotting complete.")
+    except AttributeError:
+        print("Please use Find Peaks first.")
 
 
 def data_print(elecGUI60, raw_data):
@@ -241,10 +247,15 @@ class ElecGUI60(tk.Frame):
                                            command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
 
+        # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
+        self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="tomato",
+                                            command=lambda: graph_beats(self, cm_beats, input_param))
+        self.graph_beats_button.grid(row=4, column=0, padx=2, pady=2)
+
         # to generate heatmap; currently only generates for Matplotlib demo data.
         self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
                                               command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
-        self.graph_heatmap_button.grid(row=4, column=0, padx=2, pady=2)
+        self.graph_heatmap_button.grid(row=5, column=0, padx=2, pady=2)
 
         self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
         self.mea_parameters_frame.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
@@ -310,7 +321,7 @@ def main():
     cm_beats = BeatAmplitudes()
     input_param = InputParameters()
 
-    cm_beats.comp_plot = plt.Figure(figsize=(10, 7), dpi=120)
+    cm_beats.comp_plot = plt.Figure(figsize=(10, 6.5), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
     cm_beats.axis1 = cm_beats.comp_plot.add_subplot(221)
     cm_beats.axis2 = cm_beats.comp_plot.add_subplot(222)
