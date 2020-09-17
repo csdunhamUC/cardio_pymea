@@ -108,6 +108,11 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
         cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
 
+    cm_beats.dist_beats.astype('Int64')
+    cm_beats.prom_beats.astype('Int64')
+    cm_beats.width_beats.astype('Int64')
+    cm_beats.thresh_beats.astype('Int64')
+
     dist_beats_size = len(cm_beats.dist_beats)
     print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
     print(cm_beats.dist_beats)
@@ -141,25 +146,34 @@ def graph_peaks(cm_beats, input_param):
     cm_beats.axis3.cla()
     cm_beats.axis4.cla()
 
-    cm_beats.axis1.plot(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values,
-                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values], "xr")
+    mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
+    dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
+    print(dist_without_nan.dtype)
+
+    cm_beats.axis1.plot(dist_without_nan,
+                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
     cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
     cm_beats.axis1.legend(['distance = 1000'], loc='lower left')
 
-    cm_beats.axis2.plot(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values,
-                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values], "ob")
-    cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
+    # cm_beats.axis1.plot(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values,
+    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values], "ob")
+    # cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+    # cm_beats.axis1.legend(['distance = 100'], loc='lower left')
 
-    cm_beats.axis3.plot(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values,
-                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.width_beats.iloc[0:, input_param.elec_choice].values], "vg")
-    cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    cm_beats.axis3.legend(['width = 3'], loc='lower left')
-
-    cm_beats.axis4.plot(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice],
-                        cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values], "xk")
-    cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
+    # cm_beats.axis2.plot(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values,
+    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values], "ob")
+    # cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+    # cm_beats.axis2.legend(['prominence = 100'], loc='lower left')
+    #
+    # cm_beats.axis3.plot(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values,
+    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.width_beats.iloc[0:, input_param.elec_choice].values], "vg")
+    # cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+    # cm_beats.axis3.legend(['width = 3'], loc='lower left')
+    #
+    # cm_beats.axis4.plot(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice],
+    #                     cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values], "xk")
+    # cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+    # cm_beats.axis4.legend(['threshold = 50'], loc='lower left')
 
     cm_beats.comp_plot.canvas.draw()
     print("Plotting complete.")
