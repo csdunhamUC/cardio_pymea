@@ -257,24 +257,68 @@ class ElecGUI60(tk.Frame):
                                               command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
         self.graph_heatmap_button.grid(row=5, column=0, padx=2, pady=2)
 
+        # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
         self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
         self.mea_parameters_frame.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
-        self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white")
-        self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=5)
+
+        # GUI elements in the mea_parameters_frame
+        self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white", wraplength=80)
+        self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=2)
         self.elec_to_plot_val = tk.StringVar()
         self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
         self.elec_to_plot_val.set("1")
-        self.elec_to_plot_val.get()
-        self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val)
-        self.elec_to_plot_entry.grid(row=1, column=0, padx=5,pady=5)
+        self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val, width=8)
+        self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
+        self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, text="Min Peak Distance", bg="white", wraplength=80)
+        self.min_peak_dist_label.grid(row=0, column=1, padx=5, pady=2)
+        self.min_peak_dist_val = tk.StringVar()
+        self.min_peak_dist_val.trace_add("write", self.min_peak_dist_callback)
+        self.min_peak_dist_val.set("500")
+        self.min_peak_dist_entry = tk.Entry(self.mea_parameters_frame, text=self.min_peak_dist_val, width=8)
+        self.min_peak_dist_entry.grid(row=1, column=1, padx=5, pady=2)
+
+        self.min_peak_height_label = tk.Label(self.mea_parameters_frame, text="Min Peak Height", bg="white", wraplength=80)
+        self.min_peak_height_label.grid(row=0, column=2, padx=5, pady=2)
+        self.min_peak_height_val = tk.StringVar()
+        self.min_peak_height_val.trace_add("write", self.min_peak_height_callback)
+        self.min_peak_height_val.set("100")
+        self.min_peak_height_entry = tk.Entry(self.mea_parameters_frame, text=self.min_peak_height_val, width=8)
+        self.min_peak_height_entry.grid(row=1, column=2, padx=5, pady=2)
+
+        self.parameter_prominence_label = tk.Label(self.mea_parameters_frame, text="Peak Prominence", bg="white", wraplength=100)
+        self.parameter_prominence_label.grid(row=0, column=3, padx=5, pady=2)
+        self.parameter_prominence_val = tk.StringVar()
+        self.parameter_prominence_val.trace_add("write", self.parameter_prominence_callback)
+        self.parameter_prominence_val.set("100")
+        self.parameter_prominence_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_prominence_val, width=8)
+        self.parameter_prominence_entry.grid(row=1, column=3, padx=5, pady=2)
+
+        self.parameter_width_label = tk.Label(self.mea_parameters_frame, text="Peak Width", bg="white", wraplength=100)
+        self.parameter_width_label.grid(row=0, column=4, padx=5, pady=2)
+        self.parameter_width_val = tk.StringVar()
+        self.parameter_width_val.trace_add("write", self.parameter_width_callback)
+        self.parameter_width_val.set("3")
+        self.parameter_width_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_width_val, width=8)
+        self.parameter_width_entry.grid(row=1, column=4, padx=5, pady=2)
+
+        self.parameter_thresh_label = tk.Label(self.mea_parameters_frame, text="Peak Threshold", bg="white", wraplength=100)
+        self.parameter_thresh_label.grid(row=0, column=5, padx=5, pady=2)
+        self.parameter_thresh_val = tk.StringVar()
+        self.parameter_thresh_val.trace_add("write", self.parameter_thresh_callback)
+        self.parameter_thresh_val.set("50")
+        self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
+        self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
+
+        # Frame and elements for heat map plot.
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
         self.mea_array_frame.grid_propagate(False)
         self.gen_figure = FigureCanvasTkAgg(heat_map, self.mea_array_frame)
         self.gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
 
+        # Frame and elements for peak finder plots.
         self.beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
         self.beat_detect_frame.grid_propagate(False)
@@ -287,6 +331,46 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
         try:
             chosen_electrode_val = int(self.elec_to_plot_val.get())
+            # print(type(chosen_electrode_val))
+        except ValueError:
+            print("Only numbers are allowed.  Please try again.")
+
+    def min_peak_dist_callback(self, *args):
+        print("You entered: \"{}\"".format(self.min_peak_dist_val.get()))
+        try:
+            chosen_electrode_val = int(self.min_peak_dist_val.get())
+            # print(type(chosen_electrode_val))
+        except ValueError:
+            print("Only numbers are allowed.  Please try again.")
+
+    def min_peak_height_callback(self, *args):
+        print("You entered: \"{}\"".format(self.min_peak_height_val.get()))
+        try:
+            chosen_electrode_val = int(self.min_peak_height_val.get())
+            # print(type(chosen_electrode_val))
+        except ValueError:
+            print("Only numbers are allowed.  Please try again.")
+
+    def parameter_prominence_callback(self, *args):
+        print("You entered: \"{}\"".format(self.parameter_prominence_val.get()))
+        try:
+            chosen_electrode_val = int(self.parameter_prominence_val.get())
+            # print(type(chosen_electrode_val))
+        except ValueError:
+            print("Only numbers are allowed.  Please try again.")
+
+    def parameter_width_callback(self, *args):
+        print("You entered: \"{}\"".format(self.parameter_width_val.get()))
+        try:
+            chosen_electrode_val = int(self.parameter_width_val.get())
+            # print(type(chosen_electrode_val))
+        except ValueError:
+            print("Only numbers are allowed.  Please try again.")
+
+    def parameter_thresh_callback(self, *args):
+        print("You entered: \"{}\"".format(self.parameter_thresh_val.get()))
+        try:
+            chosen_electrode_val = int(self.parameter_thresh_val.get())
             # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
