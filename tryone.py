@@ -20,6 +20,8 @@ from scipy.signal import find_peaks
 # one function to another.  Classes are generated for ImportedData (where the raw data will go), PaceMakerData
 # (where PM data will go), UpstrokeVelData (where dV/dt data will go), LocalATData (where LAT data will go), and
 # CondVelData, where CV data will go.
+
+
 class ImportedData:
     pass
 
@@ -92,24 +94,37 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
     print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
     print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
 
-    input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get())
+    input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get()) - 1
+    input_param.min_peak_dist = float(elecGUI60.min_peak_dist_val.get())
+    input_param.min_peak_height = float(elecGUI60.min_peak_height_val.get())
+    input_param.parameter_prominence = float(elecGUI60.parameter_prominence_val.get())
+    input_param.parameter_width = float(elecGUI60.parameter_width_val.get())
+    input_param.parameter_thresh = float(elecGUI60.parameter_thresh_val.get())
 
     cm_beats.dist_beats = pd.DataFrame()
     cm_beats.prom_beats = pd.DataFrame()
     cm_beats.width_beats = pd.DataFrame()
     cm_beats.thresh_beats = pd.DataFrame()
 
+    print("Summary of parameters: " + str(input_param.min_peak_dist) + ", " + str(input_param.min_peak_height) +
+          ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
+          str(input_param.parameter_thresh) + ".")
+
     for column in range(len(cm_beats.y_axis.columns)):
-        dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000)[0])
+        dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                          distance=input_param.min_peak_dist)[0])
         cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
 
-        prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000, prominence=100)[0])
+        prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                          distance=input_param.min_peak_dist, prominence=input_param.parameter_prominence)[0])
         cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
 
-        width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000, width=3)[0])
+        width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                           distance=input_param.min_peak_dist, width=input_param.parameter_width)[0])
         cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
 
-        thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=100, distance=1000, threshold=50)[0])
+        thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                            distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0])
         cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
 
     cm_beats.dist_beats.astype('Int64')
@@ -153,7 +168,8 @@ def graph_beats(elecGUI60, cm_beats, input_param):
         cm_beats.axis3.cla()
         cm_beats.axis4.cla()
 
-        input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get())
+        input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get()) - 1
+        print("Will generate graph for electrode " + str(input_param.elec_choice) + ".")
 
         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
         dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
@@ -275,7 +291,7 @@ class ElecGUI60(tk.Frame):
         self.min_peak_dist_label.grid(row=0, column=1, padx=5, pady=2)
         self.min_peak_dist_val = tk.StringVar()
         self.min_peak_dist_val.trace_add("write", self.min_peak_dist_callback)
-        self.min_peak_dist_val.set("500")
+        self.min_peak_dist_val.set("1000")
         self.min_peak_dist_entry = tk.Entry(self.mea_parameters_frame, text=self.min_peak_dist_val, width=8)
         self.min_peak_dist_entry.grid(row=1, column=1, padx=5, pady=2)
 
