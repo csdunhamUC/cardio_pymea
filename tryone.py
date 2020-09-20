@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import pandas as pd
 import seaborn as seab
 import os
@@ -170,6 +171,7 @@ def graph_beats(elecGUI60, cm_beats, input_param):
 
         input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get()) - 1
         print("Will generate graph for electrode " + str(input_param.elec_choice) + ".")
+        cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
 
         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
         dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
@@ -233,7 +235,7 @@ def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
 
 
 class ElecGUI60(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats, input_param):
+    def __init__(self, master, raw_data, cm_beats, pace_maker, input_param):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
@@ -243,6 +245,7 @@ class ElecGUI60(tk.Frame):
         self.grid()
         self.winfo_toplevel().title("Elec GUI 60 - Prototype")
 
+        # ############################################### Buttons #####################################################
         self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
         self.file_operations.grid(row=1, column=0, padx=10, pady=10, sticky="nw")
         self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
@@ -275,7 +278,7 @@ class ElecGUI60(tk.Frame):
 
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
         self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
-        self.mea_parameters_frame.grid(row=0, column=1, columnspan=3, padx=5, pady=5)
+        self.mea_parameters_frame.grid(row=0, column=1, columnspan=2, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
 
         # GUI elements in the mea_parameters_frame
@@ -287,6 +290,7 @@ class ElecGUI60(tk.Frame):
         self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val, width=8)
         self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
+        # ############################################### Entry Fields ################################################
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, text="Min Peak Distance", bg="white", wraplength=80)
         self.min_peak_dist_label.grid(row=0, column=1, padx=5, pady=2)
         self.min_peak_dist_val = tk.StringVar()
@@ -327,19 +331,27 @@ class ElecGUI60(tk.Frame):
         self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
+        # ############################################### Plot Frames #################################################
         # Frame and elements for heat map plot.
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
         self.mea_array_frame.grid_propagate(False)
         self.gen_figure = FigureCanvasTkAgg(heat_map, self.mea_array_frame)
-        self.gen_figure.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
+        self.gen_figure.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
 
         # Frame and elements for peak finder plots.
         self.beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
         self.beat_detect_frame.grid_propagate(False)
         self.gen_beats = FigureCanvasTkAgg(cm_beats.comp_plot, self.beat_detect_frame)
-        self.gen_beats.get_tk_widget().grid(row=0, column=0, padx=10, pady=10)
+        self.gen_beats.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        # NavigationToolbar2Tk calls pack internally, conflicts with grid.  Workaround: establish in own frame,
+        # use grid to place that frame in_side of the chosen parent frame.  This works because the parent frame is still
+        # a descent of "root", which is the overarching parent of all of these GUI elements.
+        self.gen_beats_toolbar_frame = tk.Frame(self)
+        self.gen_beats_toolbar_frame.grid(row=2, column=0, in_=self.beat_detect_frame)
+        self.gen_beats_toolbar = NavigationToolbar2Tk(self.gen_beats, self.gen_beats_toolbar_frame)
+
 
         # print(dir(self))
 
@@ -419,9 +431,10 @@ def main():
 
     raw_data = ImportedData()
     cm_beats = BeatAmplitudes()
+    pace_maker = PacemakerData()
     input_param = InputParameters()
 
-    cm_beats.comp_plot = plt.Figure(figsize=(10, 6.5), dpi=120)
+    cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
     cm_beats.axis1 = cm_beats.comp_plot.add_subplot(221)
     cm_beats.axis2 = cm_beats.comp_plot.add_subplot(222)
@@ -435,7 +448,7 @@ def main():
     root.geometry("2700x1200+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, input_param)
+    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, input_param)
     # print(vars(ElecGUI60))
     # print(dir(elecGUI60))
     # print(hasattr(elecGUI60, "elec_to_plot_entry"))
