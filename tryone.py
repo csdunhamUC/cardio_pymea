@@ -10,6 +10,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog
 from scipy.signal import find_peaks
+from scipy import stats
 
 # Fills in NaN values with whatever you specify
 # print("NaN replaced with 0.0123456")
@@ -109,7 +110,7 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
 
     print("Summary of parameters: " + str(input_param.min_peak_dist) + ", " + str(input_param.min_peak_height) +
           ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
-          str(input_param.parameter_thresh) + ".")
+          str(input_param.parameter_thresh) + ".\n")
 
     for column in range(len(cm_beats.y_axis.columns)):
         dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
@@ -133,25 +134,53 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
     cm_beats.width_beats.astype('Int64')
     cm_beats.thresh_beats.astype('Int64')
 
-    dist_beats_size = len(cm_beats.dist_beats)
+    # Generate beat counts for the different peakfinder methods.
+    cm_beats.beat_count_dist = np.zeros(len(cm_beats.dist_beats.columns))
+    for column in range(len(cm_beats.dist_beats.columns)):
+        cm_beats.beat_count_dist[column] = len(cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
+
+    cm_beats.beat_count_prom = np.zeros(len(cm_beats.prom_beats.columns))
+    for column in range(len(cm_beats.prom_beats.columns)):
+        cm_beats.beat_count_prom[column] = len(cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
+
+    cm_beats.beat_count_width = np.zeros(len(cm_beats.width_beats.columns))
+    for column in range(len(cm_beats.width_beats.columns)):
+        cm_beats.beat_count_width[column] = len(cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
+
+    cm_beats.beat_count_thresh = np.zeros(len(cm_beats.thresh_beats.columns))
+    for column in range(len(cm_beats.thresh_beats.columns)):
+        cm_beats.beat_count_thresh[column] = len(cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
+
+    print(cm_beats.beat_count_dist)
+    cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
+    cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
+    cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
+    cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
+
+    print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode))
+    print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode))
+    print("Mode of beats using width parameter: " + str(cm_beats.beat_count_width_mode))
+    print("Mode of beats using threshold parameter: " + str(cm_beats.beat_count_thresh_mode))
+
+    dist_beats_size = np.shape(cm_beats.dist_beats)
     print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
-    print(cm_beats.dist_beats)
-    print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
+    # print(cm_beats.dist_beats)
+    # print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
 
     prom_beats_size = np.shape(cm_beats.prom_beats)
     print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
-    print(cm_beats.prom_beats)
-    print("Data type of cm_beats.prom_beats: " + str(type(cm_beats.prom_beats)) + "\n")
+    # print(cm_beats.prom_beats)
+    # print("Data type of cm_beats.prom_beats: " + str(type(cm_beats.prom_beats)) + "\n")
 
     width_beats_size = np.shape(cm_beats.width_beats)
     print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
-    print(cm_beats.width_beats)
-    print("Data type of cm_beats.width_beats: " + str(type(cm_beats.width_beats)) + "\n")
+    # print(cm_beats.width_beats)
+    # print("Data type of cm_beats.width_beats: " + str(type(cm_beats.width_beats)) + "\n")
 
     thresh_beats_size = np.shape(cm_beats.thresh_beats)
     print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
-    print(cm_beats.thresh_beats)
-    print("Data type of cm_beats.thresh_beats: " + str(type(cm_beats.thresh_beats)) + "\n")
+    # print(cm_beats.thresh_beats)
+    # print("Data type of cm_beats.thresh_beats: " + str(type(cm_beats.thresh_beats)) + "\n")
 
     print("Finished.")
     end_time = time.process_time()
@@ -201,6 +230,11 @@ def graph_beats(elecGUI60, cm_beats, input_param):
         print("Plotting complete.")
     except AttributeError:
         print("Please use Find Peaks first.")
+
+
+def calculate_pacemaker():
+
+    return
 
 
 def data_print(elecGUI60, raw_data):
