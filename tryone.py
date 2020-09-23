@@ -79,114 +79,117 @@ def data_import(raw_data):
 
 # Finds peaks based on given input parameters.
 def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
-    print("Finding beats...\n")
-    start_time = time.process_time()
+    try:
+        print("Finding beats...\n")
+        start_time = time.process_time()
 
-    if hasattr(cm_beats, 'x_axis') is True:
-        print("Beat data are not empty; clearing before finding peaks.")
-        delattr(cm_beats, 'x_axis')
-        delattr(cm_beats, 'dist_beats')
-        delattr(cm_beats, 'prom_beats')
-        delattr(cm_beats, 'width_beats')
-        delattr(cm_beats, 'thresh_beats')
+        if hasattr(cm_beats, 'x_axis') is True:
+            print("Beat data are not empty; clearing before finding peaks.")
+            delattr(cm_beats, 'x_axis')
+            delattr(cm_beats, 'dist_beats')
+            delattr(cm_beats, 'prom_beats')
+            delattr(cm_beats, 'width_beats')
+            delattr(cm_beats, 'thresh_beats')
 
-    cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
-    # y_axis indexing ends at column -1, or second to last column, to remove the columns containing only \r
-    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
-    print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
-    print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
+        cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
+        # y_axis indexing ends at column -1, or second to last column, to remove the columns containing only \r
+        cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
+        print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
+        print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
 
-    input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get()) - 1
-    input_param.min_peak_dist = float(elecGUI60.min_peak_dist_val.get())
-    input_param.min_peak_height = float(elecGUI60.min_peak_height_val.get())
-    input_param.parameter_prominence = float(elecGUI60.parameter_prominence_val.get())
-    input_param.parameter_width = float(elecGUI60.parameter_width_val.get())
-    input_param.parameter_thresh = float(elecGUI60.parameter_thresh_val.get())
+        input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get()) - 1
+        input_param.min_peak_dist = float(elecGUI60.min_peak_dist_val.get())
+        input_param.min_peak_height = float(elecGUI60.min_peak_height_val.get())
+        input_param.parameter_prominence = float(elecGUI60.parameter_prominence_val.get())
+        input_param.parameter_width = float(elecGUI60.parameter_width_val.get())
+        input_param.parameter_thresh = float(elecGUI60.parameter_thresh_val.get())
 
-    cm_beats.dist_beats = pd.DataFrame()
-    cm_beats.prom_beats = pd.DataFrame()
-    cm_beats.width_beats = pd.DataFrame()
-    cm_beats.thresh_beats = pd.DataFrame()
+        cm_beats.dist_beats = pd.DataFrame()
+        cm_beats.prom_beats = pd.DataFrame()
+        cm_beats.width_beats = pd.DataFrame()
+        cm_beats.thresh_beats = pd.DataFrame()
 
-    print("Summary of parameters: " + str(input_param.min_peak_dist) + ", " + str(input_param.min_peak_height) +
-          ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
-          str(input_param.parameter_thresh) + ".\n")
+        print("Summary of parameters: " + str(input_param.min_peak_dist) + ", " + str(input_param.min_peak_height) +
+              ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
+              str(input_param.parameter_thresh) + ".\n")
 
-    for column in range(len(cm_beats.y_axis.columns)):
-        dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                          distance=input_param.min_peak_dist)[0])
-        cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
+        for column in range(len(cm_beats.y_axis.columns)):
+            dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                              distance=input_param.min_peak_dist)[0])
+            cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
 
-        prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                          distance=input_param.min_peak_dist, prominence=input_param.parameter_prominence)[0])
-        cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
+            prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                              distance=input_param.min_peak_dist, prominence=input_param.parameter_prominence)[0])
+            cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
 
-        width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                           distance=input_param.min_peak_dist, width=input_param.parameter_width)[0])
-        cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
+            width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                               distance=input_param.min_peak_dist, width=input_param.parameter_width)[0])
+            cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
 
-        thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                            distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0])
-        cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
+            thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
+                                                distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0])
+            cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
 
-    cm_beats.dist_beats.astype('Int64')
-    cm_beats.prom_beats.astype('Int64')
-    cm_beats.width_beats.astype('Int64')
-    cm_beats.thresh_beats.astype('Int64')
+        cm_beats.dist_beats.astype('Int64')
+        cm_beats.prom_beats.astype('Int64')
+        cm_beats.width_beats.astype('Int64')
+        cm_beats.thresh_beats.astype('Int64')
 
-    # Generate beat counts for the different peakfinder methods.
-    cm_beats.beat_count_dist = np.zeros(len(cm_beats.dist_beats.columns))
-    for column in range(len(cm_beats.dist_beats.columns)):
-        cm_beats.beat_count_dist[column] = len(cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
+        # Generate beat counts for the different peakfinder methods.
+        cm_beats.beat_count_dist = np.zeros(len(cm_beats.dist_beats.columns))
+        for column in range(len(cm_beats.dist_beats.columns)):
+            cm_beats.beat_count_dist[column] = len(cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
 
-    cm_beats.beat_count_prom = np.zeros(len(cm_beats.prom_beats.columns))
-    for column in range(len(cm_beats.prom_beats.columns)):
-        cm_beats.beat_count_prom[column] = len(cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
+        cm_beats.beat_count_prom = np.zeros(len(cm_beats.prom_beats.columns))
+        for column in range(len(cm_beats.prom_beats.columns)):
+            cm_beats.beat_count_prom[column] = len(cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
 
-    cm_beats.beat_count_width = np.zeros(len(cm_beats.width_beats.columns))
-    for column in range(len(cm_beats.width_beats.columns)):
-        cm_beats.beat_count_width[column] = len(cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
+        cm_beats.beat_count_width = np.zeros(len(cm_beats.width_beats.columns))
+        for column in range(len(cm_beats.width_beats.columns)):
+            cm_beats.beat_count_width[column] = len(cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
 
-    cm_beats.beat_count_thresh = np.zeros(len(cm_beats.thresh_beats.columns))
-    for column in range(len(cm_beats.thresh_beats.columns)):
-        cm_beats.beat_count_thresh[column] = len(cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
+        cm_beats.beat_count_thresh = np.zeros(len(cm_beats.thresh_beats.columns))
+        for column in range(len(cm_beats.thresh_beats.columns)):
+            cm_beats.beat_count_thresh[column] = len(cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
 
-    print(cm_beats.beat_count_dist)
-    cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
-    cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
-    cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
-    cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
+        print(cm_beats.beat_count_dist)
+        cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
+        cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
+        cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
+        cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
 
-    print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode))
-    print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode))
-    print("Mode of beats using width parameter: " + str(cm_beats.beat_count_width_mode))
-    print("Mode of beats using threshold parameter: " + str(cm_beats.beat_count_thresh_mode))
+        print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode))
+        print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode))
+        print("Mode of beats using width parameter: " + str(cm_beats.beat_count_width_mode))
+        print("Mode of beats using threshold parameter: " + str(cm_beats.beat_count_thresh_mode))
 
-    dist_beats_size = np.shape(cm_beats.dist_beats)
-    print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
-    # print(cm_beats.dist_beats)
-    # print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
+        dist_beats_size = np.shape(cm_beats.dist_beats)
+        print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
+        # print(cm_beats.dist_beats)
+        # print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
 
-    prom_beats_size = np.shape(cm_beats.prom_beats)
-    print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
-    # print(cm_beats.prom_beats)
-    # print("Data type of cm_beats.prom_beats: " + str(type(cm_beats.prom_beats)) + "\n")
+        prom_beats_size = np.shape(cm_beats.prom_beats)
+        print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
+        # print(cm_beats.prom_beats)
+        # print("Data type of cm_beats.prom_beats: " + str(type(cm_beats.prom_beats)) + "\n")
 
-    width_beats_size = np.shape(cm_beats.width_beats)
-    print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
-    # print(cm_beats.width_beats)
-    # print("Data type of cm_beats.width_beats: " + str(type(cm_beats.width_beats)) + "\n")
+        width_beats_size = np.shape(cm_beats.width_beats)
+        print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
+        # print(cm_beats.width_beats)
+        # print("Data type of cm_beats.width_beats: " + str(type(cm_beats.width_beats)) + "\n")
 
-    thresh_beats_size = np.shape(cm_beats.thresh_beats)
-    print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
-    # print(cm_beats.thresh_beats)
-    # print("Data type of cm_beats.thresh_beats: " + str(type(cm_beats.thresh_beats)) + "\n")
+        thresh_beats_size = np.shape(cm_beats.thresh_beats)
+        print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
+        # print(cm_beats.thresh_beats)
+        # print("Data type of cm_beats.thresh_beats: " + str(type(cm_beats.thresh_beats)) + "\n")
 
-    print("Finished.")
-    end_time = time.process_time()
-    print(end_time - start_time)
-    print("Plotting...")
-    graph_beats(elecGUI60, cm_beats, input_param)
+        print("Finished.")
+        end_time = time.process_time()
+        print(end_time - start_time)
+        print("Plotting...")
+        graph_beats(elecGUI60, cm_beats, input_param)
+    except AttributeError:
+        print("No data found. Please import data (.txt or .csv converted MCD file) first.")
 
 
 # Produces 4-subplot plot of peak finder data and graphs it.  Can be called via button.
@@ -199,7 +202,7 @@ def graph_beats(elecGUI60, cm_beats, input_param):
         cm_beats.axis4.cla()
 
         input_param.elec_choice = int(elecGUI60.elec_to_plot_val.get()) - 1
-        print("Will generate graph for electrode " + str(input_param.elec_choice) + ".")
+        print("Will generate graph for electrode " + str(input_param.elec_choice + 1) + ".")
         cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
 
         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
@@ -232,9 +235,42 @@ def graph_beats(elecGUI60, cm_beats, input_param):
         print("Please use Find Peaks first.")
 
 
-def calculate_pacemaker():
+def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
+    # try:
+        # Issues exist here.  Need to figure out the proper way to drop non-viable electrodes.  Also need to
+        # figure out how to resolve the extra peaks problem.
+        pace_maker.param_dist_normalized = cm_beats.dist_beats.sub(cm_beats.dist_beats.min(axis=1), axis=0)
+        print(cm_beats.dist_beats.min(axis=1))
+        pace_maker.param_prom_normalized = cm_beats.prom_beats.sub(cm_beats.prom_beats.min(axis=1), axis=0)
+        pace_maker.param_width_normalized = cm_beats.width_beats.sub(cm_beats.width_beats.min(axis=1), axis=0)
+        pace_maker.param_thresh_normalized = cm_beats.thresh_beats.sub(cm_beats.thresh_beats.min(axis=1), axis=0)
 
-    return
+        print()
+    # What I need to do:
+    # calculate min for each row
+    # subtract min value from each element of the given row
+    # store these normalized values
+    # do for all rows across all columns
+
+        # for column in range(len(cm_beats.dist_beats.columns)):
+        #     if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.index):
+        #         pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column])
+        #         pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
+        #     else:
+        #         pace_maker_dist_raw = pd.Series()
+        #         pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
+
+        #         cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
+        #         cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
+        #         cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
+        #         cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
+        #         cm_beats.dist_beats.astype('Int64')
+        #         cm_beats.prom_beats.astype('Int64')
+        #         cm_beats.width_beats.astype('Int64')
+        #         cm_beats.thresh_beats.astype('Int64')
+
+    # except AttributeError:
+    #     print("Please use Find Peaks first.")
 
 
 def data_print(elecGUI60, raw_data):
@@ -300,15 +336,20 @@ class ElecGUI60(tk.Frame):
                                            command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
 
+        # Invoke calculate pacemaker function, using data acquired from find_peaks function (contained in cm_beats)
+        self.calc_pacemaker_button = tk.Button(self.file_operations, text="Calculate PM", width=15, height=3, bg="light coral",
+                                               command=lambda: calculate_pacemaker(self, cm_beats, pace_maker))
+        self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
+
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
         self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="tomato",
                                             command=lambda: graph_beats(self, cm_beats, input_param))
-        self.graph_beats_button.grid(row=4, column=0, padx=2, pady=2)
+        self.graph_beats_button.grid(row=5, column=0, padx=2, pady=2)
 
         # to generate heatmap; currently only generates for Matplotlib demo data.
         self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
                                               command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
-        self.graph_heatmap_button.grid(row=5, column=0, padx=2, pady=2)
+        self.graph_heatmap_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
         self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
@@ -386,9 +427,7 @@ class ElecGUI60(tk.Frame):
         self.gen_beats_toolbar_frame.grid(row=2, column=0, in_=self.beat_detect_frame)
         self.gen_beats_toolbar = NavigationToolbar2Tk(self.gen_beats, self.gen_beats_toolbar_frame)
 
-
         # print(dir(self))
-
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
         try:
