@@ -237,38 +237,43 @@ def graph_beats(elecGUI60, cm_beats, input_param):
 
 def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
     # try:
-        # Issues exist here.  Need to figure out the proper way to drop non-viable electrodes.  Also need to
-        # figure out how to resolve the extra peaks problem.
-        pace_maker.param_dist_normalized = cm_beats.dist_beats.sub(cm_beats.dist_beats.min(axis=1), axis=0)
-        print(cm_beats.dist_beats.min(axis=1))
-        pace_maker.param_prom_normalized = cm_beats.prom_beats.sub(cm_beats.prom_beats.min(axis=1), axis=0)
-        pace_maker.param_width_normalized = cm_beats.width_beats.sub(cm_beats.width_beats.min(axis=1), axis=0)
-        pace_maker.param_thresh_normalized = cm_beats.thresh_beats.sub(cm_beats.thresh_beats.min(axis=1), axis=0)
 
-        print()
     # What I need to do:
     # calculate min for each row
     # subtract min value from each element of the given row
     # store these normalized values
     # do for all rows across all columns
+        pace_maker.param_dist_raw = pd.DataFrame()
 
-        # for column in range(len(cm_beats.dist_beats.columns)):
-        #     if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.index):
-        #         pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column])
-        #         pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
-        #     else:
-        #         pace_maker_dist_raw = pd.Series()
-        #         pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
+        for column in range(len(cm_beats.dist_beats.columns)):
+            if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
+                print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
 
-        #         cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
-        #         cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
-        #         cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
-        #         cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
-        #         cm_beats.dist_beats.astype('Int64')
-        #         cm_beats.prom_beats.astype('Int64')
-        #         cm_beats.width_beats.astype('Int64')
-        #         cm_beats.thresh_beats.astype('Int64')
+                pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column])
+                pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
+            else:
+                print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
+                pace_maker_dist_raw = pd.Series()
+                pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
 
+    # Issues exist here.  Need to figure out the proper way to drop non-viable electrodes.  Also need to
+    # figure out how to resolve the extra peaks problem.
+    #     pace_maker.param_dist_normalized = cm_beats.dist_beats.sub(cm_beats.dist_beats.min(axis=1), axis=0)
+    #     print(cm_beats.dist_beats.min(axis=1))
+    #     pace_maker.param_prom_normalized = cm_beats.prom_beats.sub(cm_beats.prom_beats.min(axis=1), axis=0)
+    #     pace_maker.param_width_normalized = cm_beats.width_beats.sub(cm_beats.width_beats.min(axis=1), axis=0)
+    #     pace_maker.param_thresh_normalized = cm_beats.thresh_beats.sub(cm_beats.thresh_beats.min(axis=1), axis=0)
+
+    # cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
+    # cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
+    # cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
+    # cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
+    # cm_beats.dist_beats.astype('Int64')
+    # cm_beats.prom_beats.astype('Int64')
+    # cm_beats.width_beats.astype('Int64')
+    # cm_beats.thresh_beats.astype('Int64')
+
+        print("Done.")
     # except AttributeError:
     #     print("Please use Find Peaks first.")
 
