@@ -115,20 +115,20 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
 
         for column in range(len(cm_beats.y_axis.columns)):
             dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                              distance=input_param.min_peak_dist)[0])
-            cm_beats.dist_beats.insert(column, column+1, dist_beats, allow_duplicates=True)
+                                              distance=input_param.min_peak_dist)[0], name=column+1)
+            cm_beats.dist_beats = pd.concat([cm_beats.dist_beats, dist_beats], axis='columns')
 
             prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                              distance=input_param.min_peak_dist, prominence=input_param.parameter_prominence)[0])
-            cm_beats.prom_beats.insert(column, column + 1, prom_beats, allow_duplicates=True)
+                                              distance=input_param.min_peak_dist, prominence=input_param.parameter_prominence)[0], name=column+1)
+            cm_beats.prom_beats = pd.concat([cm_beats.prom_beats, prom_beats], axis='columns')
 
             width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                               distance=input_param.min_peak_dist, width=input_param.parameter_width)[0])
-            cm_beats.width_beats.insert(column, column + 1, width_beats, allow_duplicates=True)
+                                               distance=input_param.min_peak_dist, width=input_param.parameter_width)[0], name=column+1)
+            cm_beats.width_beats = pd.concat([cm_beats.width_beats, width_beats], axis='columns')
 
             thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                                distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0])
-            cm_beats.thresh_beats.insert(column, column + 1, thresh_beats, allow_duplicates=True)
+                                                distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0], name=column+1)
+            cm_beats.thresh_beats = pd.concat([cm_beats.thresh_beats, thresh_beats], axis='columns')
 
         cm_beats.dist_beats.astype('Int64')
         cm_beats.prom_beats.astype('Int64')
@@ -243,18 +243,18 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
     # subtract min value from each element of the given row
     # store these normalized values
     # do for all rows across all columns
-        pace_maker.param_dist_raw = pd.DataFrame()
+    start_time = time.process_time()
+    pace_maker.param_dist_raw = pd.DataFrame()
 
-        for column in range(len(cm_beats.dist_beats.columns)):
-            if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
-                print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
-
-                pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column])
-                pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
-            else:
-                print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
-                pace_maker_dist_raw = pd.Series()
-                pace_maker.param_dist_raw.insert(column, column+1, pace_maker_dist_raw, allow_duplicates=True)
+    for column in range(len(cm_beats.dist_beats.columns)):
+        if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
+            print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
+            pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column], name=column+1)
+            pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
+        else:
+            print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
+            pace_maker_dist_raw = pd.Series(name=column+1)
+            pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
 
     # Issues exist here.  Need to figure out the proper way to drop non-viable electrodes.  Also need to
     # figure out how to resolve the extra peaks problem.
@@ -273,7 +273,9 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
     # cm_beats.width_beats.astype('Int64')
     # cm_beats.thresh_beats.astype('Int64')
 
-        print("Done.")
+    print("Done.")
+    end_time = time.process_time()
+    print(end_time - start_time)
     # except AttributeError:
     #     print("Please use Find Peaks first.")
 
