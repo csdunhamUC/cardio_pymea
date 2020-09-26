@@ -104,6 +104,7 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         input_param.parameter_width = float(elecGUI60.parameter_width_val.get())
         input_param.parameter_thresh = float(elecGUI60.parameter_thresh_val.get())
 
+        # Establish "strucs" as dataframes for subsequent operations.
         cm_beats.dist_beats = pd.DataFrame()
         cm_beats.prom_beats = pd.DataFrame()
         cm_beats.width_beats = pd.DataFrame()
@@ -113,6 +114,9 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
               ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
               str(input_param.parameter_thresh) + ".\n")
 
+        # For loops for finding beats (peaks) in each channel (electrode).  Suitable for any given MCD-converted file
+        # in which only one MEA is recorded (i.e. works for a single 120 electrode MEA, or 60 electrode MEA, etc
+        # Not currently equipped to handle datasets with dual-recorded MEAs (e.g. dual MEA60s)
         for column in range(len(cm_beats.y_axis.columns)):
             dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
                                               distance=input_param.min_peak_dist)[0], name=column+1)
@@ -130,12 +134,13 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
                                                 distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0], name=column+1)
             cm_beats.thresh_beats = pd.concat([cm_beats.thresh_beats, thresh_beats], axis='columns')
 
+        # Data designation to ensure NaN values are properly handled by subsequent calculations.
         cm_beats.dist_beats.astype('Int64')
         cm_beats.prom_beats.astype('Int64')
         cm_beats.width_beats.astype('Int64')
         cm_beats.thresh_beats.astype('Int64')
 
-        # Generate beat counts for the different peakfinder methods.
+        # Generate beat counts for the different peakfinder methods by finding the length of each electrode (column).
         cm_beats.beat_count_dist = np.zeros(len(cm_beats.dist_beats.columns))
         for column in range(len(cm_beats.dist_beats.columns)):
             cm_beats.beat_count_dist[column] = len(cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
@@ -152,12 +157,13 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         for column in range(len(cm_beats.thresh_beats.columns)):
             cm_beats.beat_count_thresh[column] = len(cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
 
-        print(cm_beats.beat_count_dist)
+        # Finds the mode of beats across the dataset for each peakfinder parameter set.
         cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
         cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
         cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
         cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
 
+        # Prints the output from the preceding operations.
         print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode))
         print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode))
         print("Mode of beats using width parameter: " + str(cm_beats.beat_count_width_mode))
@@ -236,48 +242,63 @@ def graph_beats(elecGUI60, cm_beats, input_param):
 
 
 def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
-    # try:
+    try:
+        start_time = time.process_time()
+        pace_maker.param_dist_raw = pd.DataFrame()
+        pace_maker.param_prom_raw = pd.DataFrame()
+        pace_maker.param_width_raw = pd.DataFrame()
+        pace_maker.param_thresh_raw = pd.DataFrame()
 
-    # What I need to do:
-    # calculate min for each row
-    # subtract min value from each element of the given row
-    # store these normalized values
-    # do for all rows across all columns
-    start_time = time.process_time()
-    pace_maker.param_dist_raw = pd.DataFrame()
+        for column in range(len(cm_beats.dist_beats.columns)):
+            if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
+                # print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
+                pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column], name=column+1)
+                pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
+            else:
+                # print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
+                pace_maker_dist_raw = pd.Series(name=column+1)
+                pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
 
-    for column in range(len(cm_beats.dist_beats.columns)):
-        if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
-            print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
-            pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column], name=column+1)
-            pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
-        else:
-            print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
-            pace_maker_dist_raw = pd.Series(name=column+1)
-            pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
+        for column in range(len(cm_beats.prom_beats.columns)):
+            if cm_beats.beat_count_prom_mode[0] == len(cm_beats.prom_beats.iloc[0:, column].dropna()):
+                # print(len(cm_beats.prom_beats.iloc[0:, column].dropna()))
+                pace_maker_prom_raw = pd.Series(cm_beats.prom_beats.iloc[0:, column], name=column+1)
+                pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
+            else:
+                # print(len(cm_beats.prom_beats.iloc[0:, column].dropna()))
+                pace_maker_prom_raw = pd.Series(name=column+1)
+                pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
 
-    # Issues exist here.  Need to figure out the proper way to drop non-viable electrodes.  Also need to
-    # figure out how to resolve the extra peaks problem.
-    #     pace_maker.param_dist_normalized = cm_beats.dist_beats.sub(cm_beats.dist_beats.min(axis=1), axis=0)
-    #     print(cm_beats.dist_beats.min(axis=1))
-    #     pace_maker.param_prom_normalized = cm_beats.prom_beats.sub(cm_beats.prom_beats.min(axis=1), axis=0)
-    #     pace_maker.param_width_normalized = cm_beats.width_beats.sub(cm_beats.width_beats.min(axis=1), axis=0)
-    #     pace_maker.param_thresh_normalized = cm_beats.thresh_beats.sub(cm_beats.thresh_beats.min(axis=1), axis=0)
+        for column in range(len(cm_beats.width_beats.columns)):
+            if cm_beats.beat_count_prom_mode[0] == len(cm_beats.width_beats.iloc[0:, column].dropna()):
+                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
+                pace_maker_width_raw = pd.Series(cm_beats.width_beats.iloc[0:, column], name=column+1)
+                pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
+            else:
+                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
+                pace_maker_width_raw = pd.Series(name=column+1)
+                pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
 
-    # cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
-    # cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
-    # cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
-    # cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
-    # cm_beats.dist_beats.astype('Int64')
-    # cm_beats.prom_beats.astype('Int64')
-    # cm_beats.width_beats.astype('Int64')
-    # cm_beats.thresh_beats.astype('Int64')
+        for column in range(len(cm_beats.thresh_beats.columns)):
+            if cm_beats.beat_count_thresh_mode[0] == len(cm_beats.thresh_beats.iloc[0:, column].dropna()):
+                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
+                pace_maker_thresh_raw = pd.Series(cm_beats.thresh_beats.iloc[0:, column], name=column+1)
+                pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
+            else:
+                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
+                pace_maker_thresh_raw = pd.Series(name=column+1)
+                pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
 
-    print("Done.")
-    end_time = time.process_time()
-    print(end_time - start_time)
-    # except AttributeError:
-    #     print("Please use Find Peaks first.")
+        pace_maker.param_dist_normalized = pace_maker.param_dist_raw.sub(pace_maker.param_dist_raw.min(axis=1), axis=0)
+        pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(pace_maker.param_prom_raw.min(axis=1), axis=0)
+        pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0)
+        pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0)
+        print(pace_maker.param_dist_raw.min(axis=1))
+        print("Done.")
+        end_time = time.process_time()
+        print(end_time - start_time)
+    except AttributeError:
+        print("Please use Find Peaks first.")
 
 
 def data_print(elecGUI60, raw_data):
