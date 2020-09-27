@@ -65,9 +65,13 @@ def data_import(raw_data):
         delattr(raw_data, 'imported')
 
     print("Importing data...")
-    raw_data.imported = (pd.read_csv(data_filename,
+    # Import electrodes for column headers from file.
+    raw_data.names = pd.read_csv(data_filename, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
+                                 nrows=1, encoding='iso-8859-15', skipinitialspace=True, engine='python')
+    # Import data from file.
+    raw_data.imported = pd.read_csv(data_filename,
                                      sep='\s+', lineterminator='\n', skiprows=3, header=0,
-                                     encoding='iso-8859-15', skipinitialspace=True, low_memory=False))
+                                     encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
 
     new_data_size = np.shape(raw_data.imported)
     print(new_data_size)
@@ -293,7 +297,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(pace_maker.param_prom_raw.min(axis=1), axis=0)
         pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0)
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0)
-        print(pace_maker.param_dist_raw.min(axis=1))
+        # print(pace_maker.param_dist_raw.min(axis=1))
         print("Done.")
         end_time = time.process_time()
         print(end_time - start_time)
@@ -306,13 +310,18 @@ def data_print(elecGUI60, raw_data):
     # by colons
     print(id(raw_data.imported))
     print(elecGUI60.elec_to_plot_val.get())
-    print(raw_data.imported.iloc[15:27, 0:15])
-    print(raw_data.imported.iloc[15:27, 110:])
+    print(raw_data.names)
+    print(raw_data.imported.iloc[0:10, 0:15])
+    print(raw_data.imported.iloc[0:10, 110:])
 
 
 def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
     # imshow() is the key heatmap function here.
+    axis1.cla()
     im = axis1.imshow(harvest, interpolation="nearest", aspect="auto", cmap="jet")
+
+    cbar = axis1.figure.colorbar(im)
+    cbar.remove()
 
     cbar = axis1.figure.colorbar(im)
     cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
@@ -394,6 +403,7 @@ class ElecGUI60(tk.Frame):
         self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
         # ############################################### Entry Fields ################################################
+        # Min peak distance label, entry field, trace and positioning.
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, text="Min Peak Distance", bg="white", wraplength=80)
         self.min_peak_dist_label.grid(row=0, column=1, padx=5, pady=2)
         self.min_peak_dist_val = tk.StringVar()
@@ -402,6 +412,7 @@ class ElecGUI60(tk.Frame):
         self.min_peak_dist_entry = tk.Entry(self.mea_parameters_frame, text=self.min_peak_dist_val, width=8)
         self.min_peak_dist_entry.grid(row=1, column=1, padx=5, pady=2)
 
+        # Min peak height label, entry field, trace and positioning.
         self.min_peak_height_label = tk.Label(self.mea_parameters_frame, text="Min Peak Height", bg="white", wraplength=80)
         self.min_peak_height_label.grid(row=0, column=2, padx=5, pady=2)
         self.min_peak_height_val = tk.StringVar()
@@ -410,6 +421,7 @@ class ElecGUI60(tk.Frame):
         self.min_peak_height_entry = tk.Entry(self.mea_parameters_frame, text=self.min_peak_height_val, width=8)
         self.min_peak_height_entry.grid(row=1, column=2, padx=5, pady=2)
 
+        # Peak prominence label, entry field, trace and positioning.
         self.parameter_prominence_label = tk.Label(self.mea_parameters_frame, text="Peak Prominence", bg="white", wraplength=100)
         self.parameter_prominence_label.grid(row=0, column=3, padx=5, pady=2)
         self.parameter_prominence_val = tk.StringVar()
@@ -418,6 +430,7 @@ class ElecGUI60(tk.Frame):
         self.parameter_prominence_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_prominence_val, width=8)
         self.parameter_prominence_entry.grid(row=1, column=3, padx=5, pady=2)
 
+        # Peak width label, entry field, trace and positioning.
         self.parameter_width_label = tk.Label(self.mea_parameters_frame, text="Peak Width", bg="white", wraplength=100)
         self.parameter_width_label.grid(row=0, column=4, padx=5, pady=2)
         self.parameter_width_val = tk.StringVar()
@@ -426,6 +439,7 @@ class ElecGUI60(tk.Frame):
         self.parameter_width_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_width_val, width=8)
         self.parameter_width_entry.grid(row=1, column=4, padx=5, pady=2)
 
+        # Peak threshold label, entry field, trace and positioning.
         self.parameter_thresh_label = tk.Label(self.mea_parameters_frame, text="Peak Threshold", bg="white", wraplength=100)
         self.parameter_thresh_label.grid(row=0, column=5, padx=5, pady=2)
         self.parameter_thresh_val = tk.StringVar()
