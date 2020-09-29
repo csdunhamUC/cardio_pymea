@@ -1,15 +1,19 @@
+# Original work (unless otherwise noted, e.g. Matplotlib example) by Christopher Stuart Dunham of the Gimzewski Lab.
+# Technical start date: 7/22/2020
+# Practical start date: 9/10/2020
 # Designed to run on Python 3.6 or newer.  Programmed under Python 3.8.
 # Biggest known issues with versions earlier than 3.6: use of dictionary to contain electrode coordinates.
-# Consider using an OrderedDict instead if running under earlier versions of Python.  Second issue: tkinter vs Tkinter
+# Consider using an OrderedDict instead if running under earlier versions of Python.
+# Second issue: tkinter vs Tkinter
 
 import numpy as np
-import matplotlib
+# import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import pandas as pd
-import seaborn as seab
-import os
+# import seaborn as seab
+# import os
 import time
 import tkinter as tk
 from tkinter import filedialog
@@ -22,12 +26,11 @@ from scipy import stats
 #
 # print(data_three.fillna(method='pad'))
 
+
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
 # one function to another.  Classes are generated for ImportedData (where the raw data will go), PaceMakerData
 # (where PM data will go), UpstrokeVelData (where dV/dt data will go), LocalATData (where LAT data will go), and
 # CondVelData, where CV data will go.
-
-
 class ImportedData:
     pass
 
@@ -56,7 +59,30 @@ class CondVelData:
     pass
 
 
+class MEAHeatMaps:
+    pass
+
+
+class TestingStuff:
+    # Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
+    # integrate this into a GUI.
+    vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
+                  "potato", "wheat", "barley"]
+
+    farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
+               "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
+
+    harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
+                        [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
+                        [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
+                        [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
+                        [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
+                        [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
+                        [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
+
+
 class ElectrodeConfig:
+    # Electrode names and coordinates, using the system defined by CSD where origin (0,0) is at upper left corner of MEA
     mea_120_coordinates = {'F7': [1150, 1380], 'F8': [1150, 1610], 'F12': [1150, 2530], 'F11': [1150, 2300], 'F10': [1150, 2070],
                            'F9': [1150, 1840], 'E12': [920, 2530], 'E11': [920, 2300], 'E10': [920, 2070], 'E9': [920, 1840],
                            'D12': [690, 2530], 'D11': [690, 2300], 'D10': [690, 2070], 'D9': [690, 1840], 'C11': [460, 2300],
@@ -81,6 +107,7 @@ class ElectrodeConfig:
                            'K10': [2070, 2070], 'K11': [2070, 2300], 'H8': [1610, 1610], 'J10': [1840, 2070], 'J11': [1840, 2300],
                            'J12': [1840, 2530], 'H9': [1610, 1840], 'H10': [1610, 2070], 'H11': [1610, 2300], 'H12': [1610, 2530],
                            'G9': [1380, 1840], 'G10': [1380, 2070], 'G11': [1380, 2300], 'G12': [1380, 2530], 'G8': [1380, 1610]}
+    electrode_names = mea_120_coordinates.keys()
 
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
@@ -100,9 +127,8 @@ def data_import(raw_data):
     raw_data.names = pd.read_csv(data_filename, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
                                  nrows=1, encoding='iso-8859-15', skipinitialspace=True, engine='python')
     # Import data from file.
-    raw_data.imported = pd.read_csv(data_filename,
-                                     sep='\s+', lineterminator='\n', skiprows=3, header=0,
-                                     encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
+    raw_data.imported = pd.read_csv(data_filename, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+                                    encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
 
     new_data_size = np.shape(raw_data.imported)
     print(new_data_size)
@@ -276,14 +302,20 @@ def graph_beats(elecGUI60, cm_beats, input_param):
         print("Please use Find Peaks first.")
 
 
+# Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
+# electrodes based on mismatched beat counts relative to the mode of the beat count.
 def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
     try:
+        # Clock the time it takes to run the calculation.
         start_time = time.process_time()
+
+        # Establishing these attributes of the pace_maker class appropriately as DataFrames.
         pace_maker.param_dist_raw = pd.DataFrame()
         pace_maker.param_prom_raw = pd.DataFrame()
         pace_maker.param_width_raw = pd.DataFrame()
         pace_maker.param_thresh_raw = pd.DataFrame()
 
+        # Performs PM calculation for each detection parameter (peak distance, prominence, width, threshold)
         for column in range(len(cm_beats.dist_beats.columns)):
             if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
                 # print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
@@ -291,7 +323,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
                 pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
             else:
                 # print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
-                pace_maker_dist_raw = pd.Series(name=column+1)
+                pace_maker_dist_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
 
         for column in range(len(cm_beats.prom_beats.columns)):
@@ -301,7 +333,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
                 pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
             else:
                 # print(len(cm_beats.prom_beats.iloc[0:, column].dropna()))
-                pace_maker_prom_raw = pd.Series(name=column+1)
+                pace_maker_prom_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
 
         for column in range(len(cm_beats.width_beats.columns)):
@@ -311,7 +343,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
                 pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
             else:
                 # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
-                pace_maker_width_raw = pd.Series(name=column+1)
+                pace_maker_width_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
 
         for column in range(len(cm_beats.thresh_beats.columns)):
@@ -321,15 +353,25 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
                 pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
             else:
                 # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
-                pace_maker_thresh_raw = pd.Series(name=column+1)
+                pace_maker_thresh_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
 
+        # Normalizes the values for each beat by subtracting the minimum time of a given beat from all other electrodes
         pace_maker.param_dist_normalized = pace_maker.param_dist_raw.sub(pace_maker.param_dist_raw.min(axis=1), axis=0)
         pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(pace_maker.param_prom_raw.min(axis=1), axis=0)
         pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0)
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0)
+
+        # Assigns column headers (names) using the naming convention provided in the ElectrodeConfig class.
+        pace_maker.param_dist_normalized.columns = list(ElectrodeConfig.electrode_names)
+        pace_maker.param_prom_normalized.columns = list(ElectrodeConfig.electrode_names)
+        pace_maker.param_width_normalized.columns = list(ElectrodeConfig.electrode_names)
+        pace_maker.param_thresh_normalized.columns = list(ElectrodeConfig.electrode_names)
+
         # print(pace_maker.param_dist_raw.min(axis=1))
         print("Done.")
+
+        # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
     except AttributeError:
@@ -339,17 +381,21 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
 def data_print(elecGUI60, raw_data):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    print(id(raw_data.imported))
-    print(elecGUI60.elec_to_plot_val.get())
-    print(raw_data.names)
-    print(raw_data.imported.iloc[0:10, 0:15])
-    print(raw_data.imported.iloc[0:10, 110:])
+    print(ElectrodeConfig.mea_120_coordinates.keys())
+    print(ElectrodeConfig.mea_120_coordinates.values())
+    print(len(ElectrodeConfig.mea_120_coordinates))
+    print(list(ElectrodeConfig.electrode_names))
+    # print(id(raw_data.imported))
+    # print(elecGUI60.elec_to_plot_val.get())
+    # print(raw_data.names)
+    # print(raw_data.imported.iloc[0:10, 0:15])
+    # print(raw_data.imported.iloc[0:10, 110:])
 
 
-def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
+def graph_heatmap(heat_map, axis1):
     # imshow() is the key heatmap function here.
     axis1.cla()
-    im = axis1.imshow(harvest, interpolation="nearest", aspect="auto", cmap="jet")
+    im = axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
 
     cbar = axis1.figure.colorbar(im)
     cbar.remove()
@@ -357,15 +403,15 @@ def graph_heatmap(vegetables, farmers, harvest, heat_map, axis1):
     cbar = axis1.figure.colorbar(im)
     cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
 
-    axis1.set_xticks(np.arange(len(farmers)))
-    axis1.set_yticks(np.arange(len(vegetables)))
-    axis1.set_xticklabels(farmers)
-    axis1.set_yticklabels(vegetables)
+    axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
+    axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
+    axis1.set_xticklabels(TestingStuff.farmers)
+    axis1.set_yticklabels(TestingStuff.vegetables)
     plt.setp(axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
-    for i in range(len(vegetables)):
-        for j in range(len(farmers)):
-            text = axis1.text(j, i, harvest[i, j], ha="center", va="center", color="w")
+    for i in range(len(TestingStuff.vegetables)):
+        for j in range(len(TestingStuff.farmers)):
+            text = axis1.text(j, i, TestingStuff.harvest[i, j], ha="center", va="center", color="w")
     axis1.set_title("Harvest Demo from Matplotlib Website")
     heat_map.tight_layout()
     heat_map.canvas.draw()
@@ -416,7 +462,7 @@ class ElecGUI60(tk.Frame):
 
         # to generate heatmap; currently only generates for Matplotlib demo data.
         self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
-                                              command=lambda: graph_heatmap(vegetables, farmers, harvest, heat_map, axis1))
+                                              command=lambda: graph_heatmap(heat_map, axis1))
         self.graph_heatmap_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
@@ -551,25 +597,6 @@ class ElecGUI60(tk.Frame):
 
 
 def main():
-    # Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
-    # integrate this into a GUI.
-    global vegetables
-    vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
-                  "potato", "wheat", "barley"]
-
-    global farmers
-    farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
-               "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
-
-    global harvest
-    harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
-                        [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
-                        [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
-                        [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
-                        [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
-                        [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
-                        [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
-
     global heat_map
     heat_map = plt.Figure(figsize=(10, 6), dpi=120)
     global axis1
