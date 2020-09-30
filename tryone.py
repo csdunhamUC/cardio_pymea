@@ -107,7 +107,7 @@ class ElectrodeConfig:
                            'K10': [2070, 2070], 'K11': [2070, 2300], 'H8': [1610, 1610], 'J10': [1840, 2070], 'J11': [1840, 2300],
                            'J12': [1840, 2530], 'H9': [1610, 1840], 'H10': [1610, 2070], 'H11': [1610, 2300], 'H12': [1610, 2530],
                            'G9': [1380, 1840], 'G10': [1380, 2070], 'G11': [1380, 2300], 'G12': [1380, 2530], 'G8': [1380, 1610]}
-    electrode_names = mea_120_coordinates.keys()
+    electrode_names = list(mea_120_coordinates.keys())
 
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
@@ -383,43 +383,51 @@ def data_print(elecGUI60, raw_data):
     # by colons
     print(ElectrodeConfig.mea_120_coordinates.keys())
     print(ElectrodeConfig.mea_120_coordinates.values())
-    print(len(ElectrodeConfig.mea_120_coordinates))
-    print(list(ElectrodeConfig.electrode_names))
-    # print(id(raw_data.imported))
-    # print(elecGUI60.elec_to_plot_val.get())
-    # print(raw_data.names)
-    # print(raw_data.imported.iloc[0:10, 0:15])
-    # print(raw_data.imported.iloc[0:10, 110:])
+    # print(len(ElectrodeConfig.mea_120_coordinates))
+
+    print(ElectrodeConfig.electrode_names[0])
+    print(type(ElectrodeConfig.electrode_names[0]))
+    print(ElectrodeConfig.electrode_names[5])
+
+    # for name in ElectrodeConfig.electrode_names:
+    #     # print(ElectrodeConfig.mea_120_coordinates[name][0])
+    #     print(ElectrodeConfig.mea_120_coordinates[name][1])
+
+    print(ElectrodeConfig.mea_120_coordinates[ElectrodeConfig.electrode_names[5]])
 
 
-def graph_heatmap(heat_map, axis1):
+def graph_heatmap(heat_map):
     # imshow() is the key heatmap function here.
-    axis1.cla()
-    im = axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
+    heat_map.axis1.cla()
 
-    cbar = axis1.figure.colorbar(im)
+    im = heat_map.axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
+
+    cbar = heat_map.axis1.figure.colorbar(im)
     cbar.remove()
 
-    cbar = axis1.figure.colorbar(im)
+    cbar = heat_map.axis1.figure.colorbar(im)
     cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
 
-    axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
-    axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
-    axis1.set_xticklabels(TestingStuff.farmers)
-    axis1.set_yticklabels(TestingStuff.vegetables)
-    plt.setp(axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+    heat_map.axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
+    heat_map.axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
+    heat_map.axis1.set_xticklabels(TestingStuff.farmers)
+    heat_map.axis1.set_yticklabels(TestingStuff.vegetables)
+
+    # Modifying x-axis presentation.
+    plt.setp(heat_map.axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
 
     for i in range(len(TestingStuff.vegetables)):
         for j in range(len(TestingStuff.farmers)):
-            text = axis1.text(j, i, TestingStuff.harvest[i, j], ha="center", va="center", color="w")
-    axis1.set_title("Harvest Demo from Matplotlib Website")
-    heat_map.tight_layout()
-    heat_map.canvas.draw()
+            text = heat_map.axis1.text(j, i, TestingStuff.harvest[i, j], ha="center", va="center", color="w")
+    heat_map.axis1.set_title("Harvest Demo from Matplotlib Website")
+
+    heat_map.curr_plot.tight_layout()
+    heat_map.curr_plot.canvas.draw()
     return
 
 
 class ElecGUI60(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats, pace_maker, input_param):
+    def __init__(self, master, raw_data, cm_beats, pace_maker, input_param, heat_map):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
@@ -462,7 +470,7 @@ class ElecGUI60(tk.Frame):
 
         # to generate heatmap; currently only generates for Matplotlib demo data.
         self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
-                                              command=lambda: graph_heatmap(heat_map, axis1))
+                                              command=lambda: graph_heatmap(heat_map))
         self.graph_heatmap_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
@@ -530,7 +538,7 @@ class ElecGUI60(tk.Frame):
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
         self.mea_array_frame.grid_propagate(False)
-        self.gen_figure = FigureCanvasTkAgg(heat_map, self.mea_array_frame)
+        self.gen_figure = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_array_frame)
         self.gen_figure.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
 
         # Frame and elements for peak finder plots.
@@ -597,15 +605,14 @@ class ElecGUI60(tk.Frame):
 
 
 def main():
-    global heat_map
-    heat_map = plt.Figure(figsize=(10, 6), dpi=120)
-    global axis1
-    axis1 = heat_map.add_subplot(111)
-
     raw_data = ImportedData()
     cm_beats = BeatAmplitudes()
     pace_maker = PacemakerData()
     input_param = InputParameters()
+    heat_map = MEAHeatMaps()
+
+    heat_map.curr_plot = plt.Figure(figsize=(10, 6), dpi=120)
+    heat_map.axis1 = heat_map.curr_plot.add_subplot(111)
 
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
@@ -621,7 +628,7 @@ def main():
     root.geometry("2700x1200+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, input_param)
+    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, input_param, heat_map)
     # print(vars(ElecGUI60))
     # print(dir(elecGUI60))
     # print(hasattr(elecGUI60, "elec_to_plot_entry"))
