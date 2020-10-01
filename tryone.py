@@ -20,13 +20,8 @@ from tkinter import filedialog
 from scipy.signal import find_peaks
 from scipy import stats
 
-# Fills in NaN values with whatever you specify
-# print("NaN replaced with 0.0123456")
-# print(data_three.fillna(0.123456))
-#
-# print(data_three.fillna(method='pad'))
 
-
+#######################################################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
 # one function to another.  Classes are generated for ImportedData (where the raw data will go), PaceMakerData
 # (where PM data will go), UpstrokeVelData (where dV/dt data will go), LocalATData (where LAT data will go), and
@@ -63,6 +58,8 @@ class MEAHeatMaps:
     pass
 
 
+#######################################################################################################################
+# Class containing matplotlib example data.  Can be removed after heatmap mystery is resolved.
 class TestingStuff:
     # Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
     # integrate this into a GUI.
@@ -81,6 +78,7 @@ class TestingStuff:
                         [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
 
 
+# Class containing electrode names and corresponding coordinates in x,y form, units of micrometers (microns, um)
 class ElectrodeConfig:
     # Electrode names and coordinates, using the system defined by CSD where origin (0,0) is at upper left corner of MEA
     mea_120_coordinates = {'F7': [1150, 1380], 'F8': [1150, 1610], 'F12': [1150, 2530], 'F11': [1150, 2300], 'F10': [1150, 2070],
@@ -107,7 +105,11 @@ class ElectrodeConfig:
                            'K10': [2070, 2070], 'K11': [2070, 2300], 'H8': [1610, 1610], 'J10': [1840, 2070], 'J11': [1840, 2300],
                            'J12': [1840, 2530], 'H9': [1610, 1840], 'H10': [1610, 2070], 'H11': [1610, 2300], 'H12': [1610, 2530],
                            'G9': [1380, 1840], 'G10': [1380, 2070], 'G11': [1380, 2300], 'G12': [1380, 2530], 'G8': [1380, 1610]}
+
+    # Key values (electrode names) from mea_120_coordinates only.
     electrode_names = list(mea_120_coordinates.keys())
+    electrode_coords_x = np.array([i[0] for i in mea_120_coordinates.values()])
+    electrode_coords_y = np.array([i[1] for i in mea_120_coordinates.values()])
 
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
@@ -378,7 +380,8 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         print("Please use Find Peaks first.")
 
 
-def data_print(elecGUI60, raw_data):
+# Usually just for debugging, a function that prints out values upon button press.
+def data_print(elecGUI60, raw_data, pace_maker):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
     print(ElectrodeConfig.mea_120_coordinates.keys())
@@ -386,27 +389,31 @@ def data_print(elecGUI60, raw_data):
     # print(len(ElectrodeConfig.mea_120_coordinates))
 
     print(ElectrodeConfig.electrode_names[0])
-    print(type(ElectrodeConfig.electrode_names[0]))
+    # print(type(ElectrodeConfig.electrode_names[0]))
     print(ElectrodeConfig.electrode_names[5])
+
+    print(ElectrodeConfig.electrode_coords_x)
+    print(type(ElectrodeConfig.electrode_coords_x))
 
     # for name in ElectrodeConfig.electrode_names:
     #     # print(ElectrodeConfig.mea_120_coordinates[name][0])
     #     print(ElectrodeConfig.mea_120_coordinates[name][1])
 
-    print(ElectrodeConfig.mea_120_coordinates[ElectrodeConfig.electrode_names[5]])
+    # print(ElectrodeConfig.mea_120_coordinates[ElectrodeConfig.electrode_names[5]])
 
 
+# Generates heatmap based on matplotlib example from website.
 def graph_heatmap(heat_map):
     # imshow() is the key heatmap function here.
     heat_map.axis1.cla()
 
     im = heat_map.axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
 
-    cbar = heat_map.axis1.figure.colorbar(im)
-    cbar.remove()
+    heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+    heat_map.cbar.remove()
 
-    cbar = heat_map.axis1.figure.colorbar(im)
-    cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
+    heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+    heat_map.cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
 
     heat_map.axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
     heat_map.axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
@@ -424,6 +431,23 @@ def graph_heatmap(heat_map):
     heat_map.curr_plot.tight_layout()
     heat_map.curr_plot.canvas.draw()
     return
+
+
+def graph_pacemaker(elecGUI60, heat_map, pace_maker):
+    heat_map.axis1.cla()
+
+    if hasattr(heat_map, 'cbar') is True:
+        heat_map.cbar.remove()
+        delattr(heat_map, 'cbar')
+
+    im = heat_map.axis1.imshow(pace_maker.param_dist_normalized.iloc[0:10, 0:], interpolation="nearest", aspect="auto", cmap="jet")
+    heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+    # heat_map.axis1.set_xticks(np.unique(ElectrodeConfig.electrode_coords_x))
+    # heat_map.axis1.tick_params(top=True, bottom=False)
+    # heat_map.axis1.set_yticks(np.unique(ElectrodeConfig.electrode_coords_y))
+
+    heat_map.curr_plot.canvas.draw()
+    print()
 
 
 class ElecGUI60(tk.Frame):
@@ -450,7 +474,7 @@ class ElecGUI60(tk.Frame):
 
         # prints data from import; eventually test to specify columns and rows.
         self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
-                                           command=lambda: data_print(self, raw_data))
+                                           command=lambda: data_print(self, raw_data, pace_maker))
         self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
 
         # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
@@ -463,16 +487,23 @@ class ElecGUI60(tk.Frame):
                                                command=lambda: calculate_pacemaker(self, cm_beats, pace_maker))
         self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
 
+        # Invoke pacemaker heatmap function, using data acquired from calculate_pacemaker function (contained in pace_maker)
+        self.pacemaker_heatmap = tk.Button(self.file_operations, text="PM Heatmap", width=15, height=3, bg="tomato",
+                                           command=lambda: graph_pacemaker(self, heat_map, pace_maker))
+        self.pacemaker_heatmap.grid(row=5, column=0, padx=2, pady=2)
+
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
-        self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="tomato",
+        self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="orange red",
                                             command=lambda: graph_beats(self, cm_beats, input_param))
-        self.graph_beats_button.grid(row=5, column=0, padx=2, pady=2)
+        self.graph_beats_button.grid(row=6, column=0, padx=2, pady=2)
 
         # to generate heatmap; currently only generates for Matplotlib demo data.
         self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
                                               command=lambda: graph_heatmap(heat_map))
-        self.graph_heatmap_button.grid(row=6, column=0, padx=2, pady=2)
+        self.graph_heatmap_button.grid(row=7, column=0, padx=2, pady=2)
 
+
+        # ############################################### Entry Fields ################################################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
         self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
         self.mea_parameters_frame.grid(row=0, column=1, columnspan=2, padx=5, pady=5)
@@ -487,7 +518,6 @@ class ElecGUI60(tk.Frame):
         self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val, width=8)
         self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
-        # ############################################### Entry Fields ################################################
         # Min peak distance label, entry field, trace and positioning.
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, text="Min Peak Distance", bg="white", wraplength=80)
         self.min_peak_dist_label.grid(row=0, column=1, padx=5, pady=2)
@@ -625,7 +655,7 @@ def main():
 
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from top of screen
-    root.geometry("2700x1200+900+900")
+    root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
     elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, input_param, heat_map)
