@@ -308,8 +308,16 @@ def graph_beats(elecGUI60, cm_beats, input_param):
 # electrodes based on mismatched beat counts relative to the mode of the beat count.
 def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
     try:
+        if hasattr(pace_maker, 'param_dist_raw') is True:
+            print("Clearing old pacemaker data before running new calculation...")
+            delattr(pace_maker, 'param_dist_raw')
+            delattr(pace_maker, 'param_prom_raw')
+            delattr(pace_maker, 'param_width_raw')
+            delattr(pace_maker, 'param_thresh_raw')
+
         # Clock the time it takes to run the calculation.
         start_time = time.process_time()
+        print("Calculating pacemaker intervals per beat.")
 
         # Establishing these attributes of the pace_maker class appropriately as DataFrames.
         pace_maker.param_dist_raw = pd.DataFrame()
@@ -369,6 +377,45 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_prom_normalized.columns = list(ElectrodeConfig.electrode_names)
         pace_maker.param_width_normalized.columns = list(ElectrodeConfig.electrode_names)
         pace_maker.param_thresh_normalized.columns = list(ElectrodeConfig.electrode_names)
+
+        dist_new_index = []
+        for row in pace_maker.param_dist_normalized.index:
+            # curr_beat = 'Beat' + str(row+1)
+            dist_new_index.append('Beat ' + str(row+1))
+
+        prom_new_index = []
+        for row in pace_maker.param_prom_normalized.index:
+            prom_new_index.append('Beat ' + str(row+1))
+
+        width_new_index = []
+        for row in pace_maker.param_width_normalized.index:
+            width_new_index.append('Beat ' + str(row+1))
+
+        thresh_new_index = []
+        for row in pace_maker.param_thresh_normalized.index:
+            thresh_new_index.append('Beat ' + str(row+1))
+
+        pace_maker.param_dist_normalized.index = dist_new_index
+        pace_maker.param_prom_normalized.index = prom_new_index
+        pace_maker.param_width_normalized.index = width_new_index
+        pace_maker.param_thresh_normalized.index = thresh_new_index
+
+        pace_maker.param_dist_normalized = pace_maker.param_dist_normalized.transpose()
+        pace_maker.param_prom_normalized = pace_maker.param_prom_normalized.transpose()
+        pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
+        pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
+
+        pace_maker.param_dist_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_dist_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+
+        pace_maker.param_prom_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_prom_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+
+        pace_maker.param_width_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_width_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+
+        pace_maker.param_thresh_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_thresh_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
 
         # print(pace_maker.param_dist_raw.min(axis=1))
         print("Done.")
@@ -440,11 +487,16 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker):
         heat_map.cbar.remove()
         delattr(heat_map, 'cbar')
 
-    im = heat_map.axis1.imshow(pace_maker.param_dist_normalized.iloc[0:10, 0:], interpolation="nearest", aspect="auto", cmap="jet")
+    electrode_names = np.asarray(pace_maker.param_dist_normalized)
+
+    im = heat_map.axis1.imshow(pace_maker.param_dist_normalized.iloc[0:20, 0:], interpolation="nearest", aspect="auto", cmap="jet")
     heat_map.cbar = heat_map.axis1.figure.colorbar(im)
-    # heat_map.axis1.set_xticks(np.unique(ElectrodeConfig.electrode_coords_x))
-    # heat_map.axis1.tick_params(top=True, bottom=False)
-    # heat_map.axis1.set_yticks(np.unique(ElectrodeConfig.electrode_coords_y))
+
+    heat_map.axis1.set_xticks(range(12))
+    heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
+    heat_map.axis1.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
+    heat_map.axis1.set_yticks(range(12))
+    heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
 
     heat_map.curr_plot.canvas.draw()
     print()
