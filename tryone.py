@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import pandas as pd
-# import seaborn as seab
+import seaborn as sns
 # import os
 import time
 import tkinter as tk
@@ -373,10 +373,10 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0)
 
         # Assigns column headers (names) using the naming convention provided in the ElectrodeConfig class.
-        pace_maker.param_dist_normalized.columns = list(ElectrodeConfig.electrode_names)
-        pace_maker.param_prom_normalized.columns = list(ElectrodeConfig.electrode_names)
-        pace_maker.param_width_normalized.columns = list(ElectrodeConfig.electrode_names)
-        pace_maker.param_thresh_normalized.columns = list(ElectrodeConfig.electrode_names)
+        pace_maker.param_dist_normalized.columns = ElectrodeConfig.electrode_names
+        pace_maker.param_prom_normalized.columns = ElectrodeConfig.electrode_names
+        pace_maker.param_width_normalized.columns = ElectrodeConfig.electrode_names
+        pace_maker.param_thresh_normalized.columns = ElectrodeConfig.electrode_names
 
         dist_new_index = []
         for row in pace_maker.param_dist_normalized.index:
@@ -395,27 +395,35 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         for row in pace_maker.param_thresh_normalized.index:
             thresh_new_index.append('Beat ' + str(row+1))
 
+        # Adds beat number labeling to each row, pre-transpose.
         pace_maker.param_dist_normalized.index = dist_new_index
         pace_maker.param_prom_normalized.index = prom_new_index
         pace_maker.param_width_normalized.index = width_new_index
         pace_maker.param_thresh_normalized.index = thresh_new_index
 
+        # Transpose dataframe to make future plotting easier.  Makes rows = electrodes and columns = beat number.
         pace_maker.param_dist_normalized = pace_maker.param_dist_normalized.transpose()
         pace_maker.param_prom_normalized = pace_maker.param_prom_normalized.transpose()
         pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
 
-        pace_maker.param_dist_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_dist_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+        # Insert electrode name as column to make future plotting easier when attempting to use pivot table.
+        pace_maker.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        pace_maker.param_prom_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        pace_maker.param_width_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        pace_maker.param_thresh_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
 
-        pace_maker.param_prom_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_prom_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
-        pace_maker.param_width_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_width_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_prom_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_prom_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
-        pace_maker.param_thresh_normalized.insert(0, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_thresh_normalized.insert(1, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_width_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_width_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+
+        pace_maker.param_thresh_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        pace_maker.param_thresh_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
         # print(pace_maker.param_dist_raw.min(axis=1))
         print("Done.")
@@ -487,16 +495,21 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker):
         heat_map.cbar.remove()
         delattr(heat_map, 'cbar')
 
-    electrode_names = np.asarray(pace_maker.param_dist_normalized)
+    electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
+    pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
 
-    im = heat_map.axis1.imshow(pace_maker.param_dist_normalized.iloc[0:20, 0:], interpolation="nearest", aspect="auto", cmap="jet")
-    heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+    heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
 
-    heat_map.axis1.set_xticks(range(12))
-    heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
-    heat_map.axis1.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
-    heat_map.axis1.set_yticks(range(12))
-    heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
+    heat_map.temp = sns.heatmap(heatmap_pivot_table, annot=electrode_names, fmt="", ax=heat_map.axis1)
+
+    # im = heat_map.axis1.imshow(pace_maker.param_dist_normalized.iloc[0:20, 0:], interpolation="nearest", aspect="auto", cmap="jet")
+    # heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+    #
+    # heat_map.axis1.set_xticks(range(12))
+    # heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
+    # heat_map.axis1.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
+    # heat_map.axis1.set_yticks(range(12))
+    # heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
 
     heat_map.curr_plot.canvas.draw()
     print()
