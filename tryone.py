@@ -378,6 +378,12 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_width_normalized.columns = ElectrodeConfig.electrode_names
         pace_maker.param_thresh_normalized.columns = ElectrodeConfig.electrode_names
 
+        # Generate index (row) labels, as a list, in order to access chosen beat heatmaps in subsequent function.
+        pace_maker.final_dist_beat_count = []
+        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+            pace_maker.final_dist_beat_count.append('Beat ' + str(beat+1))
+
+        # Generate index (row) labels, as a list, for assignment to dataframe, prior to transpose.
         dist_new_index = []
         for row in pace_maker.param_dist_normalized.index:
             # curr_beat = 'Beat' + str(row+1)
@@ -413,6 +419,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_width_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
         pace_maker.param_thresh_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
 
+        # Insert electrode coordinates X,Y (in micrometers) as columns after electrode identifier.
         pace_maker.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
@@ -425,7 +432,6 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_thresh_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_thresh_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
-        # print(pace_maker.param_dist_raw.min(axis=1))
         print("Done.")
 
         # Finishes tabulating time for the calculation and prints the time.
@@ -439,22 +445,16 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
 def data_print(elecGUI60, raw_data, pace_maker):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    print(ElectrodeConfig.mea_120_coordinates.keys())
-    print(ElectrodeConfig.mea_120_coordinates.values())
+    # print(ElectrodeConfig.mea_120_coordinates.keys())
+    # print(ElectrodeConfig.mea_120_coordinates.values())
     # print(len(ElectrodeConfig.mea_120_coordinates))
 
     print(ElectrodeConfig.electrode_names[0])
     # print(type(ElectrodeConfig.electrode_names[0]))
     print(ElectrodeConfig.electrode_names[5])
 
-    print(ElectrodeConfig.electrode_coords_x)
-    print(type(ElectrodeConfig.electrode_coords_x))
-
-    # for name in ElectrodeConfig.electrode_names:
-    #     # print(ElectrodeConfig.mea_120_coordinates[name][0])
-    #     print(ElectrodeConfig.mea_120_coordinates[name][1])
-
-    # print(ElectrodeConfig.mea_120_coordinates[ElectrodeConfig.electrode_names[5]])
+    # print(ElectrodeConfig.electrode_coords_x)
+    # print(type(ElectrodeConfig.electrode_coords_x))
 
 
 # Generates heatmap based on matplotlib example from website.
@@ -488,31 +488,30 @@ def graph_heatmap(heat_map):
     return
 
 
-def graph_pacemaker(elecGUI60, heat_map, pace_maker):
-    heat_map.axis1.cla()
+def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
+    try:
+        heat_map.axis1.cla()
+        input_param.beat_choice = int(elecGUI60.parameter_beat_choice_val.get()) - 1
 
-    if hasattr(heat_map, 'cbar') is True:
-        heat_map.cbar.remove()
-        delattr(heat_map, 'cbar')
+        electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
+        # pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
 
-    electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
-    pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
+        heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.beat_choice])
 
-    heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
+        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, cbar_ax=heat_map.cbar_ax)
 
-    heat_map.temp = sns.heatmap(heatmap_pivot_table, annot=electrode_names, fmt="", ax=heat_map.axis1)
+        # heat_map.axis1.set_xticks(range(12))
+        # heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
+        # heat_map.axis1.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
+        # heat_map.axis1.set_yticks(range(12))
+        # heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
 
-    # im = heat_map.axis1.imshow(pace_maker.param_dist_normalized.iloc[0:20, 0:], interpolation="nearest", aspect="auto", cmap="jet")
-    # heat_map.cbar = heat_map.axis1.figure.colorbar(im)
-    #
-    # heat_map.axis1.set_xticks(range(12))
-    # heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
-    # heat_map.axis1.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
-    # heat_map.axis1.set_yticks(range(12))
-    # heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
-
-    heat_map.curr_plot.canvas.draw()
-    print()
+        heat_map.curr_plot.canvas.draw()
+        print()
+    except AttributeError:
+        print("Please use Calculate PM first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")
 
 
 class ElecGUI60(tk.Frame):
@@ -554,7 +553,7 @@ class ElecGUI60(tk.Frame):
 
         # Invoke pacemaker heatmap function, using data acquired from calculate_pacemaker function (contained in pace_maker)
         self.pacemaker_heatmap = tk.Button(self.file_operations, text="PM Heatmap", width=15, height=3, bg="tomato",
-                                           command=lambda: graph_pacemaker(self, heat_map, pace_maker))
+                                           command=lambda: graph_pacemaker(self, heat_map, pace_maker, input_param))
         self.pacemaker_heatmap.grid(row=5, column=0, padx=2, pady=2)
 
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
@@ -628,6 +627,15 @@ class ElecGUI60(tk.Frame):
         self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
+        # Desired beat for heatmap label, entry field, trace and positioning.
+        self.parameter_beat_choice_label = tk.Label(self.mea_parameters_frame, text="Beat Mapped", bg="white", wraplength=100)
+        self.parameter_beat_choice_label.grid(row=0, column=6, padx=5, pady=2)
+        self.parameter_beat_choice_val = tk.StringVar()
+        self.parameter_beat_choice_val.trace_add("write", self.parameter_beat_choice_callback)
+        self.parameter_beat_choice_val.set("1")
+        self.parameter_beat_choice_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_beat_choice_val, width=8)
+        self.parameter_beat_choice_entry.grid(row=1, column=6, padx=5, pady=2)
+
         # ############################################### Plot Frames #################################################
         # Frame and elements for heat map plot.
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
@@ -698,6 +706,13 @@ class ElecGUI60(tk.Frame):
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
+    def parameter_beat_choice_callback(self, *args):
+        print("You entered: \"{}\"".format(self.parameter_beat_choice_val.get()))
+        try:
+            chosen_beat_val = int(self.parameter_beat_choice_val.get())
+        except ValueError:
+            print("Only numbers are allowed.  Please try again")
+
 
 def main():
     raw_data = ImportedData()
@@ -708,6 +723,8 @@ def main():
 
     heat_map.curr_plot = plt.Figure(figsize=(10, 6), dpi=120)
     heat_map.axis1 = heat_map.curr_plot.add_subplot(111)
+    # axis param: dist from left, bottom, width, height
+    heat_map.cbar_ax = heat_map.curr_plot.add_axes([.935, .11, .02, .77])
 
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
