@@ -7,7 +7,6 @@
 # Second issue: tkinter vs Tkinter
 
 import numpy as np
-# import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
@@ -234,23 +233,15 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
 
         dist_beats_size = np.shape(cm_beats.dist_beats)
         print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
-        # print(cm_beats.dist_beats)
-        # print("Data type of cm_beats.dist_beats: " + str(type(cm_beats.dist_beats)))
 
         prom_beats_size = np.shape(cm_beats.prom_beats)
         print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
-        # print(cm_beats.prom_beats)
-        # print("Data type of cm_beats.prom_beats: " + str(type(cm_beats.prom_beats)) + "\n")
 
         width_beats_size = np.shape(cm_beats.width_beats)
         print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
-        # print(cm_beats.width_beats)
-        # print("Data type of cm_beats.width_beats: " + str(type(cm_beats.width_beats)) + "\n")
 
         thresh_beats_size = np.shape(cm_beats.thresh_beats)
         print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
-        # print(cm_beats.thresh_beats)
-        # print("Data type of cm_beats.thresh_beats: " + str(type(cm_beats.thresh_beats)) + "\n")
 
         print("Finished.")
         end_time = time.process_time()
@@ -372,6 +363,9 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0)
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0)
 
+        # Find maximum time lag (interval)
+        pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
+
         # Assigns column headers (names) using the naming convention provided in the ElectrodeConfig class.
         pace_maker.param_dist_normalized.columns = ElectrodeConfig.electrode_names
         pace_maker.param_prom_normalized.columns = ElectrodeConfig.electrode_names
@@ -445,16 +439,8 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
 def data_print(elecGUI60, raw_data, pace_maker):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
-    # print(ElectrodeConfig.mea_120_coordinates.keys())
-    # print(ElectrodeConfig.mea_120_coordinates.values())
-    # print(len(ElectrodeConfig.mea_120_coordinates))
-
     print(ElectrodeConfig.electrode_names[0])
-    # print(type(ElectrodeConfig.electrode_names[0]))
     print(ElectrodeConfig.electrode_names[5])
-
-    # print(ElectrodeConfig.electrode_coords_x)
-    # print(type(ElectrodeConfig.electrode_coords_x))
 
 
 # Generates heatmap based on matplotlib example from website.
@@ -498,7 +484,7 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
 
         heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.beat_choice])
 
-        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, cbar_ax=heat_map.cbar_ax)
+        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, cbar_ax=heat_map.cbar_ax, vmin=0, vmax=pace_maker.param_dist_normalized_max)
 
         # heat_map.axis1.set_xticks(range(12))
         # heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
@@ -662,7 +648,6 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
         try:
             chosen_electrode_val = int(self.elec_to_plot_val.get())
-            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -670,7 +655,6 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.min_peak_dist_val.get()))
         try:
             chosen_electrode_val = int(self.min_peak_dist_val.get())
-            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -678,7 +662,6 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.min_peak_height_val.get()))
         try:
             chosen_electrode_val = int(self.min_peak_height_val.get())
-            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -686,7 +669,6 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.parameter_prominence_val.get()))
         try:
             chosen_electrode_val = int(self.parameter_prominence_val.get())
-            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -694,7 +676,6 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.parameter_width_val.get()))
         try:
             chosen_electrode_val = int(self.parameter_width_val.get())
-            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -702,7 +683,6 @@ class ElecGUI60(tk.Frame):
         print("You entered: \"{}\"".format(self.parameter_thresh_val.get()))
         try:
             chosen_electrode_val = int(self.parameter_thresh_val.get())
-            # print(type(chosen_electrode_val))
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
@@ -732,8 +712,6 @@ def main():
     cm_beats.axis2 = cm_beats.comp_plot.add_subplot(222)
     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
-
-    # print("Import data memory reference: " + str(id(import_raw_data)))
 
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from top of screen
