@@ -366,6 +366,9 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         # Find maximum time lag (interval)
         pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
 
+        # Set slider value to maximum number of beats
+        elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+
         # Assigns column headers (names) using the naming convention provided in the ElectrodeConfig class.
         pace_maker.param_dist_normalized.columns = ElectrodeConfig.electrode_names
         pace_maker.param_prom_normalized.columns = ElectrodeConfig.electrode_names
@@ -436,11 +439,13 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
 
 
 # Usually just for debugging, a function that prints out values upon button press.
-def data_print(elecGUI60, raw_data, pace_maker):
+def data_print(elecGUI60, raw_data, pace_maker, input_param):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
+    input_param.beat_choice = int(elecGUI60.mea_beat_select.get()) - 1
     print(ElectrodeConfig.electrode_names[0])
     print(ElectrodeConfig.electrode_names[5])
+    print(input_param.beat_choice)
 
 
 # Generates heatmap based on matplotlib example from website.
@@ -477,7 +482,8 @@ def graph_heatmap(heat_map):
 def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
     try:
         heat_map.axis1.cla()
-        input_param.beat_choice = int(elecGUI60.parameter_beat_choice_val.get()) - 1
+        # input_param.beat_choice = int(elecGUI60.parameter_beat_choice_val.get()) - 1
+        input_param.beat_choice = int(elecGUI60.mea_beat_select.get()) - 1
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
         # pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
@@ -493,7 +499,6 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
         # heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
 
         heat_map.curr_plot.canvas.draw()
-        print()
     except AttributeError:
         print("Please use Calculate PM first.")
     except IndexError:
@@ -524,7 +529,7 @@ class ElecGUI60(tk.Frame):
 
         # prints data from import; eventually test to specify columns and rows.
         self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
-                                           command=lambda: data_print(self, raw_data, pace_maker))
+                                           command=lambda: data_print(self, raw_data, pace_maker, input_param))
         self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
 
         # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
@@ -629,6 +634,12 @@ class ElecGUI60(tk.Frame):
         self.mea_array_frame.grid_propagate(False)
         self.gen_figure = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_array_frame)
         self.gen_figure.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
+        self.mea_beat_select = tk.Scale(self.mea_array_frame, length=200, width=15, from_=1, to=20,
+                                        orient="horizontal", bg="white", label="Current Beat Number")
+        # self.mea_beat_select.bind("<B1-Motion>", data_print(self, raw_data, pace_maker))
+        self.mea_beat_select.grid(row=1, column=1, padx=5, pady=5)
+        self.mea_beat_select.bind("<ButtonRelease-1>",
+                                  lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
 
         # Frame and elements for peak finder plots.
         self.beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
