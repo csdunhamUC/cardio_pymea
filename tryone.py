@@ -233,13 +233,10 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
 
         dist_beats_size = np.shape(cm_beats.dist_beats)
         print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
-
         prom_beats_size = np.shape(cm_beats.prom_beats)
         print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
-
         width_beats_size = np.shape(cm_beats.width_beats)
         print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
-
         thresh_beats_size = np.shape(cm_beats.thresh_beats)
         print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
 
@@ -449,34 +446,34 @@ def data_print(elecGUI60, raw_data, pace_maker, input_param):
 
 
 # Generates heatmap based on matplotlib example from website.
-def graph_heatmap(heat_map):
-    # imshow() is the key heatmap function here.
-    heat_map.axis1.cla()
-
-    im = heat_map.axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
-
-    heat_map.cbar = heat_map.axis1.figure.colorbar(im)
-    heat_map.cbar.remove()
-
-    heat_map.cbar = heat_map.axis1.figure.colorbar(im)
-    heat_map.cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
-
-    heat_map.axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
-    heat_map.axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
-    heat_map.axis1.set_xticklabels(TestingStuff.farmers)
-    heat_map.axis1.set_yticklabels(TestingStuff.vegetables)
-
-    # Modifying x-axis presentation.
-    plt.setp(heat_map.axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-
-    for i in range(len(TestingStuff.vegetables)):
-        for j in range(len(TestingStuff.farmers)):
-            text = heat_map.axis1.text(j, i, TestingStuff.harvest[i, j], ha="center", va="center", color="w")
-    heat_map.axis1.set_title("Harvest Demo from Matplotlib Website")
-
-    heat_map.curr_plot.tight_layout()
-    heat_map.curr_plot.canvas.draw()
-    return
+# def graph_heatmap(heat_map):
+#     # imshow() is the key heatmap function here.
+#     heat_map.axis1.cla()
+#
+#     im = heat_map.axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
+#
+#     heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+#     heat_map.cbar.remove()
+#
+#     heat_map.cbar = heat_map.axis1.figure.colorbar(im)
+#     heat_map.cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
+#
+#     heat_map.axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
+#     heat_map.axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
+#     heat_map.axis1.set_xticklabels(TestingStuff.farmers)
+#     heat_map.axis1.set_yticklabels(TestingStuff.vegetables)
+#
+#     # Modifying x-axis presentation.
+#     plt.setp(heat_map.axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
+#
+#     for i in range(len(TestingStuff.vegetables)):
+#         for j in range(len(TestingStuff.farmers)):
+#             text = heat_map.axis1.text(j, i, TestingStuff.harvest[i, j], ha="center", va="center", color="w")
+#     heat_map.axis1.set_title("Harvest Demo from Matplotlib Website")
+#
+#     heat_map.curr_plot.tight_layout()
+#     heat_map.curr_plot.canvas.draw()
+#     return
 
 
 def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
@@ -552,10 +549,10 @@ class ElecGUI60(tk.Frame):
                                             command=lambda: graph_beats(self, cm_beats, input_param))
         self.graph_beats_button.grid(row=6, column=0, padx=2, pady=2)
 
-        # to generate heatmap; currently only generates for Matplotlib demo data.
-        self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
-                                              command=lambda: graph_heatmap(heat_map))
-        self.graph_heatmap_button.grid(row=7, column=0, padx=2, pady=2)
+        # # to generate heatmap; currently only generates for Matplotlib demo data.
+        # self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
+        #                                       command=lambda: graph_heatmap(heat_map))
+        # self.graph_heatmap_button.grid(row=7, column=0, padx=2, pady=2)
 
 
         # ############################################### Entry Fields ################################################
@@ -618,14 +615,14 @@ class ElecGUI60(tk.Frame):
         self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
-        # Desired beat for heatmap label, entry field, trace and positioning.
-        self.parameter_beat_choice_label = tk.Label(self.mea_parameters_frame, text="Beat Mapped", bg="white", wraplength=100)
-        self.parameter_beat_choice_label.grid(row=0, column=6, padx=5, pady=2)
-        self.parameter_beat_choice_val = tk.StringVar()
-        self.parameter_beat_choice_val.trace_add("write", self.parameter_beat_choice_callback)
-        self.parameter_beat_choice_val.set("1")
-        self.parameter_beat_choice_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_beat_choice_val, width=8)
-        self.parameter_beat_choice_entry.grid(row=1, column=6, padx=5, pady=2)
+        # # Desired beat for heatmap label, entry field, trace and positioning.
+        # self.parameter_beat_choice_label = tk.Label(self.mea_parameters_frame, text="Beat Mapped", bg="white", wraplength=100)
+        # self.parameter_beat_choice_label.grid(row=0, column=6, padx=5, pady=2)
+        # self.parameter_beat_choice_val = tk.StringVar()
+        # self.parameter_beat_choice_val.trace_add("write", self.parameter_beat_choice_callback)
+        # self.parameter_beat_choice_val.set("1")
+        # self.parameter_beat_choice_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_beat_choice_val, width=8)
+        # self.parameter_beat_choice_entry.grid(row=1, column=6, padx=5, pady=2)
 
         # ############################################### Plot Frames #################################################
         # Frame and elements for heat map plot.
@@ -697,12 +694,12 @@ class ElecGUI60(tk.Frame):
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
 
-    def parameter_beat_choice_callback(self, *args):
-        print("You entered: \"{}\"".format(self.parameter_beat_choice_val.get()))
-        try:
-            chosen_beat_val = int(self.parameter_beat_choice_val.get())
-        except ValueError:
-            print("Only numbers are allowed.  Please try again")
+    # def parameter_beat_choice_callback(self, *args):
+    #     print("You entered: \"{}\"".format(self.parameter_beat_choice_val.get()))
+    #     try:
+    #         chosen_beat_val = int(self.parameter_beat_choice_val.get())
+    #     except ValueError:
+    #         print("Only numbers are allowed.  Please try again")
 
 
 def main():
