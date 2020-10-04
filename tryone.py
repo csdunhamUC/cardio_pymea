@@ -178,7 +178,8 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
 
         # For loops for finding beats (peaks) in each channel (electrode).  Suitable for any given MCD-converted file
         # in which only one MEA is recorded (i.e. works for a single 120 electrode MEA, or 60 electrode MEA, etc
-        # Not currently equipped to handle datasets with dual-recorded MEAs (e.g. dual MEA60s)
+        # Caveat 1: have not tested for singular MEA60 data.
+        # Disclaimer: Not currently equipped to handle datasets with dual-recorded MEAs (e.g. dual MEA60s)
         for column in range(len(cm_beats.y_axis.columns)):
             dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
                                               distance=input_param.min_peak_dist)[0], name=column+1)
@@ -316,41 +317,33 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         # Performs PM calculation for each detection parameter (peak distance, prominence, width, threshold)
         for column in range(len(cm_beats.dist_beats.columns)):
             if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
-                # print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
                 pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column], name=column+1)
                 pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
             else:
-                # print(len(cm_beats.dist_beats.iloc[0:, column].dropna()))
                 pace_maker_dist_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
 
         for column in range(len(cm_beats.prom_beats.columns)):
             if cm_beats.beat_count_prom_mode[0] == len(cm_beats.prom_beats.iloc[0:, column].dropna()):
-                # print(len(cm_beats.prom_beats.iloc[0:, column].dropna()))
                 pace_maker_prom_raw = pd.Series(cm_beats.prom_beats.iloc[0:, column], name=column+1)
                 pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
             else:
-                # print(len(cm_beats.prom_beats.iloc[0:, column].dropna()))
                 pace_maker_prom_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
 
         for column in range(len(cm_beats.width_beats.columns)):
             if cm_beats.beat_count_prom_mode[0] == len(cm_beats.width_beats.iloc[0:, column].dropna()):
-                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
                 pace_maker_width_raw = pd.Series(cm_beats.width_beats.iloc[0:, column], name=column+1)
                 pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
             else:
-                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
                 pace_maker_width_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
 
         for column in range(len(cm_beats.thresh_beats.columns)):
             if cm_beats.beat_count_thresh_mode[0] == len(cm_beats.thresh_beats.iloc[0:, column].dropna()):
-                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
                 pace_maker_thresh_raw = pd.Series(cm_beats.thresh_beats.iloc[0:, column], name=column+1)
                 pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
             else:
-                # print(len(cm_beats.width_beats.iloc[0:, column].dropna()))
                 pace_maker_thresh_raw = pd.Series(name=column+1, dtype='float64')
                 pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
 
@@ -435,6 +428,44 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         print("Please use Find Peaks first.")
 
 
+def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
+
+    # Clock the time it takes to run the calculation.
+    start_time = time.process_time()
+    print("Calculating pacemaker intervals per beat.")
+
+    upstroke_vel.param_dist_raw = pd.DataFrame()
+    upstroke_vel.param_prom_raw = pd.DataFrame()
+    upstroke_vel.param_width_raw = pd.DataFrame()
+    upstroke_vel.param_thresh_raw = pd.DataFrame()
+
+    # for column in range(len(cm_beats.dist_beats.columns)):
+    #     if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
+    # ultimately want to populate a temporary variable with amplitudes from ((index-9):index, column), per beat
+    # May need to use list of lists to capture all of this data...
+    # calculate slope for each set of data, find max slope, insert value for given beat&electrode into upstroke_vel
+    # Alternative idea: populate the temp variable with the values and find the slope, then give that value to
+    # upstroke_vel, for a single electrode at a single beat.  Then repeat the process again.  We don't care about
+    # keeping the values (amplitudes) that are used to calculate slope.  We only want dV/dt max.
+
+    # What to do:
+    # Use mode of beat count from cm_beats
+    # Loop over the range of cm_beats
+    # Collect up to 9 preceding indices leading up to beat index
+    # Method 1:
+    # Send all 10 indices and corresponding beat amplitudes to a polynomial fit function
+    # Would use either numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
+    # Obtain dV/dt "average"
+    # Method 2:
+    # Calculate slopes for all index/beat amplitude pairings
+    # Determine maximum slope from calculations
+    # Obtain dV/dt max
+
+    # Set slider value to maximum number of beats
+    elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+
+
+
 # Usually just for debugging, a function that prints out values upon button press.
 def data_print(elecGUI60, raw_data, pace_maker, input_param):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
@@ -479,7 +510,6 @@ def data_print(elecGUI60, raw_data, pace_maker, input_param):
 def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
     try:
         heat_map.axis1.cla()
-        # input_param.beat_choice = int(elecGUI60.parameter_beat_choice_val.get()) - 1
         input_param.beat_choice = int(elecGUI60.mea_beat_select.get()) - 1
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
@@ -503,7 +533,7 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
 
 
 class ElecGUI60(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats, pace_maker, input_param, heat_map):
+    def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, input_param, heat_map):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
@@ -544,10 +574,15 @@ class ElecGUI60(tk.Frame):
                                            command=lambda: graph_pacemaker(self, heat_map, pace_maker, input_param))
         self.pacemaker_heatmap.grid(row=5, column=0, padx=2, pady=2)
 
+        # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
+        self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3,
+                                                  bg="orange red", command=lambda: calculate_upstroke_vel(self, raw_data, cm_beats, upstroke_vel))
+        self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
+
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
-        self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="orange red",
+        self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="red2",
                                             command=lambda: graph_beats(self, cm_beats, input_param))
-        self.graph_beats_button.grid(row=6, column=0, padx=2, pady=2)
+        self.graph_beats_button.grid(row=7, column=0, padx=2, pady=2)
 
         # # to generate heatmap; currently only generates for Matplotlib demo data.
         # self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
@@ -706,6 +741,7 @@ def main():
     raw_data = ImportedData()
     cm_beats = BeatAmplitudes()
     pace_maker = PacemakerData()
+    upstroke_vel = UpstrokeVelData()
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
 
@@ -726,7 +762,7 @@ def main():
     root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, input_param, heat_map)
+    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, upstroke_vel, input_param, heat_map)
     # print(vars(ElecGUI60))
     # print(dir(elecGUI60))
     # print(hasattr(elecGUI60, "elec_to_plot_entry"))
