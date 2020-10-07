@@ -155,7 +155,11 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
 
         cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
         # y_axis indexing ends at column -1, or second to last column, to remove the columns containing only \r
-        cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
+        if '\r' in raw_data.imported.columns:
+            cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
+        else:
+            cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
+
         print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
         print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
 
