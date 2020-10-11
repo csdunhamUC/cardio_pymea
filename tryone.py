@@ -146,7 +146,7 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         start_time = time.process_time()
 
         if hasattr(cm_beats, 'x_axis') is True:
-            print("Beat data are not empty; clearing before finding peaks.")
+            print("Beat data are not empty; clearing before finding beats.")
             delattr(cm_beats, 'x_axis')
             delattr(cm_beats, 'dist_beats')
             delattr(cm_beats, 'prom_beats')
@@ -299,7 +299,7 @@ def graph_beats(elecGUI60, cm_beats, input_param):
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
 # electrodes based on mismatched beat counts relative to the mode of the beat count.
-def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
+def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
     try:
         if hasattr(pace_maker, 'param_dist_raw') is True:
             print("Clearing old pacemaker data before running new calculation...")
@@ -428,6 +428,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker):
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
+        graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -436,16 +437,18 @@ def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
 
     # Clock the time it takes to run the calculation.
     start_time = time.process_time()
-    print("Calculating pacemaker intervals per beat.")
+    print("Calculating upstroke velocity per beat.")
 
     upstroke_vel.param_dist_raw = pd.DataFrame()
     upstroke_vel.param_prom_raw = pd.DataFrame()
     upstroke_vel.param_width_raw = pd.DataFrame()
     upstroke_vel.param_thresh_raw = pd.DataFrame()
 
+    temp_slope = []
+
     # for column in range(len(cm_beats.dist_beats.columns)):
     #     if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
-    # ultimately want to populate a temporary variable with amplitudes from ((index-9):index, column), per beat
+    # ultimately want to populate a temporary variable with amplitudes from ((index-5):index, column), per beat
     # May need to use list of lists to capture all of this data...
     # calculate slope for each set of data, find max slope, insert value for given beat&electrode into upstroke_vel
     # Alternative idea: populate the temp variable with the values and find the slope, then give that value to
@@ -455,7 +458,7 @@ def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
     # What to do:
     # Use mode of beat count from cm_beats
     # Loop over the range of cm_beats
-    # Collect up to 9 preceding indices leading up to beat index
+    # Collect up to 5 preceding indices leading up to beat index
     # Method 1:
     # Send all 10 indices and corresponding beat amplitudes to a polynomial fit function
     # Would use either numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
@@ -468,6 +471,11 @@ def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
     # Set slider value to maximum number of beats
     elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
+
+def calc_slope_dvdt(x_1, y_1, x_2, y_2):
+    calc_slope = (y_2 - y_1)/(x_2 - x_1)
+    print()
+    return calc_slope
 
 
 # Usually just for debugging, a function that prints out values upon button press.
@@ -518,18 +526,13 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
         # pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
-
         heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.beat_choice])
 
         heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, cbar_ax=heat_map.cbar_ax, vmin=0, vmax=pace_maker.param_dist_normalized_max)
 
-        # heat_map.axis1.set_xticks(range(12))
-        # heat_map.axis1.set_xticklabels(np.unique(ElectrodeConfig.electrode_coords_x))
-        # heat_map.axis1.tick_params(top=True, labeltop=True, bottom=False, labelbottom=False)
-        # heat_map.axis1.set_yticks(range(12))
-        # heat_map.axis1.set_yticklabels(np.flip(np.unique(ElectrodeConfig.electrode_coords_y)))
-
+        heat_map.axis1.set(title="Beat " + str(input_param.beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
         heat_map.curr_plot.canvas.draw()
+
     except AttributeError:
         print("Please use Calculate PM first.")
     except IndexError:
@@ -564,23 +567,18 @@ class ElecGUI60(tk.Frame):
         self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
 
         # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
-        self.calc_peaks_button = tk.Button(self.file_operations, text="Find Peaks", width=15, height=3, bg="orange",
+        self.calc_peaks_button = tk.Button(self.file_operations, text="Find Beats", width=15, height=3, bg="orange",
                                            command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
 
         # Invoke calculate pacemaker function, using data acquired from find_peaks function (contained in cm_beats)
         self.calc_pacemaker_button = tk.Button(self.file_operations, text="Calculate PM", width=15, height=3, bg="light coral",
-                                               command=lambda: calculate_pacemaker(self, cm_beats, pace_maker))
+                                               command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
         self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
-
-        # Invoke pacemaker heatmap function, using data acquired from calculate_pacemaker function (contained in pace_maker)
-        self.pacemaker_heatmap = tk.Button(self.file_operations, text="PM Heatmap", width=15, height=3, bg="tomato",
-                                           command=lambda: graph_pacemaker(self, heat_map, pace_maker, input_param))
-        self.pacemaker_heatmap.grid(row=5, column=0, padx=2, pady=2)
 
         # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
         self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3,
-                                                  bg="orange red", command=lambda: calculate_upstroke_vel(self, raw_data, cm_beats, upstroke_vel))
+                                                  bg="tomato", command=lambda: calculate_upstroke_vel(self, raw_data, cm_beats, upstroke_vel))
         self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
@@ -654,15 +652,6 @@ class ElecGUI60(tk.Frame):
         self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
-        # # Desired beat for heatmap label, entry field, trace and positioning.
-        # self.parameter_beat_choice_label = tk.Label(self.mea_parameters_frame, text="Beat Mapped", bg="white", wraplength=100)
-        # self.parameter_beat_choice_label.grid(row=0, column=6, padx=5, pady=2)
-        # self.parameter_beat_choice_val = tk.StringVar()
-        # self.parameter_beat_choice_val.trace_add("write", self.parameter_beat_choice_callback)
-        # self.parameter_beat_choice_val.set("1")
-        # self.parameter_beat_choice_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_beat_choice_val, width=8)
-        # self.parameter_beat_choice_entry.grid(row=1, column=6, padx=5, pady=2)
-
         # ############################################### Plot Frames #################################################
         # Frame and elements for heat map plot.
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
@@ -732,13 +721,6 @@ class ElecGUI60(tk.Frame):
             chosen_electrode_val = int(self.parameter_thresh_val.get())
         except ValueError:
             print("Only numbers are allowed.  Please try again.")
-
-    # def parameter_beat_choice_callback(self, *args):
-    #     print("You entered: \"{}\"".format(self.parameter_beat_choice_val.get()))
-    #     try:
-    #         chosen_beat_val = int(self.parameter_beat_choice_val.get())
-    #     except ValueError:
-    #         print("Only numbers are allowed.  Please try again")
 
 
 def main():
