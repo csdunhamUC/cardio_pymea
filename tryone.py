@@ -445,6 +445,46 @@ def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
     upstroke_vel.param_thresh_raw = pd.DataFrame()
 
     temp_slope = []
+    dvdt_max = []
+
+    # to use:
+    # cm_beats.y_axis
+    # cm_beats.dist_beats
+    # use pd.concat(axis='index')
+
+    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+        for electrode in cm_beats.dist_beats.columns:
+            for slope in range(1, 6):
+                # Need more conditional checks.  Need to confirm whether length of column is same as mode; if not,
+                # populate with NaN values.  Need to check if NaN is in any of the rows of the given electrode, confined
+                # within the mode of the beat count...
+                print(cm_beats.dist_beats.iloc[beat, electrode - 1])
+                if pd.isnull(cm_beats.dist_beats.iloc[beat, electrode-1]):
+                    print()
+                    temp_slope.append(float("NaN"))
+                else:
+                    x_2 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1] - slope))])
+                    x_1 = x_2 - 1
+                    y_2 = cm_beats.y_axis.iloc[x_2, electrode - 1]
+                    y_1 = cm_beats.y_axis.iloc[x_1, electrode - 1]
+                    calc_slope = calc_slope_dvdt(x_1, y_1, x_2, y_2)
+                    print(calc_slope)
+                    temp_slope.append(calc_slope)
+            dvdt_max.append(max(temp_slope))
+            temp_slope.clear()
+
+        upstroke_vel.param_dist_raw = pd.concat([upstroke_vel.param_dist_raw, pd.Series(dvdt_max, name="Beat " + str(beat+1))], axis='columns')
+        dvdt_max.clear()
+        print(beat)
+
+    # For testing purposes.
+    x_1 = 1
+    x_2 = 4
+    y_2 = 12
+    y_1 = 3
+    # calc_slope = calc_slope_dvdt(x_1, y_1, x_2, y_2)
+    temp_slope.append(calc_slope)
+    print(temp_slope)
 
     # for column in range(len(cm_beats.dist_beats.columns)):
     #     if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
@@ -469,12 +509,13 @@ def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
     # Obtain dV/dt max
 
     # Set slider value to maximum number of beats
-    elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+    # elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
 
 def calc_slope_dvdt(x_1, y_1, x_2, y_2):
     calc_slope = (y_2 - y_1)/(x_2 - x_1)
-    print()
+    print("Y2: " + str(y_2) + ", Y1: " + str(y_1))
+    print("X2: " + str(x_2) + ", X1: " + str(x_1))
     return calc_slope
 
 
