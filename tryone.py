@@ -433,71 +433,95 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
         print("Please use Find Peaks first.")
 
 
-def calculate_upstroke_vel(elecGUI60, raw_data, cm_beats, upstroke_vel):
+# For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
+# Calculates upstroke velocity (dV/dt)
+def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel):
+    try:
+        if hasattr(upstroke_vel, 'param_dist_raw') is True:
+            print("Clearing old dV/dt max data before running new calculation...")
+            delattr(upstroke_vel, 'param_dist_raw')
+            delattr(upstroke_vel, 'param_prom_raw')
+            delattr(upstroke_vel, 'param_width_raw')
+            delattr(upstroke_vel, 'param_thresh_raw')
 
-    # Clock the time it takes to run the calculation.
-    start_time = time.process_time()
-    print("Calculating upstroke velocity per beat.")
+        # Clock the time it takes to run the calculation.
+        start_time = time.process_time()
+        print("Calculating upstroke velocity per beat.")
 
-    upstroke_vel.param_dist_raw = pd.DataFrame()
-    upstroke_vel.param_prom_raw = pd.DataFrame()
-    upstroke_vel.param_width_raw = pd.DataFrame()
-    upstroke_vel.param_thresh_raw = pd.DataFrame()
+        upstroke_vel.param_dist_raw = pd.DataFrame()
+        upstroke_vel.param_prom_raw = pd.DataFrame()
+        upstroke_vel.param_width_raw = pd.DataFrame()
+        upstroke_vel.param_thresh_raw = pd.DataFrame()
 
-    temp_slope = []
-    dvdt_max = []
+        temp_slope = []
+        dvdt_max = []
 
-    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-        for electrode in cm_beats.dist_beats.columns:
-            for slope in range(1, 6):
-                # print(cm_beats.beat_count_dist_mode[0])
-                # print(len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()))
+        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+            for electrode in cm_beats.dist_beats.columns:
                 if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
-                    x_2 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1] - slope))])
-                    x_1 = x_2 - 1
-                    y_2 = cm_beats.y_axis.iloc[x_2, electrode - 1]
-                    y_1 = cm_beats.y_axis.iloc[x_1, electrode - 1]
-                    calc_slope = calc_slope_dvdt(x_1, y_1, x_2, y_2)
-                    # print(calc_slope)
-                    temp_slope.append(calc_slope)
+                    x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1] - 1))])
+                    x_2_2 = x_2_1 - 1
+                    x_2_3 = x_2_2 - 1
+                    x_2_4 = x_2_3 - 1
+                    x_2_5 = x_2_4 - 1
+
+                    x_1_1 = x_2_1 - 1
+                    x_1_2 = x_2_2 - 1
+                    x_1_3 = x_2_3 - 1
+                    x_1_4 = x_2_4 - 1
+                    x_1_5 = x_2_5 - 1
+
+                    y_2_1 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
+                    y_1_1 = cm_beats.y_axis.iloc[x_1_1, electrode - 1]
+                    y_2_2 = cm_beats.y_axis.iloc[x_2_2, electrode - 1]
+                    y_1_2 = cm_beats.y_axis.iloc[x_1_2, electrode - 1]
+                    y_2_3 = cm_beats.y_axis.iloc[x_2_3, electrode - 1]
+                    y_1_3 = cm_beats.y_axis.iloc[x_1_3, electrode - 1]
+                    y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
+                    y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
+                    y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
+                    y_1_5 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
+
+                    calc_slope_1 = (y_2_1 - y_1_1)/(x_2_1 - x_1_1)
+                    calc_slope_2 = (y_2_2 - y_1_2)/(x_2_2 - x_1_2)
+                    calc_slope_3 = (y_2_3 - y_1_3)/(x_2_3 - x_1_3)
+                    calc_slope_4 = (y_2_4 - y_1_4)/(x_2_4 - x_1_4)
+                    calc_slope_5 = (y_2_5 - y_1_5)/(x_2_5 - x_1_5)
+                    temp_slope.extend([calc_slope_1, calc_slope_2, calc_slope_3, calc_slope_4, calc_slope_5])
                 else:
-                    # print()
-                    temp_slope.append(float("NaN"))
+                    temp_slope.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
 
-            dvdt_max.append(max(temp_slope))
-            temp_slope.clear()
+                # for slope in range(1, 6):
+                #     # print(cm_beats.beat_count_dist_mode[0])
+                #     # print(len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()))
+                #     if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
+                #         x_2 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1] - slope))])
+                #         x_1 = x_2 - 1
+                #         y_2 = cm_beats.y_axis.iloc[x_2, electrode - 1]
+                #         y_1 = cm_beats.y_axis.iloc[x_1, electrode - 1]
+                #         calc_slope = (y_2 - y_1)/(x_2 - x_1)
+                #         # print(calc_slope)
+                #         temp_slope.append(calc_slope)
+                #     else:
+                #         # print()
+                #         temp_slope.append(float("NaN"))
 
-        upstroke_vel.param_dist_raw = pd.concat([upstroke_vel.param_dist_raw, pd.Series(dvdt_max, name="Beat " + str(beat+1))], axis='columns')
-        dvdt_max.clear()
+                dvdt_max.append(max(temp_slope))
+                temp_slope.clear()
 
-    upstroke_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
+            upstroke_vel.param_dist_raw = pd.concat([upstroke_vel.param_dist_raw, pd.Series(dvdt_max, name="Beat " + str(beat+1))], axis='columns')
+            dvdt_max.clear()
 
-    # What to do:
-    # Use mode of beat count from cm_beats
-    # Loop over the range of cm_beats
-    # Collect up to 5 preceding indices leading up to beat index
-    # Method 1:
-    # Send all 10 indices and corresponding beat amplitudes to a polynomial fit function
-    # Would use either numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
-    # Obtain dV/dt "average"
-    # Method 2:
-    # Calculate slopes for all index/beat amplitude pairings
-    # Determine maximum slope from calculations
-    # Obtain dV/dt max
+        upstroke_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
 
-    # Set slider value to maximum number of beats
-    elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        # Set slider value to maximum number of beats
+        elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
-    end_time = time.process_time()
-    print(end_time - start_time)
-    print()
-
-
-def calc_slope_dvdt(x_1, y_1, x_2, y_2):
-    calc_slope = (y_2 - y_1)/(x_2 - x_1)
-    # print("Y2: " + str(y_2) + ", Y1: " + str(y_1))
-    # print("X2: " + str(x_2) + ", X1: " + str(x_1))
-    return calc_slope
+        end_time = time.process_time()
+        print(end_time - start_time)
+        print()
+    except AttributeError:
+        print("Please use Find Peaks first.")
 
 
 # Usually just for debugging, a function that prints out values upon button press.
@@ -600,7 +624,7 @@ class ElecGUI60(tk.Frame):
 
         # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
         self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3,
-                                                  bg="tomato", command=lambda: calculate_upstroke_vel(self, raw_data, cm_beats, upstroke_vel))
+                                                  bg="tomato", command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel))
         self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
