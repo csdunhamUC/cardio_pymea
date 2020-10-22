@@ -249,6 +249,7 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         end_time = time.process_time()
         print(end_time - start_time)
         print("Plotting...")
+        elecGUI60.beat_detect_window(cm_beats)
         graph_beats(elecGUI60, cm_beats, input_param)
     except AttributeError:
         print("No data found. Please import data (.txt or .csv converted MCD file) first.")
@@ -565,6 +566,8 @@ def data_print(elecGUI60, raw_data, pace_maker, input_param):
 #     return
 
 
+# Construct heatmap from previously calculated pacemaker data.  Function is called each time the slider is moved to
+# select a new beat.
 def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
     try:
         heat_map.axis1.cla()
@@ -583,6 +586,10 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
         print("Please use Calculate PM first.")
     except IndexError:
         print("You entered a beat that does not exist.")
+
+
+def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
+    return
 
 
 class ElecGUI60(tk.Frame):
@@ -703,8 +710,8 @@ class ElecGUI60(tk.Frame):
         self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
         self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
         self.mea_array_frame.grid_propagate(False)
-        self.gen_figure = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_array_frame)
-        self.gen_figure.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
+        self.gen_pm_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_array_frame)
+        self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
         self.mea_beat_select = tk.Scale(self.mea_array_frame, length=200, width=15, from_=1, to=20,
                                         orient="horizontal", bg="white", label="Current Beat Number")
         # self.mea_beat_select.bind("<B1-Motion>", data_print(self, raw_data, pace_maker))
@@ -713,19 +720,36 @@ class ElecGUI60(tk.Frame):
                                   lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
 
         # Frame and elements for peak finder plots.
-        self.beat_detect_frame = tk.Frame(self, width=1200, height=800, bg="white")
-        self.beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
-        self.beat_detect_frame.grid_propagate(False)
-        self.gen_beats = FigureCanvasTkAgg(cm_beats.comp_plot, self.beat_detect_frame)
-        self.gen_beats.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.mea_array_frame_2 = tk.Frame(self, width=1200, height=800, bg="white")
+        self.mea_array_frame_2.grid(row=1, column=2, padx=10, pady=10)
+        self.mea_array_frame_2.grid_propagate(False)
+        self.gen_other_heatmaps = FigureCanvasTkAgg(heat_map.curr_plot_2, self.mea_array_frame_2)
+        self.gen_other_heatmaps.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         # NavigationToolbar2Tk calls pack internally, conflicts with grid.  Workaround: establish in own frame,
         # use grid to place that frame in_side of the chosen parent frame.  This works because the parent frame is still
         # a descent of "root", which is the overarching parent of all of these GUI elements.
-        self.gen_beats_toolbar_frame = tk.Frame(self)
-        self.gen_beats_toolbar_frame.grid(row=2, column=0, in_=self.beat_detect_frame)
-        self.gen_beats_toolbar = NavigationToolbar2Tk(self.gen_beats, self.gen_beats_toolbar_frame)
+        # self.gen_beats_toolbar_frame = tk.Frame(self)
+        # self.gen_beats_toolbar_frame.grid(row=2, column=0, in_=self.mea_array_frame_2)
+        # self.gen_beats_toolbar = NavigationToolbar2Tk(self.gen_beats, self.gen_beats_toolbar_frame)
 
         # print(dir(self))
+
+    def beat_detect_window(self, cm_beats):
+        beat_detect = tk.Toplevel(self)
+        beat_detect.title('Beat Detect Window')
+        beat_detect.geometry('1250x850')
+        beat_detect_frame = tk.Frame(beat_detect, width=1200, height=800, bg="white")
+        beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
+        beat_detect_frame.grid_propagate(False)
+        gen_beats_fig = FigureCanvasTkAgg(cm_beats.comp_plot, beat_detect_frame)
+        gen_beats_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        # NavigationToolbar2Tk calls pack internally, conflicts with grid.  Workaround: establish in own frame,
+        # use grid to place that frame in_side of the chosen parent frame.  This works because the parent frame is still
+        # a descent of "root", which is the overarching parent of all of these GUI elements.
+        gen_beats_toolbar_frame = tk.Frame(beat_detect)
+        gen_beats_toolbar_frame.grid(row=2, column=0, in_=beat_detect_frame)
+        gen_beats_toolbar = NavigationToolbar2Tk(gen_beats_fig, gen_beats_toolbar_frame)
+
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
         try:
@@ -779,6 +803,8 @@ def main():
 
     heat_map.curr_plot = plt.Figure(figsize=(10, 6), dpi=120)
     heat_map.axis1 = heat_map.curr_plot.add_subplot(111)
+    heat_map.curr_plot_2 = plt.Figure(figsize=(10, 6), dpi=120)
+    heat_map.axis2 = heat_map.curr_plot_2.add_subplot(111)
     # axis param: dist from left, bottom, width, height
     heat_map.cbar_ax = heat_map.curr_plot.add_axes([.935, .11, .02, .77])
 
