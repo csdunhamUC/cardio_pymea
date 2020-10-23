@@ -637,36 +637,64 @@ class ElecGUI60(tk.Frame):
         self.grid()
         self.winfo_toplevel().title("Elec GUI 60 - Prototype")
 
+        # ############################################### Menu ########################################################
+        self.master = master
+        menu = tk.Menu(self.master, tearoff=False)
+        self.master.config(menu=menu)
+        file_menu = tk.Menu(menu)
+        menu.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Import Data (.csv or .txt)", command=lambda: data_import(raw_data))
+        file_menu.add_command(label="Save Processed Data", command=None)
+        file_menu.add_command(label="Save Heatmaps", command=None)
+        file_menu.add_command(label="Print (Debug)", command=lambda: data_print(self, raw_data, pace_maker, input_param))
+
+        calc_menu = tk.Menu(menu)
+        menu.add_cascade(label="Calculations", menu=calc_menu)
+        calc_menu.add_command(label="Beat Detect (run first)", command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
+        calc_menu.add_command(label="Pacemaker", command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
+        calc_menu.add_command(label="Upstroke Velocity", command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
+        calc_menu.add_command(label="Local Activ. Time", command=None)
+        calc_menu.add_command(label="Conduction Velocity", command=None)
+
+        advanced_tools_menu = tk.Menu(menu)
+        menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)
+        advanced_tools_menu.add_command(label="Statistics", command=None)
+        advanced_tools_menu.add_command(label="K-Means Clustering", command=None)
+        advanced_tools_menu.add_command(label="t-SNE", command=None)
+        advanced_tools_menu.add_command(label="DBSCAN", command=None)
+        advanced_tools_menu.add_command(label="PCA", command=None)
+
+
         # ############################################### Buttons #####################################################
         self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
         self.file_operations.grid(row=1, column=0, padx=5, pady=5, sticky="nw")
-        self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
-                                            command=lambda: data_import(raw_data))
-        self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
-
-        # to save data; not implemented.
-        self.save_data_button = tk.Button(self.file_operations, text="Save Data", width=15, height=3, bg="lightgreen")
-        self.save_data_button.grid(row=1, column=0, padx=2, pady=2)
-
-        # prints data from import; eventually test to specify columns and rows.
-        self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
-                                           command=lambda: data_print(self, raw_data, pace_maker, input_param))
-        self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
-
-        # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
-        self.calc_peaks_button = tk.Button(self.file_operations, text="Find Beats", width=15, height=3, bg="orange",
-                                           command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
-        self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
-
-        # Invoke calculate pacemaker function, using data acquired from find_peaks function (contained in cm_beats)
-        self.calc_pacemaker_button = tk.Button(self.file_operations, text="Calculate PM", width=15, height=3, bg="light coral",
-                                               command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
-        self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
-
-        # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
-        self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3, bg="tomato",
-                                                  command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
-        self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
+        # self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
+        #                                     command=lambda: data_import(raw_data))
+        # self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
+        #
+        # # to save data; not implemented.
+        # self.save_data_button = tk.Button(self.file_operations, text="Save Data", width=15, height=3, bg="lightgreen")
+        # self.save_data_button.grid(row=1, column=0, padx=2, pady=2)
+        #
+        # # prints data from import; eventually test to specify columns and rows.
+        # self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
+        #                                    command=lambda: data_print(self, raw_data, pace_maker, input_param))
+        # self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
+        #
+        # # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
+        # self.calc_peaks_button = tk.Button(self.file_operations, text="Find Beats", width=15, height=3, bg="orange",
+        #                                    command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
+        # self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
+        #
+        # # Invoke calculate pacemaker function, using data acquired from find_peaks function (contained in cm_beats)
+        # self.calc_pacemaker_button = tk.Button(self.file_operations, text="Calculate PM", width=15, height=3, bg="light coral",
+        #                                        command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
+        # self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
+        #
+        # # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
+        # self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3, bg="tomato",
+        #                                           command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
+        # self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
         self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="red2",
@@ -740,7 +768,7 @@ class ElecGUI60(tk.Frame):
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
         # ############################################### Plot Frames #################################################
-        # Frame and elements for heat map plot.
+        # Frame and elements for pacemaker heat map plot.
         self.mea_array_frame = tk.Frame(self, width=800, height=700, bg="white")
         self.mea_array_frame.grid(row=1, column=1, padx=5, pady=5)
         self.mea_array_frame.grid_propagate(False)
@@ -748,12 +776,11 @@ class ElecGUI60(tk.Frame):
         self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
         self.mea_beat_select = tk.Scale(self.mea_array_frame, length=200, width=15, from_=1, to=20,
                                         orient="horizontal", bg="white", label="Current Beat Number")
-        # self.mea_beat_select.bind("<B1-Motion>", data_print(self, raw_data, pace_maker))
         self.mea_beat_select.grid(row=1, column=1, padx=5, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
                                   lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
 
-        # Frame and elements for peak finder plots.
+        # Frame and elements for dV/dt heatmap plot.
         self.mea_array_frame_2 = tk.Frame(self, width=800, height=700, bg="white")
         self.mea_array_frame_2.grid(row=1, column=2, padx=5, pady=5)
         self.mea_array_frame_2.grid_propagate(False)
@@ -761,7 +788,6 @@ class ElecGUI60(tk.Frame):
         self.gen_other_heatmaps.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         self.mea_beat_select_2 = tk.Scale(self.mea_array_frame_2, length=200, width=15, from_=1, to=20,
                                         orient="horizontal", bg="white", label="Current Beat Number")
-        # self.mea_beat_select.bind("<B1-Motion>", data_print(self, raw_data, pace_maker))
         self.mea_beat_select_2.grid(row=1, column=0, padx=5, pady=5)
         self.mea_beat_select_2.bind("<ButtonRelease-1>", lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
         # print(dir(self))
