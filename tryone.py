@@ -436,7 +436,7 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
 
 # For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
 # Calculates upstroke velocity (dV/dt)
-def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel):
+def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_param):
     try:
         if hasattr(upstroke_vel, 'param_dist_raw') is True:
             print("Clearing old dV/dt max data before running new calculation...")
@@ -513,14 +513,21 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel):
             upstroke_vel.param_dist_raw = pd.concat([upstroke_vel.param_dist_raw, pd.Series(dvdt_max, name="Beat " + str(beat+1))], axis='columns')
             dvdt_max.clear()
 
+        upstroke_vel.final_dist_beat_count = []
+        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+            upstroke_vel.final_dist_beat_count.append('Beat ' + str(beat + 1))
+
         upstroke_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
+        upstroke_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        upstroke_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        upstroke_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
         # Set slider value to maximum number of beats
-        elecGUI60.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
         end_time = time.process_time()
         print(end_time - start_time)
-        print()
+        graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -570,6 +577,9 @@ def data_print(elecGUI60, raw_data, pace_maker, input_param):
 # select a new beat.
 def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
     try:
+        if hasattr(heat_map, 'cbar_1') is True:
+            heat_map.cbar_1.remove()
+
         heat_map.axis1.cla()
         input_param.beat_choice = int(elecGUI60.mea_beat_select.get()) - 1
 
@@ -577,9 +587,12 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
         # pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
         heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.beat_choice])
 
-        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, cbar_ax=heat_map.cbar_ax, vmin=0, vmax=pace_maker.param_dist_normalized_max)
+        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
+        mappable = heat_map.temp.get_children()[0]
+        heat_map.cbar_1 = heat_map.axis1.figure.colorbar(mappable)
 
-        heat_map.axis1.set(title="Beat " + str(input_param.beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.axis1.set(title="Pacemaker, Beat " + str(input_param.beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.curr_plot.tight_layout()
         heat_map.curr_plot.canvas.draw()
 
     except AttributeError:
@@ -589,6 +602,27 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
 
 
 def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
+    try:
+        if hasattr(heat_map, 'cbar_2') is True:
+            heat_map.cbar_2.remove()
+        heat_map.axis2.cla()
+        input_param.beat_choice_2 = int(elecGUI60.mea_beat_select_2.get()) - 1
+
+        electrode_names_2 = upstroke_vel.param_dist_raw.pivot(index='Y', columns='X', values='Electrode')
+        heatmap_pivot_table_2 = upstroke_vel.param_dist_raw.pivot(index='Y', columns='X', values=upstroke_vel.final_dist_beat_count[input_param.beat_choice_2])
+
+        heat_map.temp_2 = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.axis2, cbar=False)
+        mappable_2 = heat_map.temp_2.get_children()[0]
+        heat_map.cbar_2 = heat_map.axis2.figure.colorbar(mappable_2)
+
+        heat_map.axis2.set(title="Upstroke Velocity, Beat " + str(input_param.beat_choice_2+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.curr_plot_2.tight_layout()
+        heat_map.curr_plot_2.canvas.draw()
+
+    except AttributeError:
+        print("Please use Calculate dV/dt first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")
     return
 
 
@@ -605,7 +639,7 @@ class ElecGUI60(tk.Frame):
 
         # ############################################### Buttons #####################################################
         self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
-        self.file_operations.grid(row=1, column=0, padx=10, pady=10, sticky="nw")
+        self.file_operations.grid(row=1, column=0, padx=5, pady=5, sticky="nw")
         self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
                                             command=lambda: data_import(raw_data))
         self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
@@ -630,8 +664,8 @@ class ElecGUI60(tk.Frame):
         self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
 
         # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
-        self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3,
-                                                  bg="tomato", command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel))
+        self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3, bg="tomato",
+                                                  command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
         self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
 
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
@@ -647,8 +681,8 @@ class ElecGUI60(tk.Frame):
 
         # ############################################### Entry Fields ################################################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
-        self.mea_parameters_frame = tk.Frame(self, width=2420, height=100, bg="white")
-        self.mea_parameters_frame.grid(row=0, column=1, columnspan=2, padx=5, pady=5)
+        self.mea_parameters_frame = tk.Frame(self, width=1820, height=100, bg="white")
+        self.mea_parameters_frame.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
 
         # GUI elements in the mea_parameters_frame
@@ -707,8 +741,8 @@ class ElecGUI60(tk.Frame):
 
         # ############################################### Plot Frames #################################################
         # Frame and elements for heat map plot.
-        self.mea_array_frame = tk.Frame(self, width=1200, height=800, bg="white")
-        self.mea_array_frame.grid(row=1, column=1, padx=10, pady=10)
+        self.mea_array_frame = tk.Frame(self, width=800, height=700, bg="white")
+        self.mea_array_frame.grid(row=1, column=1, padx=5, pady=5)
         self.mea_array_frame.grid_propagate(False)
         self.gen_pm_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_array_frame)
         self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
@@ -720,18 +754,16 @@ class ElecGUI60(tk.Frame):
                                   lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
 
         # Frame and elements for peak finder plots.
-        self.mea_array_frame_2 = tk.Frame(self, width=1200, height=800, bg="white")
-        self.mea_array_frame_2.grid(row=1, column=2, padx=10, pady=10)
+        self.mea_array_frame_2 = tk.Frame(self, width=800, height=700, bg="white")
+        self.mea_array_frame_2.grid(row=1, column=2, padx=5, pady=5)
         self.mea_array_frame_2.grid_propagate(False)
         self.gen_other_heatmaps = FigureCanvasTkAgg(heat_map.curr_plot_2, self.mea_array_frame_2)
         self.gen_other_heatmaps.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        # NavigationToolbar2Tk calls pack internally, conflicts with grid.  Workaround: establish in own frame,
-        # use grid to place that frame in_side of the chosen parent frame.  This works because the parent frame is still
-        # a descent of "root", which is the overarching parent of all of these GUI elements.
-        # self.gen_beats_toolbar_frame = tk.Frame(self)
-        # self.gen_beats_toolbar_frame.grid(row=2, column=0, in_=self.mea_array_frame_2)
-        # self.gen_beats_toolbar = NavigationToolbar2Tk(self.gen_beats, self.gen_beats_toolbar_frame)
-
+        self.mea_beat_select_2 = tk.Scale(self.mea_array_frame_2, length=200, width=15, from_=1, to=20,
+                                        orient="horizontal", bg="white", label="Current Beat Number")
+        # self.mea_beat_select.bind("<B1-Motion>", data_print(self, raw_data, pace_maker))
+        self.mea_beat_select_2.grid(row=1, column=0, padx=5, pady=5)
+        self.mea_beat_select_2.bind("<ButtonRelease-1>", lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
         # print(dir(self))
 
     def beat_detect_window(self, cm_beats):
@@ -739,7 +771,7 @@ class ElecGUI60(tk.Frame):
         beat_detect.title('Beat Detect Window')
         beat_detect.geometry('1250x850')
         beat_detect_frame = tk.Frame(beat_detect, width=1200, height=800, bg="white")
-        beat_detect_frame.grid(row=1, column=2, padx=10, pady=10)
+        beat_detect_frame.grid(row=1, column=2, padx=5, pady=5)
         beat_detect_frame.grid_propagate(False)
         gen_beats_fig = FigureCanvasTkAgg(cm_beats.comp_plot, beat_detect_frame)
         gen_beats_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
@@ -801,12 +833,10 @@ def main():
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
 
-    heat_map.curr_plot = plt.Figure(figsize=(10, 6), dpi=120)
+    heat_map.curr_plot = plt.Figure(figsize=(7, 5), dpi=120)
     heat_map.axis1 = heat_map.curr_plot.add_subplot(111)
-    heat_map.curr_plot_2 = plt.Figure(figsize=(10, 6), dpi=120)
+    heat_map.curr_plot_2 = plt.Figure(figsize=(7, 5), dpi=120)
     heat_map.axis2 = heat_map.curr_plot_2.add_subplot(111)
-    # axis param: dist from left, bottom, width, height
-    heat_map.cbar_ax = heat_map.curr_plot.add_axes([.935, .11, .02, .77])
 
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
@@ -817,7 +847,7 @@ def main():
 
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from top of screen
-    root.geometry("2700x1000+900+900")
+    # root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
     elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, upstroke_vel, input_param, heat_map)
