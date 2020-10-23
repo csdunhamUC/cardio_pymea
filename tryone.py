@@ -590,6 +590,7 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
         heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
         mappable = heat_map.temp.get_children()[0]
         heat_map.cbar_1 = heat_map.axis1.figure.colorbar(mappable)
+        heat_map.cbar_1.ax.set_title("Time Lag (ms)", fontsize=10)
 
         heat_map.axis1.set(title="Pacemaker, Beat " + str(input_param.beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
         heat_map.curr_plot.tight_layout()
@@ -614,6 +615,7 @@ def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
         heat_map.temp_2 = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.axis2, cbar=False)
         mappable_2 = heat_map.temp_2.get_children()[0]
         heat_map.cbar_2 = heat_map.axis2.figure.colorbar(mappable_2)
+        heat_map.cbar_2.ax.set_title("uV/ms", fontsize=10)
 
         heat_map.axis2.set(title="Upstroke Velocity, Beat " + str(input_param.beat_choice_2+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
         heat_map.curr_plot_2.tight_layout()
