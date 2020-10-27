@@ -11,6 +11,7 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import pandas as pd
+import pandasgui as pgui
 import seaborn as sns
 # import os
 import time
@@ -249,7 +250,7 @@ def determine_beats(elecGUI60, raw_data, cm_beats, input_param):
         end_time = time.process_time()
         print(end_time - start_time)
         print("Plotting...")
-        elecGUI60.beat_detect_window(cm_beats)
+        elecGUI60.beat_detect_window(cm_beats, input_param)
         graph_beats(elecGUI60, cm_beats, input_param)
     except AttributeError:
         print("No data found. Please import data (.txt or .csv converted MCD file) first.")
@@ -424,6 +425,8 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
         pace_maker.param_thresh_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_thresh_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
+        pace_maker.param_dist_normalized.name = 'Pacemaker (Normalized)'
+
         print("Done.")
 
         # Finishes tabulating time for the calculation and prints the time.
@@ -522,8 +525,13 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
         upstroke_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         upstroke_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
+        # Assign name to resulting dataframe.
+        upstroke_vel.param_dist_raw.name = 'Upstroke Velocity'
+
         # Set slider value to maximum number of beats
         elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+
+        print("Done")
 
         end_time = time.process_time()
         print(end_time - start_time)
@@ -537,6 +545,7 @@ def data_print(elecGUI60, raw_data, pace_maker, input_param):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
     # by colons
     input_param.beat_choice = int(elecGUI60.mea_beat_select.get()) - 1
+    print(pace_maker.param_dist_normalized.name)
     print(ElectrodeConfig.electrode_names[0])
     print(ElectrodeConfig.electrode_names[5])
     print(input_param.beat_choice)
@@ -628,6 +637,16 @@ def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
     return
 
 
+# Doesn't work at the moment; PandasGUI doesn't like something I'm doing, and I'm not sure what the problem is.
+def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel):
+    try:
+        pm_normalized = pace_maker.param_dist_normalized
+        dVdt = upstroke_vel.param_dist_raw
+        pgui.show(pm_normalized, dVdt, settings={'block': True})
+    except(AttributeError):
+        print("Please run all of your calculations first.")
+
+
 class ElecGUI60(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, input_param, heat_map):
         tk.Frame.__init__(self, master)
@@ -650,6 +669,10 @@ class ElecGUI60(tk.Frame):
         file_menu.add_command(label="Save Heatmaps", command=None)
         file_menu.add_command(label="Print (Debug)", command=lambda: data_print(self, raw_data, pace_maker, input_param))
 
+        view_menu = tk.Menu(menu)
+        menu.add_cascade(label="View", menu=view_menu)
+        view_menu.add_command(label="View Pandas Dataframes", command=lambda: show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel))
+
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
         calc_menu.add_command(label="Beat Detect (run first)", command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
@@ -666,53 +689,17 @@ class ElecGUI60(tk.Frame):
         advanced_tools_menu.add_command(label="DBSCAN", command=None)
         advanced_tools_menu.add_command(label="PCA", command=None)
 
-
         # ############################################### Buttons #####################################################
-        self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
-        self.file_operations.grid(row=1, column=0, padx=5, pady=5, sticky="nw")
+        # self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
+        # self.file_operations.grid(row=1, column=0, padx=5, pady=5, sticky="nw")
         # self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
         #                                     command=lambda: data_import(raw_data))
         # self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
-        #
-        # # to save data; not implemented.
-        # self.save_data_button = tk.Button(self.file_operations, text="Save Data", width=15, height=3, bg="lightgreen")
-        # self.save_data_button.grid(row=1, column=0, padx=2, pady=2)
-        #
-        # # prints data from import; eventually test to specify columns and rows.
-        # self.print_data_button = tk.Button(self.file_operations, text="Print Data", width=15, height=3, bg="yellow",
-        #                                    command=lambda: data_print(self, raw_data, pace_maker, input_param))
-        # self.print_data_button.grid(row=2, column=0, padx=2, pady=2)
-        #
-        # # Invoke peak finder (beats) for data. Calls to function determine_beats, which is external to class ElecGUI60
-        # self.calc_peaks_button = tk.Button(self.file_operations, text="Find Beats", width=15, height=3, bg="orange",
-        #                                    command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
-        # self.calc_peaks_button.grid(row=3, column=0, padx=2, pady=2)
-        #
-        # # Invoke calculate pacemaker function, using data acquired from find_peaks function (contained in cm_beats)
-        # self.calc_pacemaker_button = tk.Button(self.file_operations, text="Calculate PM", width=15, height=3, bg="light coral",
-        #                                        command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
-        # self.calc_pacemaker_button.grid(row=4, column=0, padx=2, pady=2)
-        #
-        # # Invoke calculate upstroke velocity (dV/dt) function, using data from find_peaks function and raw_data.
-        # self.calc_upstroke_vel_button = tk.Button(self.file_operations, text="Calculate dV/dt", width=15, height=3, bg="tomato",
-        #                                           command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
-        # self.calc_upstroke_vel_button.grid(row=6, column=0, padx=2, pady=2)
-
-        # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
-        self.graph_beats_button = tk.Button(self.file_operations, text="Graph Beats", width=15, height=3, bg="red2",
-                                            command=lambda: graph_beats(self, cm_beats, input_param))
-        self.graph_beats_button.grid(row=7, column=0, padx=2, pady=2)
-
-        # # to generate heatmap; currently only generates for Matplotlib demo data.
-        # self.graph_heatmap_button = tk.Button(self.file_operations, text="Graph Heatmap", width=15, height=3, bg="red",
-        #                                       command=lambda: graph_heatmap(heat_map))
-        # self.graph_heatmap_button.grid(row=7, column=0, padx=2, pady=2)
-
 
         # ############################################### Entry Fields ################################################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
-        self.mea_parameters_frame = tk.Frame(self, width=1820, height=100, bg="white")
-        self.mea_parameters_frame.grid(row=0, column=0, columnspan=3, padx=5, pady=5)
+        self.mea_parameters_frame = tk.Frame(self, width=1620, height=100, bg="white")
+        self.mea_parameters_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
 
         # GUI elements in the mea_parameters_frame
@@ -772,7 +759,7 @@ class ElecGUI60(tk.Frame):
         # ############################################### Plot Frames #################################################
         # Frame and elements for pacemaker heat map plot.
         self.mea_array_frame = tk.Frame(self, width=800, height=700, bg="white")
-        self.mea_array_frame.grid(row=1, column=1, padx=5, pady=5)
+        self.mea_array_frame.grid(row=1, column=0, padx=5, pady=5)
         self.mea_array_frame.grid_propagate(False)
         self.gen_pm_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_array_frame)
         self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
@@ -784,7 +771,7 @@ class ElecGUI60(tk.Frame):
 
         # Frame and elements for dV/dt heatmap plot.
         self.mea_array_frame_2 = tk.Frame(self, width=800, height=700, bg="white")
-        self.mea_array_frame_2.grid(row=1, column=2, padx=5, pady=5)
+        self.mea_array_frame_2.grid(row=1, column=1, padx=5, pady=5)
         self.mea_array_frame_2.grid_propagate(False)
         self.gen_other_heatmaps = FigureCanvasTkAgg(heat_map.curr_plot_2, self.mea_array_frame_2)
         self.gen_other_heatmaps.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
@@ -794,21 +781,26 @@ class ElecGUI60(tk.Frame):
         self.mea_beat_select_2.bind("<ButtonRelease-1>", lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
         # print(dir(self))
 
-    def beat_detect_window(self, cm_beats):
+    def beat_detect_window(self, cm_beats, input_param):
         beat_detect = tk.Toplevel(self)
         beat_detect.title('Beat Detect Window')
         beat_detect.geometry('1250x850')
         beat_detect_frame = tk.Frame(beat_detect, width=1200, height=800, bg="white")
-        beat_detect_frame.grid(row=1, column=2, padx=5, pady=5)
+        beat_detect_frame.grid(row=0, column=0, padx=5, pady=5)
         beat_detect_frame.grid_propagate(False)
         gen_beats_fig = FigureCanvasTkAgg(cm_beats.comp_plot, beat_detect_frame)
-        gen_beats_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        gen_beats_fig.get_tk_widget().grid(row=1, column=0, padx=5, pady=5)
         # NavigationToolbar2Tk calls pack internally, conflicts with grid.  Workaround: establish in own frame,
         # use grid to place that frame in_side of the chosen parent frame.  This works because the parent frame is still
         # a descent of "root", which is the overarching parent of all of these GUI elements.
         gen_beats_toolbar_frame = tk.Frame(beat_detect)
-        gen_beats_toolbar_frame.grid(row=2, column=0, in_=beat_detect_frame)
+        gen_beats_toolbar_frame.grid(row=3, column=0, in_=beat_detect_frame)
         gen_beats_toolbar = NavigationToolbar2Tk(gen_beats_fig, gen_beats_toolbar_frame)
+
+        # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
+        graph_beats_button = tk.Button(beat_detect_frame, text="Graph Beats", width=15, height=3, bg="red2",
+                                            command=lambda: graph_beats(self, cm_beats, input_param))
+        graph_beats_button.grid(row=0, column=0, padx=2, pady=2)
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
