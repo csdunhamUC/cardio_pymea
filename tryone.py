@@ -19,7 +19,7 @@ import tkinter as tk
 from tkinter import filedialog
 from scipy.signal import find_peaks
 from scipy import stats
-
+from dis import dis
 
 #######################################################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
@@ -428,7 +428,6 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
         pace_maker.param_dist_normalized.name = 'Pacemaker (Normalized)'
 
         print("Done.")
-
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
@@ -444,9 +443,6 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
         if hasattr(upstroke_vel, 'param_dist_raw') is True:
             print("Clearing old dV/dt max data before running new calculation...")
             delattr(upstroke_vel, 'param_dist_raw')
-            delattr(upstroke_vel, 'param_prom_raw')
-            delattr(upstroke_vel, 'param_width_raw')
-            delattr(upstroke_vel, 'param_thresh_raw')
 
         # Clock the time it takes to run the calculation.
         start_time = time.process_time()
@@ -463,7 +459,7 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
             for electrode in cm_beats.dist_beats.columns:
                 if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
-                    x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1] - 1))])
+                    x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1]))])
                     x_2_2 = x_2_1 - 1
                     x_2_3 = x_2_2 - 1
                     x_2_4 = x_2_3 - 1
@@ -484,7 +480,7 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
                     y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
                     y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
                     y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
-                    y_1_5 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
+                    y_1_5 = cm_beats.y_axis.iloc[x_1_5, electrode - 1]
 
                     calc_slope_1 = (y_2_1 - y_1_1)/(x_2_1 - x_1_1)
                     calc_slope_2 = (y_2_2 - y_1_2)/(x_2_2 - x_1_2)
@@ -512,7 +508,6 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
 
                 dvdt_max.append(max(temp_slope))
                 temp_slope.clear()
-
             upstroke_vel.param_dist_raw = pd.concat([upstroke_vel.param_dist_raw, pd.Series(dvdt_max, name="Beat " + str(beat+1))], axis='columns')
             dvdt_max.clear()
 
@@ -532,12 +527,78 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
         elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
         print("Done")
-
+        # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
         graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
+
+
+def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
+    if hasattr(local_act_time, 'param_dist_raw') is True:
+        print("Clearing old LAT data before running new calculation...")
+        delattr(local_act_time, 'param_dist_raw')
+
+    # Clock the time it takes to run the calculation.
+    start_time = time.process_time()
+    print("Calculating LAT per beat.")
+
+    local_act_time.param_dist_raw = pd.DataFrame()
+
+    temp_slope = []
+    temp_index = []
+    local_at = [0]*len(cm_beats.dist_beats.columns)
+
+    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+        for electrode in cm_beats.dist_beats.columns:
+            if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
+                x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1]))])
+                x_2_2 = x_2_1 + 1
+                x_2_3 = x_2_2 + 1
+                x_2_4 = x_2_3 + 1
+                x_2_5 = x_2_4 + 1
+
+                x_1_1 = x_2_1 + 1
+                x_1_2 = x_2_2 + 1
+                x_1_3 = x_2_3 + 1
+                x_1_4 = x_2_4 + 1
+                x_1_5 = x_2_5 + 1
+
+                y_2_1 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
+                y_1_1 = cm_beats.y_axis.iloc[x_1_1, electrode - 1]
+                y_2_2 = cm_beats.y_axis.iloc[x_2_2, electrode - 1]
+                y_1_2 = cm_beats.y_axis.iloc[x_1_2, electrode - 1]
+                y_2_3 = cm_beats.y_axis.iloc[x_2_3, electrode - 1]
+                y_1_3 = cm_beats.y_axis.iloc[x_1_3, electrode - 1]
+                y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
+                y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
+                y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
+                y_1_5 = cm_beats.y_axis.iloc[x_1_5, electrode - 1]
+
+                calc_slope_1 = (y_2_1 - y_1_1) / (x_2_1 - x_1_1)
+                calc_slope_2 = (y_2_2 - y_1_2) / (x_2_2 - x_1_2)
+                calc_slope_3 = (y_2_3 - y_1_3) / (x_2_3 - x_1_3)
+                calc_slope_4 = (y_2_4 - y_1_4) / (x_2_4 - x_1_4)
+                calc_slope_5 = (y_2_5 - y_1_5) / (x_2_5 - x_1_5)
+                temp_index.extend([x_2_1, x_2_2, x_2_3, x_2_4, x_2_5])
+                temp_slope.extend([calc_slope_1, calc_slope_2, calc_slope_3, calc_slope_4, calc_slope_5])
+            else:
+                temp_index.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
+                temp_slope.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
+
+            # print(min(temp_slope))
+            # print(temp_slope.index(min(temp_slope)))
+            local_at[electrode-1] = temp_index[temp_slope.index(min(temp_slope))]
+            temp_index.clear()
+            temp_slope.clear()
+        local_act_time.param_dist_raw = pd.concat([local_act_time.param_dist_raw, pd.Series(local_at, name="Beat " + str(beat+1))], axis='columns')
+
+    print("Done")
+    # Finishes tabulating time for the calculation and prints the time.
+    end_time = time.process_time()
+    print(end_time - start_time)
+
 
 
 # Usually just for debugging, a function that prints out values upon button press.
@@ -549,6 +610,10 @@ def data_print(elecGUI60, raw_data, pace_maker, input_param):
     print(ElectrodeConfig.electrode_names[0])
     print(ElectrodeConfig.electrode_names[5])
     print(input_param.beat_choice)
+
+
+def time_test():
+    dis(calculate_lat)
 
 
 # Generates heatmap based on matplotlib example from website.
@@ -648,7 +713,7 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel):
 
 
 class ElecGUI60(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, input_param, heat_map):
+    def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, input_param, heat_map):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
@@ -678,11 +743,12 @@ class ElecGUI60(tk.Frame):
         calc_menu.add_command(label="Beat Detect (run first)", command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         calc_menu.add_command(label="Pacemaker", command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
         calc_menu.add_command(label="Upstroke Velocity", command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
-        calc_menu.add_command(label="Local Activ. Time", command=None)
+        calc_menu.add_command(label="Local Activation Time", command=lambda: calculate_lat(self, cm_beats, local_act_time, heat_map, input_param))
         calc_menu.add_command(label="Conduction Velocity", command=None)
 
         advanced_tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)
+        advanced_tools_menu.add_command(label="Test Efficiency", command=lambda: time_test())
         advanced_tools_menu.add_command(label="Statistics", command=None)
         advanced_tools_menu.add_command(label="K-Means Clustering", command=None)
         advanced_tools_menu.add_command(label="t-SNE", command=None)
@@ -850,6 +916,7 @@ def main():
     cm_beats = BeatAmplitudes()
     pace_maker = PacemakerData()
     upstroke_vel = UpstrokeVelData()
+    local_act_time = LocalATData()
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
 
@@ -870,7 +937,7 @@ def main():
     # root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, upstroke_vel, input_param, heat_map)
+    elecGUI60 = ElecGUI60(root, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, input_param, heat_map)
     # print(vars(ElecGUI60))
     # print(dir(elecGUI60))
     # print(hasattr(elecGUI60, "elec_to_plot_entry"))
