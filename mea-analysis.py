@@ -538,86 +538,89 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
 
 
 def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
-    if hasattr(local_act_time, 'param_dist_raw') is True:
-        print("Clearing old LAT data before running new calculation...")
-        delattr(local_act_time, 'param_dist_raw')
+    try:
+        if hasattr(local_act_time, 'param_dist_raw') is True:
+            print("Clearing old LAT data before running new calculation...")
+            delattr(local_act_time, 'param_dist_raw')
 
-    # Clock the time it takes to run the calculation.
-    start_time = time.process_time()
-    print("Calculating LAT per beat.")
+        # Clock the time it takes to run the calculation.
+        start_time = time.process_time()
+        print("Calculating LAT per beat.")
 
-    local_act_time.param_dist_raw = pd.DataFrame()
-    temp_slope = []
-    temp_index = []
-    local_at = [0]*len(cm_beats.dist_beats.columns)
+        local_act_time.param_dist_raw = pd.DataFrame()
+        temp_slope = []
+        temp_index = []
+        local_at = [0]*len(cm_beats.dist_beats.columns)
 
-    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-        for electrode in cm_beats.dist_beats.columns:
-            if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
-                x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1]))])
-                x_2_2 = x_2_1 + 1
-                x_2_3 = x_2_2 + 1
-                x_2_4 = x_2_3 + 1
-                x_2_5 = x_2_4 + 1
+        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+            for electrode in cm_beats.dist_beats.columns:
+                if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
+                    x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1]))])
+                    x_2_2 = x_2_1 + 1
+                    x_2_3 = x_2_2 + 1
+                    x_2_4 = x_2_3 + 1
+                    x_2_5 = x_2_4 + 1
 
-                x_1_1 = x_2_1 + 1
-                x_1_2 = x_2_2 + 1
-                x_1_3 = x_2_3 + 1
-                x_1_4 = x_2_4 + 1
-                x_1_5 = x_2_5 + 1
+                    x_1_1 = x_2_1 + 1
+                    x_1_2 = x_2_2 + 1
+                    x_1_3 = x_2_3 + 1
+                    x_1_4 = x_2_4 + 1
+                    x_1_5 = x_2_5 + 1
 
-                y_2_1 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
-                y_1_1 = cm_beats.y_axis.iloc[x_1_1, electrode - 1]
-                y_2_2 = cm_beats.y_axis.iloc[x_2_2, electrode - 1]
-                y_1_2 = cm_beats.y_axis.iloc[x_1_2, electrode - 1]
-                y_2_3 = cm_beats.y_axis.iloc[x_2_3, electrode - 1]
-                y_1_3 = cm_beats.y_axis.iloc[x_1_3, electrode - 1]
-                y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
-                y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
-                y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
-                y_1_5 = cm_beats.y_axis.iloc[x_1_5, electrode - 1]
+                    y_2_1 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
+                    y_1_1 = cm_beats.y_axis.iloc[x_1_1, electrode - 1]
+                    y_2_2 = cm_beats.y_axis.iloc[x_2_2, electrode - 1]
+                    y_1_2 = cm_beats.y_axis.iloc[x_1_2, electrode - 1]
+                    y_2_3 = cm_beats.y_axis.iloc[x_2_3, electrode - 1]
+                    y_1_3 = cm_beats.y_axis.iloc[x_1_3, electrode - 1]
+                    y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
+                    y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
+                    y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
+                    y_1_5 = cm_beats.y_axis.iloc[x_1_5, electrode - 1]
 
-                calc_slope_1 = (y_2_1 - y_1_1) / (x_2_1 - x_1_1)
-                calc_slope_2 = (y_2_2 - y_1_2) / (x_2_2 - x_1_2)
-                calc_slope_3 = (y_2_3 - y_1_3) / (x_2_3 - x_1_3)
-                calc_slope_4 = (y_2_4 - y_1_4) / (x_2_4 - x_1_4)
-                calc_slope_5 = (y_2_5 - y_1_5) / (x_2_5 - x_1_5)
-                temp_index.extend([x_2_1, x_2_2, x_2_3, x_2_4, x_2_5])
-                temp_slope.extend([calc_slope_1, calc_slope_2, calc_slope_3, calc_slope_4, calc_slope_5])
-            else:
-                temp_index.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
-                temp_slope.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
+                    calc_slope_1 = (y_2_1 - y_1_1) / (x_2_1 - x_1_1)
+                    calc_slope_2 = (y_2_2 - y_1_2) / (x_2_2 - x_1_2)
+                    calc_slope_3 = (y_2_3 - y_1_3) / (x_2_3 - x_1_3)
+                    calc_slope_4 = (y_2_4 - y_1_4) / (x_2_4 - x_1_4)
+                    calc_slope_5 = (y_2_5 - y_1_5) / (x_2_5 - x_1_5)
+                    temp_index.extend([x_2_1, x_2_2, x_2_3, x_2_4, x_2_5])
+                    temp_slope.extend([calc_slope_1, calc_slope_2, calc_slope_3, calc_slope_4, calc_slope_5])
+                else:
+                    temp_index.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
+                    temp_slope.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
 
-            local_at[electrode-1] = temp_index[temp_slope.index(min(temp_slope))]
-            temp_index.clear()
-            temp_slope.clear()
+                local_at[electrode-1] = temp_index[temp_slope.index(min(temp_slope))]
+                temp_index.clear()
+                temp_slope.clear()
 
-        local_act_time.param_dist_raw = pd.concat([local_act_time.param_dist_raw, pd.Series(local_at, name="Beat " + str(beat+1))], axis='columns')
+            local_act_time.param_dist_raw = pd.concat([local_act_time.param_dist_raw, pd.Series(local_at, name="Beat " + str(beat+1))], axis='columns')
 
-    local_act_time.param_dist_normalized = local_act_time.param_dist_raw.sub(local_act_time.param_dist_raw.min(axis=0), axis=1)
-    # Find maximum time lag, LAT version (interval)
-    local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
+        local_act_time.param_dist_normalized = local_act_time.param_dist_raw.sub(local_act_time.param_dist_raw.min(axis=0), axis=1)
+        # Find maximum time lag, LAT version (interval)
+        local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
 
-    local_act_time.final_dist_beat_count = []
-    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-        local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
+        local_act_time.final_dist_beat_count = []
+        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+            local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
 
-    local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
-    local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-    local_act_time.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-    local_act_time.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
+        local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        local_act_time.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        local_act_time.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
-    # Assign name to resulting dataframe.
-    local_act_time.param_dist_normalized.name = 'Upstroke Velocity'
+        # Assign name to resulting dataframe.
+        local_act_time.param_dist_normalized.name = 'Upstroke Velocity'
 
-    # Set slider value to maximum number of beats
-    elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        # Set slider value to maximum number of beats
+        elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
-    print("Done")
-    # Finishes tabulating time for the calculation and prints the time.
-    end_time = time.process_time()
-    print(end_time - start_time)
-    calculate_distances(local_act_time)
+        print("Done")
+        # Finishes tabulating time for the calculation and prints the time.
+        end_time = time.process_time()
+        print(end_time - start_time)
+        calculate_distances(local_act_time)
+    except AttributeError:
+        print("Please use Find Peaks first.")
 
 
 # Function that calculates distances from the minimum electrode for each beat.  Values for use in conduction velocity.
@@ -697,7 +700,6 @@ def graph_pacemaker(elecGUI60, heat_map, pace_maker, input_param):
         input_param.beat_choice = int(elecGUI60.mea_beat_select.get()) - 1
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
-        # pm_values = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Beat 1')
         heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.beat_choice])
 
         heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
@@ -747,7 +749,8 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time
         pm_normalized = pace_maker.param_dist_normalized
         dVdt_normalized = upstroke_vel.param_dist_normalized
         lat_normalized = local_act_time.param_dist_normalized
-        pgui.show(pm_normalized, dVdt_normalized, lat_normalized, settings={'block': True})
+        lat_distances = local_act_time.distance_from_min
+        pgui.show(pm_normalized, dVdt_normalized, lat_normalized, lat_distances, settings={'block': True})
     except(AttributeError):
         print("Please run all of your calculations first.")
 
