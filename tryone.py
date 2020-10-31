@@ -7,16 +7,15 @@
 # Second issue: tkinter vs Tkinter
 
 import numpy as np
+from math import sqrt
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import pandas as pd
 import pandasgui as pgui
 import seaborn as sns
 # import os
 import time
 import tkinter as tk
-from tkinter import filedialog
 from scipy.signal import find_peaks
 from scipy import stats
 from dis import dis
@@ -114,7 +113,7 @@ class ElectrodeConfig:
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
 def data_import(raw_data):
-    data_filename = filedialog.askopenfilename(initialdir="/", title="Select file",
+    data_filename = tk.filedialog.askopenfilename(initialdir="/", title="Select file",
                                                filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 
     start_time = time.process_time()
@@ -415,13 +414,13 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
         # Insert electrode coordinates X,Y (in micrometers) as columns after electrode identifier.
         pace_maker.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
+        # Repeat for prominence parameter.
         pace_maker.param_prom_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_prom_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
+        # Repeat for width parameter.
         pace_maker.param_width_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_width_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
+        # Repeat for threshold parameter.
         pace_maker.param_thresh_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
         pace_maker.param_thresh_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
@@ -452,7 +451,6 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
         upstroke_vel.param_prom_raw = pd.DataFrame()
         upstroke_vel.param_width_raw = pd.DataFrame()
         upstroke_vel.param_thresh_raw = pd.DataFrame()
-
         temp_slope = []
         dvdt_max = []
 
@@ -511,17 +509,21 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
             upstroke_vel.param_dist_raw = pd.concat([upstroke_vel.param_dist_raw, pd.Series(dvdt_max, name="Beat " + str(beat+1))], axis='columns')
             dvdt_max.clear()
 
+        upstroke_vel.param_dist_normalized = upstroke_vel.param_dist_raw.sub(upstroke_vel.param_dist_raw.min(axis=0), axis=1)
+        # Find maximum upstroke velocity
+        upstroke_vel.param_dist_normalized_max = upstroke_vel.param_dist_normalized.max().max()
+
         upstroke_vel.final_dist_beat_count = []
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
             upstroke_vel.final_dist_beat_count.append('Beat ' + str(beat + 1))
 
-        upstroke_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
-        upstroke_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        upstroke_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        upstroke_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        upstroke_vel.param_dist_normalized.index = ElectrodeConfig.electrode_names
+        upstroke_vel.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        upstroke_vel.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        upstroke_vel.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
         # Assign name to resulting dataframe.
-        upstroke_vel.param_dist_raw.name = 'Upstroke Velocity'
+        upstroke_vel.param_dist_normalized.name = 'Upstroke Velocity'
 
         # Set slider value to maximum number of beats
         elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
@@ -545,7 +547,6 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
     print("Calculating LAT per beat.")
 
     local_act_time.param_dist_raw = pd.DataFrame()
-
     temp_slope = []
     temp_index = []
     local_at = [0]*len(cm_beats.dist_beats.columns)
@@ -587,18 +588,56 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
                 temp_index.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
                 temp_slope.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
 
-            # print(min(temp_slope))
-            # print(temp_slope.index(min(temp_slope)))
             local_at[electrode-1] = temp_index[temp_slope.index(min(temp_slope))]
             temp_index.clear()
             temp_slope.clear()
+
         local_act_time.param_dist_raw = pd.concat([local_act_time.param_dist_raw, pd.Series(local_at, name="Beat " + str(beat+1))], axis='columns')
+
+    local_act_time.param_dist_normalized = local_act_time.param_dist_raw.sub(local_act_time.param_dist_raw.min(axis=0), axis=1)
+    # Find maximum time lag, LAT version (interval)
+    local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
+
+    local_act_time.final_dist_beat_count = []
+    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+        local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
+
+    local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
+    local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+    local_act_time.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+    local_act_time.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+
+    # Assign name to resulting dataframe.
+    local_act_time.param_dist_normalized.name = 'Upstroke Velocity'
+
+    # Set slider value to maximum number of beats
+    elecGUI60.mea_beat_select_2.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
     print("Done")
     # Finishes tabulating time for the calculation and prints the time.
     end_time = time.process_time()
     print(end_time - start_time)
+    calculate_distances(local_act_time)
 
+
+# Function that calculates distances from the minimum electrode for each beat.  Values for use in conduction velocity.
+def calculate_distances(local_act_time):
+    start_time = time.process_time()
+    print("Calculating distances from electrode minimum, per beat.")
+
+    calc_dist_from_min = [0]*len(local_act_time.final_dist_beat_count)
+
+    for num, beat in enumerate(local_act_time.final_dist_beat_count):
+        min_beat_location = local_act_time.param_dist_normalized[[beat]].idxmin()
+        min_coords = np.array([local_act_time.param_dist_normalized.loc[min_beat_location[0], 'X'],
+                              local_act_time.param_dist_normalized.loc[min_beat_location[0], 'Y']])
+        calc_dist_from_min[num] = ((local_act_time.param_dist_normalized[['X', 'Y']] - min_coords).pow(2).sum(1).pow(0.5))
+
+    local_act_time.distance_from_min = pd.DataFrame(calc_dist_from_min, index=local_act_time.final_dist_beat_count).T
+
+    print("Done.")
+    end_time = time.process_time()
+    print(end_time - start_time)
 
 
 # Usually just for debugging, a function that prints out values upon button press.
@@ -683,10 +722,10 @@ def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
         heat_map.axis2.cla()
         input_param.beat_choice_2 = int(elecGUI60.mea_beat_select_2.get()) - 1
 
-        electrode_names_2 = upstroke_vel.param_dist_raw.pivot(index='Y', columns='X', values='Electrode')
-        heatmap_pivot_table_2 = upstroke_vel.param_dist_raw.pivot(index='Y', columns='X', values=upstroke_vel.final_dist_beat_count[input_param.beat_choice_2])
+        electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
+        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', columns='X', values=upstroke_vel.final_dist_beat_count[input_param.beat_choice_2])
 
-        heat_map.temp_2 = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.axis2, cbar=False)
+        heat_map.temp_2 = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.axis2, vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
         mappable_2 = heat_map.temp_2.get_children()[0]
         heat_map.cbar_2 = heat_map.axis2.figure.colorbar(mappable_2)
         heat_map.cbar_2.ax.set_title("uV/ms", fontsize=10)
@@ -703,11 +742,12 @@ def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
 
 
 # Doesn't work at the moment; PandasGUI doesn't like something I'm doing, and I'm not sure what the problem is.
-def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel):
+def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time):
     try:
         pm_normalized = pace_maker.param_dist_normalized
-        dVdt = upstroke_vel.param_dist_raw
-        pgui.show(pm_normalized, dVdt, settings={'block': True})
+        dVdt_normalized = upstroke_vel.param_dist_normalized
+        lat_normalized = local_act_time.param_dist_normalized
+        pgui.show(pm_normalized, dVdt_normalized, lat_normalized, settings={'block': True})
     except(AttributeError):
         print("Please run all of your calculations first.")
 
@@ -736,7 +776,7 @@ class ElecGUI60(tk.Frame):
 
         view_menu = tk.Menu(menu)
         menu.add_cascade(label="View", menu=view_menu)
-        view_menu.add_command(label="View Pandas Dataframes", command=lambda: show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel))
+        view_menu.add_command(label="View Pandas Dataframes", command=lambda: show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time))
 
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
