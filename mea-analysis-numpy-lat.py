@@ -546,19 +546,14 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
         start_time = time.process_time()
         print("Calculating LAT per beat.")
 
-        # local_act_time.param_dist_raw = pd.DataFrame()
         num_of_electrodes = len(cm_beats.dist_beats.columns)
         num_of_beats = int(cm_beats.beat_count_dist_mode[0])
         temp_slope = np.zeros((num_of_electrodes, 5))
         temp_index = np.zeros((num_of_electrodes, 5))
         temp_local_at = np.zeros(num_of_electrodes)
-        # temp_slope = [0]
-        # temp_index = [0]
         x_values = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
         y_values = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-        # local_at = [0]*len(cm_beats.dist_beats.columns)
         local_at = np.zeros((num_of_beats, num_of_electrodes))
-        # local_at = [0] * int(cm_beats.beat_count_dist_mode[0])
 
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
             for electrode in cm_beats.dist_beats.columns:
@@ -592,26 +587,13 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
 
                     calc_slope = np.divide([y_values[0]-y_values[1]], [x_values[0]-x_values[1]])
 
-                    # calc_slope_1 = (y_2_1 - y_1_1) / (x_2_1 - x_1_1)
-                    # calc_slope_2 = (y_2_2 - y_1_2) / (x_2_2 - x_1_2)
-                    # calc_slope_3 = (y_2_3 - y_1_3) / (x_2_3 - x_1_3)
-                    # calc_slope_4 = (y_2_4 - y_1_4) / (x_2_4 - x_1_4)
-                    # calc_slope_5 = (y_2_5 - y_1_5) / (x_2_5 - x_1_5)
-
-                    # temp_index.extend([x_2_1, x_2_2, x_2_3, x_2_4, x_2_5])
                     temp_index[electrode-1] = x_values[0]
-                    # temp_slope.extend([calc_slope_1, calc_slope_2, calc_slope_3, calc_slope_4, calc_slope_5])
                     temp_slope[electrode-1] = calc_slope
                 else:
-                    # temp_index.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
-                    # temp_slope.extend([float("NaN"), float("NaN"), float("NaN"), float("NaN"), float("NaN")])
                     temp_index[electrode-1] = [np.nan, np.nan, np.nan, np.nan, np.nan]
                     temp_slope[electrode-1] = [np.nan, np.nan, np.nan, np.nan, np.nan]
-                # local_at[electrode-1] = temp_index[temp_slope.index(min(temp_slope))]
                 temp_local_at[electrode-1] = temp_index[electrode-1, np.argmin(temp_slope[electrode-1])]
-                # temp_local_at[electrode-1] = temp_index[electrode - 1][temp_slope[electrode - 1].index(min(temp_slope[electrode - 1]))]
-        #         temp_index.clear()
-        #         temp_slope.clear()
+
             local_at[beat] = temp_local_at
 
         local_act_time.final_dist_beat_count = []
@@ -619,17 +601,10 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
             local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
 
         local_act_time.param_dist_raw = pd.DataFrame(local_at, index=local_act_time.final_dist_beat_count).T
-
-        #     local_act_time.param_dist_raw = pd.concat([local_act_time.param_dist_raw, pd.Series(local_at, name="Beat " + str(beat+1))], axis='columns')
         local_act_time.param_dist_normalized = local_act_time.param_dist_raw.sub(local_act_time.param_dist_raw.min(axis=0), axis=1)
-
 
         # Find maximum time lag, LAT version (interval)
         local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
-
-        # local_act_time.final_dist_beat_count = []
-        # for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-        #     local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
 
         local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
         local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
@@ -775,7 +750,6 @@ def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
     return
 
 
-# Doesn't work at the moment; PandasGUI doesn't like something I'm doing, and I'm not sure what the problem is.
 def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time):
     try:
         pm_normalized = pace_maker.param_dist_normalized

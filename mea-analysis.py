@@ -549,8 +549,6 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
         local_act_time.param_dist_raw = pd.DataFrame()
         temp_slope = []
         temp_index = []
-        x_values = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
-        y_values = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
         local_at = [0]*len(cm_beats.dist_beats.columns)
 
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
@@ -567,8 +565,6 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
                     x_1_3 = x_2_3 + 1
                     x_1_4 = x_2_4 + 1
                     x_1_5 = x_2_5 + 1
-
-                    # x_values[0:] =
 
                     y_2_1 = cm_beats.y_axis.iat[x_2_1, electrode - 1]
                     y_2_2 = cm_beats.y_axis.iat[x_2_2, electrode - 1]
@@ -751,7 +747,6 @@ def graph_upstroke(elecGUI60, heat_map, upstroke_vel, input_param):
     return
 
 
-# Doesn't work at the moment; PandasGUI doesn't like something I'm doing, and I'm not sure what the problem is.
 def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time):
     try:
         pm_normalized = pace_maker.param_dist_normalized
