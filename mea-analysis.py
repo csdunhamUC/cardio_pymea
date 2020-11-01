@@ -7,7 +7,6 @@
 # Second issue: tkinter vs Tkinter
 
 import numpy as np
-from math import sqrt
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import pandas as pd
@@ -378,7 +377,6 @@ def calculate_pacemaker(elecGUI60, cm_beats, pace_maker, heat_map, input_param):
         # Generate index (row) labels, as a list, for assignment to dataframe, prior to transpose.
         dist_new_index = []
         for row in pace_maker.param_dist_normalized.index:
-            # curr_beat = 'Beat' + str(row+1)
             dist_new_index.append('Beat ' + str(row+1))
 
         prom_new_index = []
@@ -457,7 +455,7 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
             for electrode in cm_beats.dist_beats.columns:
                 if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
-                    x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1]))])
+                    x_2_1 = int(cm_beats.x_axis.iat[int((cm_beats.dist_beats.iat[beat, electrode - 1]))])
                     x_2_2 = x_2_1 - 1
                     x_2_3 = x_2_2 - 1
                     x_2_4 = x_2_3 - 1
@@ -469,16 +467,17 @@ def calculate_upstroke_vel(elecGUI60, cm_beats, upstroke_vel, heat_map, input_pa
                     x_1_4 = x_2_4 - 1
                     x_1_5 = x_2_5 - 1
 
-                    y_2_1 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
-                    y_1_1 = cm_beats.y_axis.iloc[x_1_1, electrode - 1]
-                    y_2_2 = cm_beats.y_axis.iloc[x_2_2, electrode - 1]
-                    y_1_2 = cm_beats.y_axis.iloc[x_1_2, electrode - 1]
-                    y_2_3 = cm_beats.y_axis.iloc[x_2_3, electrode - 1]
-                    y_1_3 = cm_beats.y_axis.iloc[x_1_3, electrode - 1]
-                    y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
-                    y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
-                    y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
-                    y_1_5 = cm_beats.y_axis.iloc[x_1_5, electrode - 1]
+                    y_2_1 = cm_beats.y_axis.iat[x_2_1, electrode - 1]
+                    y_2_2 = cm_beats.y_axis.iat[x_2_2, electrode - 1]
+                    y_2_3 = cm_beats.y_axis.iat[x_2_3, electrode - 1]
+                    y_2_4 = cm_beats.y_axis.iat[x_2_4, electrode - 1]
+                    y_2_5 = cm_beats.y_axis.iat[x_2_5, electrode - 1]
+
+                    y_1_1 = cm_beats.y_axis.iat[x_1_1, electrode - 1]
+                    y_1_2 = cm_beats.y_axis.iat[x_1_2, electrode - 1]
+                    y_1_3 = cm_beats.y_axis.iat[x_1_3, electrode - 1]
+                    y_1_4 = cm_beats.y_axis.iat[x_1_4, electrode - 1]
+                    y_1_5 = cm_beats.y_axis.iat[x_1_5, electrode - 1]
 
                     calc_slope_1 = (y_2_1 - y_1_1)/(x_2_1 - x_1_1)
                     calc_slope_2 = (y_2_2 - y_1_2)/(x_2_2 - x_1_2)
@@ -550,12 +549,14 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
         local_act_time.param_dist_raw = pd.DataFrame()
         temp_slope = []
         temp_index = []
+        x_values = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
+        y_values = np.array([[0, 0, 0, 0, 0], [0, 0, 0, 0, 0]])
         local_at = [0]*len(cm_beats.dist_beats.columns)
 
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
             for electrode in cm_beats.dist_beats.columns:
                 if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, electrode - 1].dropna()):
-                    x_2_1 = int(cm_beats.x_axis.iloc[int((cm_beats.dist_beats.iloc[beat, electrode - 1]))])
+                    x_2_1 = int(cm_beats.x_axis.iat[int((cm_beats.dist_beats.iat[beat, electrode - 1]))])
                     x_2_2 = x_2_1 + 1
                     x_2_3 = x_2_2 + 1
                     x_2_4 = x_2_3 + 1
@@ -567,16 +568,19 @@ def calculate_lat(elecGUI60, cm_beats, local_act_time, heat_map, input_param):
                     x_1_4 = x_2_4 + 1
                     x_1_5 = x_2_5 + 1
 
-                    y_2_1 = cm_beats.y_axis.iloc[x_2_1, electrode - 1]
-                    y_1_1 = cm_beats.y_axis.iloc[x_1_1, electrode - 1]
-                    y_2_2 = cm_beats.y_axis.iloc[x_2_2, electrode - 1]
-                    y_1_2 = cm_beats.y_axis.iloc[x_1_2, electrode - 1]
-                    y_2_3 = cm_beats.y_axis.iloc[x_2_3, electrode - 1]
-                    y_1_3 = cm_beats.y_axis.iloc[x_1_3, electrode - 1]
-                    y_2_4 = cm_beats.y_axis.iloc[x_2_4, electrode - 1]
-                    y_1_4 = cm_beats.y_axis.iloc[x_1_4, electrode - 1]
-                    y_2_5 = cm_beats.y_axis.iloc[x_2_5, electrode - 1]
-                    y_1_5 = cm_beats.y_axis.iloc[x_1_5, electrode - 1]
+                    # x_values[0:] =
+
+                    y_2_1 = cm_beats.y_axis.iat[x_2_1, electrode - 1]
+                    y_2_2 = cm_beats.y_axis.iat[x_2_2, electrode - 1]
+                    y_2_3 = cm_beats.y_axis.iat[x_2_3, electrode - 1]
+                    y_2_4 = cm_beats.y_axis.iat[x_2_4, electrode - 1]
+                    y_2_5 = cm_beats.y_axis.iat[x_2_5, electrode - 1]
+
+                    y_1_1 = cm_beats.y_axis.iat[x_1_1, electrode - 1]
+                    y_1_2 = cm_beats.y_axis.iat[x_1_2, electrode - 1]
+                    y_1_3 = cm_beats.y_axis.iat[x_1_3, electrode - 1]
+                    y_1_4 = cm_beats.y_axis.iat[x_1_4, electrode - 1]
+                    y_1_5 = cm_beats.y_axis.iat[x_1_5, electrode - 1]
 
                     calc_slope_1 = (y_2_1 - y_1_1) / (x_2_1 - x_1_1)
                     calc_slope_2 = (y_2_2 - y_1_2) / (x_2_2 - x_1_2)
