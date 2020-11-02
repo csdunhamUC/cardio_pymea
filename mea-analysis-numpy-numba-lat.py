@@ -603,7 +603,7 @@ def lat_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_
     for beat in range(mode_of_beats):
         for electrode in range(num_of_electrodes):
             if mode_of_beats == per_electrode_mode_of_beats[electrode]:
-                x_2_1 = cm_beats_dist_beats_as_array[beat, electrode] + 1
+                x_2_1 = cm_beats_dist_beats_as_array[beat, electrode]
                 x_2_2 = x_2_1 + 1
                 x_2_3 = x_2_2 + 1
                 x_2_4 = x_2_3 + 1
@@ -635,7 +635,6 @@ def lat_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_
                 y_diff = y_values[0, :] - y_values[1, :]
                 x_diff = x_values[0, :] - x_values[1, :]
 
-                # calc_slope = np.divide([y_values[0, :] - y_values[1, :]], [x_values[0, :] - x_values[1, :]])
                 calc_slope = np.divide(y_diff, x_diff)
 
                 temp_index[electrode] = x_values[0]
