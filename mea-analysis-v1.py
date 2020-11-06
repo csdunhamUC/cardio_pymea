@@ -803,7 +803,7 @@ class ElecGUI60(tk.Frame):
         # organize accordingly.  If you have 2 widgets you can only have 2 rows or 2 columns.
         # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change mouse-over color effects.
         self.grid()
-        self.winfo_toplevel().title("Elec GUI 60 - Prototype")
+        self.winfo_toplevel().title("MEA Analysis - v1")
 
         # ############################################### Menu ########################################################
         self.master = master
