@@ -430,7 +430,7 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param)
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
-        graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param)
+        # graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -438,7 +438,7 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param)
 # For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
 # Calculates upstroke velocity (dV/dt)
 def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_param):
-    # try:
+    try:
         if hasattr(upstroke_vel, 'param_dist_raw') is True:
             print("Clearing old dV/dt max data before running new calculation...")
             delattr(upstroke_vel, 'param_dist_raw')
@@ -485,9 +485,9 @@ def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_p
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
-        graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param)
-    # except AttributeError:
-    #     print("Please use Find Peaks first.")
+        # graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param)
+    except AttributeError:
+        print("Please use Find Peaks first.")
 
 
 @njit
@@ -596,7 +596,7 @@ def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param):
         end_time = time.process_time()
         print(end_time - start_time)
         calculate_distances(local_act_time, ElectrodeConfig)
-        graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param)
+        # graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -685,20 +685,26 @@ def calculate_distances(local_act_time, ElectrodeConfig):
 
 
 def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, heat_map, input_param):
-    start_time = time.process_time()
-    conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(local_act_time.param_dist_normalized.loc[:, local_act_time.final_dist_beat_count])
-    # Need to add a placeholder value for the minimum channel; currently gives NaN as a consequence of division by zero.
-    # Want/need to display the origin for heat map purposes.  Question is how to do this efficiently.
+    try:
+        if hasattr(conduction_vel, 'param_dist_raw') is True:
+            print("Clearing old CV data before running new calculation...")
+            delattr(conduction_vel, 'param_dist_raw')
+        start_time = time.process_time()
+        conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(local_act_time.param_dist_normalized.loc[:, local_act_time.final_dist_beat_count])
+        # Need to add a placeholder value for the minimum channel; currently gives NaN as a consequence of division by zero.
+        # Want/need to display the origin for heat map purposes.  Question is how to do this efficiently.
 
-    conduction_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
-    conduction_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-    conduction_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-    conduction_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        conduction_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
+        conduction_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        conduction_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+        conduction_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
 
-    end_time = time.process_time()
-    print("CV calculation complete.")
-    print(end_time - start_time)
-    graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, input_param)
+        end_time = time.process_time()
+        print("CV calculation complete.")
+        print(end_time - start_time)
+        # graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, input_param)
+    except AttributeError:
+        print("Please calculate local activation time first.")
 
 
 # Usually just for debugging, a function that prints out values upon button press.
@@ -751,7 +757,7 @@ def time_test():
 # slider on the main window.  It generates the heat maps observed in the main window of the program. The code
 # is largely identical with the individual functions, which (will soon) open their own windows for each calculation.
 def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param):
-    # Pacemaker
+    # ------------------------------------------------- Pacemaker ------------------------------------------------------
     if hasattr(heat_map, 'cbar_1') is True:
         heat_map.cbar_1.remove()
 
@@ -839,29 +845,29 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
 # Construct heatmap from previously calculated pacemaker data.  Function is called each time the slider is moved to
 # select a new beat.
 def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
-    try:
-        if hasattr(heat_map, 'cbar_1') is True:
-            heat_map.cbar_1.remove()
+    # try:
+        if hasattr(heat_map, 'pm_solo_cbar') is True:
+            heat_map.pm_solo_cbar.remove()
 
-        heat_map.axis1.cla()
-        input_param.beat_choice = int(elecGUI120.mea_beat_select.get()) - 1
+        heat_map.pm_solo_axis.cla()
+        input_param.pm_solo_beat_choice = int(elecGUI120.pm_solo_beat_select.get()) - 1
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
-        heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.beat_choice])
+        heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.pm_solo_beat_choice])
 
-        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.axis1, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
+        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.pm_solo_axis, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
         mappable = heat_map.temp.get_children()[0]
-        heat_map.cbar_1 = heat_map.axis1.figure.colorbar(mappable, ax=heat_map.axis1)
-        heat_map.cbar_1.ax.set_title("Time Lag (ms)", fontsize=10)
+        heat_map.pm_solo_cbar = heat_map.pm_solo_axis.figure.colorbar(mappable, ax=heat_map.pm_solo_axis)
+        heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        heat_map.axis1.set(title="Pacemaker, Beat " + str(input_param.beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
-        # heat_map.curr_plot.tight_layout()
-        # heat_map.curr_plot.canvas.draw()
+        heat_map.pm_solo_axis.set(title="Pacemaker, Beat " + str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.pm_solo_plot.tight_layout()
+        heat_map.pm_solo_plot.canvas.draw()
 
-    except AttributeError:
-        print("Please calculate PM first.")
-    except IndexError:
-        print("You entered a beat that does not exist.")
+    # except AttributeError:
+    #     print("Please calculate PM first.")
+    # except IndexError:
+    #     print("You entered a beat that does not exist.")
 
 
 def graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param):
@@ -979,14 +985,19 @@ class ElecGUI120(tk.Frame):
 
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
+        calc_menu.add_command(label="Beat Detect (Run First!)", command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
         calc_menu.add_command(label="Calculate All Parameters",
-                              command=lambda: [determine_beats(self, raw_data, cm_beats, input_param),
-                                               calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param),
+                              command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param),
                                                calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param),
                                                calculate_lat(self, cm_beats, local_act_time, heat_map, input_param),
-                                               calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param)])
-        calc_menu.add_command(label="Beat Detect", command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
-        calc_menu.add_command(label="Pacemaker", command=lambda: calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param))
+                                               calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param),
+                                               graph_all(self, heat_map, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param)])
+        # Add extra command for each solitary calculation that calls the appropriate graphing function.
+        # The graphing function will call the appropriate method to open the window.  This will allow for individual
+        # parameter analysis.
+        calc_menu.add_command(label="Pacemaker", command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param),
+                                                                  self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, input_param),
+                                                                  graph_pacemaker(self, heat_map, pace_maker, input_param)])
         calc_menu.add_command(label="Upstroke Velocity", command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
         calc_menu.add_command(label="Local Activation Time", command=lambda: calculate_lat(self, cm_beats, local_act_time, heat_map, input_param))
         calc_menu.add_command(label="Conduction Velocity", command=lambda: calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param))
@@ -1081,16 +1092,13 @@ class ElecGUI120(tk.Frame):
                                   lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
                                                           local_act_time, conduction_vel, input_param))
 
-        # # Frame and elements for dV/dt heatmap plot.
-        # self.mea_array_frame_2 = tk.Frame(self, width=800, height=700, bg="white")
-        # self.mea_array_frame_2.grid(row=1, column=1, padx=5, pady=5)
-        # self.mea_array_frame_2.grid_propagate(False)
-        # self.gen_other_heatmaps = FigureCanvasTkAgg(heat_map.curr_plot_2, self.mea_array_frame_2)
-        # self.gen_other_heatmaps.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        # self.mea_beat_select_2 = tk.Scale(self.mea_array_frame_2, length=200, width=15, from_=1, to=20,
-        #                                 orient="horizontal", bg="white", label="Current Beat Number")
-        # self.mea_beat_select_2.grid(row=1, column=0, padx=5, pady=5)
-        # self.mea_beat_select_2.bind("<ButtonRelease-1>", lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
+        # The following 4 lines are for the slider controls from the child windows that open when doing the individual,
+        # or solo, calculations for the respective parameter.
+        self.pm_solo_beat_select = None
+        self.dvdt_solo_beat_select = None
+        self.lat_solo_beat_select = None
+        self.cv_solo_beat_select = None
+
         # # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -1113,6 +1121,25 @@ class ElecGUI120(tk.Frame):
         graph_beats_button = tk.Button(beat_detect_frame, text="Graph Beats", width=15, height=3, bg="red2",
                                             command=lambda: graph_beats(self, cm_beats, input_param))
         graph_beats_button.grid(row=0, column=0, padx=2, pady=2)
+
+    def pacemaker_heatmap_window(self, cm_beats, pace_maker, heat_map, input_param):
+        pm_heatmap = tk.Toplevel(self)
+        pm_heatmap.title("Pacemaker Heatmap")
+        # pm_heatmap.geometry('1250x850')
+        pm_heatmap_frame = tk.Frame(pm_heatmap, width=1400, height=900, bg="white")
+        pm_heatmap_frame.grid(row=0, column=0, padx=5, pady=5)
+        pm_heatmap_frame.grid_propagate(False)
+        pm_heatmap_fig = FigureCanvasTkAgg(heat_map.pm_solo_plot, pm_heatmap_frame)
+        pm_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.pm_solo_beat_select = tk.Scale(pm_heatmap_frame, length=200, width=15, from_=1,
+                                            to=int(cm_beats.beat_count_dist_mode[0]),
+                                        orient="horizontal", bg="white", label="Current Beat Number")
+        self.pm_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        # print(dir(self))
+        self.pm_solo_beat_select.bind("<ButtonRelease-1>",
+                                  lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
+
+        # elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
@@ -1172,8 +1199,9 @@ def main():
     heat_map.axis2 = heat_map.curr_plot.add_subplot(222)
     heat_map.axis3 = heat_map.curr_plot.add_subplot(223)
     heat_map.axis4 = heat_map.curr_plot.add_subplot(224)
-    # heat_map.curr_plot_2 = plt.Figure(figsize=(7, 5), dpi=120)
-    # heat_map.axis2 = heat_map.curr_plot_2.add_subplot(111)
+
+    heat_map.pm_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
+    heat_map.pm_solo_axis = heat_map.pm_solo_plot.add_subplot(111)
 
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
