@@ -430,7 +430,6 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param)
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
-        # graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -485,7 +484,6 @@ def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_p
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
-        # graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -493,7 +491,6 @@ def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_p
 @njit
 def dvdt_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_array, cm_beats_y_axis_as_array, per_electrode_mode_of_beats):
     temp_slope = np.zeros((num_of_electrodes, 5))
-    # temp_index = np.zeros((num_of_electrodes, 5))
     temp_dvdt_max = np.zeros(num_of_electrodes)
     x_values = np.zeros((2, 5))
     y_values = np.zeros((2, 5))
@@ -535,11 +532,8 @@ def dvdt_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as
                 x_diff = x_values[0, :] - x_values[1, :]
 
                 calc_slope = np.divide(y_diff, x_diff)
-
-                # temp_index[electrode] = x_values[0]
                 temp_slope[electrode] = calc_slope
             else:
-                # temp_index[electrode] = [np.nan, np.nan, np.nan, np.nan, np.nan]
                 temp_slope[electrode] = [np.nan, np.nan, np.nan, np.nan, np.nan]
             temp_dvdt_max[electrode] = max(temp_slope[electrode])
 
@@ -596,7 +590,6 @@ def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param):
         end_time = time.process_time()
         print(end_time - start_time)
         calculate_distances(local_act_time, ElectrodeConfig)
-        # graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -845,7 +838,7 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
 # Construct heatmap from previously calculated pacemaker data.  Function is called each time the slider is moved to
 # select a new beat.
 def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
-    # try:
+    try:
         if hasattr(heat_map, 'pm_solo_cbar') is True:
             heat_map.pm_solo_cbar.remove()
 
@@ -855,8 +848,8 @@ def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
         heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', columns='X', values=pace_maker.final_dist_beat_count[input_param.pm_solo_beat_choice])
 
-        heat_map.temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.pm_solo_axis, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
-        mappable = heat_map.temp.get_children()[0]
+        heat_map.pm_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", annot=electrode_names, fmt="", ax=heat_map.pm_solo_axis, vmin=0, vmax=pace_maker.param_dist_normalized_max, cbar=False)
+        mappable = heat_map.pm_solo_temp.get_children()[0]
         heat_map.pm_solo_cbar = heat_map.pm_solo_axis.figure.colorbar(mappable, ax=heat_map.pm_solo_axis)
         heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
@@ -864,30 +857,31 @@ def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
         heat_map.pm_solo_plot.tight_layout()
         heat_map.pm_solo_plot.canvas.draw()
 
-    # except AttributeError:
-    #     print("Please calculate PM first.")
-    # except IndexError:
-    #     print("You entered a beat that does not exist.")
+    except AttributeError:
+        print("Please calculate PM first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")
 
 
 def graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param):
     try:
-        if hasattr(heat_map, 'cbar_2') is True:
-            heat_map.cbar_2.remove()
-        heat_map.axis2.cla()
-        input_param.beat_choice_2 = int(elecGUI120.mea_beat_select.get()) - 1
+        if hasattr(heat_map, 'dvdt_solo_cbar') is True:
+            heat_map.dvdt_solo_cbar.remove()
+
+        heat_map.dvdt_solo_axis.cla()
+        input_param.dvdt_solo_beat_choice = int(elecGUI120.dvdt_solo_beat_select.get()) - 1
 
         electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
-        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', columns='X', values=upstroke_vel.final_dist_beat_count[input_param.beat_choice_2])
+        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', columns='X', values=upstroke_vel.final_dist_beat_count[input_param.dvdt_solo_beat_choice])
 
-        heat_map.temp_2 = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.axis2, vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
-        mappable_2 = heat_map.temp_2.get_children()[0]
-        heat_map.cbar_2 = heat_map.axis2.figure.colorbar(mappable_2, ax=heat_map.axis2)
-        heat_map.cbar_2.ax.set_title("uV/ms", fontsize=10)
+        heat_map.dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.dvdt_solo_axis, vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
+        mappable_2 = heat_map.dvdt_solo_temp.get_children()[0]
+        heat_map.dvdt_solo_cbar = heat_map.dvdt_solo_axis.figure.colorbar(mappable_2, ax=heat_map.dvdt_solo_axis)
+        heat_map.dvdt_solo_cbar.ax.set_title("uV/ms", fontsize=10)
 
-        heat_map.axis2.set(title="Upstroke Velocity, Beat " + str(input_param.beat_choice_2+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
-        # heat_map.curr_plot.tight_layout()
-        # heat_map.curr_plot.canvas.draw()
+        heat_map.dvdt_solo_axis.set(title="Upstroke Velocity, Beat " + str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.dvdt_solo_plot.tight_layout()
+        heat_map.dvdt_solo_plot.canvas.draw()
 
     except AttributeError:
         print("Please calculate dV/dt first.")
@@ -897,22 +891,22 @@ def graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param):
 
 def graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param):
     try:
-        if hasattr(heat_map, 'cbar_3') is True:
-            heat_map.cbar_3.remove()
-        heat_map.axis3.cla()
-        input_param.beat_choice_3 = int(elecGUI120.mea_beat_select.get()) - 1
+        if hasattr(heat_map, 'lat_solo_cbar') is True:
+            heat_map.lat_solo_cbar.remove()
+        heat_map.lat_solo_axis.cla()
+        input_param.lat_solo_beat_choice = int(elecGUI120.lat_solo_beat_select.get()) - 1
 
         electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', columns='X', values='Electrode')
-        heatmap_pivot_table_3 = local_act_time.param_dist_normalized.pivot(index='Y', columns='X', values=local_act_time.final_dist_beat_count[input_param.beat_choice_3])
+        heatmap_pivot_table_3 = local_act_time.param_dist_normalized.pivot(index='Y', columns='X', values=local_act_time.final_dist_beat_count[input_param.lat_solo_beat_choice])
 
-        heat_map.temp_3 = sns.heatmap(heatmap_pivot_table_3, cmap="jet", annot=electrode_names_3, fmt="", ax=heat_map.axis3, vmax=local_act_time.param_dist_normalized_max, cbar=False)
-        mappable_3 = heat_map.temp_3.get_children()[0]
-        heat_map.cbar_3 = heat_map.axis3.figure.colorbar(mappable_3, ax=heat_map.axis3)
-        heat_map.cbar_3.ax.set_title("Time Lag (ms)", fontsize=10)
+        heat_map.lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", annot=electrode_names_3, fmt="", ax=heat_map.lat_solo_axis, vmax=local_act_time.param_dist_normalized_max, cbar=False)
+        mappable_3 = heat_map.lat_solo_temp.get_children()[0]
+        heat_map.lat_solo_cbar = heat_map.lat_solo_axis.figure.colorbar(mappable_3, ax=heat_map.lat_solo_axis)
+        heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        heat_map.axis3.set(title="Local Activation Time, Beat " + str(input_param.beat_choice_3+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
-        # heat_map.curr_plot.tight_layout()
-        # heat_map.curr_plot.canvas.draw()
+        heat_map.lat_solo_axis.set(title="Local Activation Time, Beat " + str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.lat_solo_plot.tight_layout()
+        heat_map.lat_solo_plot.canvas.draw()
 
     except AttributeError:
         print("Please calculate LAT first.")
@@ -998,8 +992,12 @@ class ElecGUI120(tk.Frame):
         calc_menu.add_command(label="Pacemaker", command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param),
                                                                   self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, input_param),
                                                                   graph_pacemaker(self, heat_map, pace_maker, input_param)])
-        calc_menu.add_command(label="Upstroke Velocity", command=lambda: calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param))
-        calc_menu.add_command(label="Local Activation Time", command=lambda: calculate_lat(self, cm_beats, local_act_time, heat_map, input_param))
+        calc_menu.add_command(label="Upstroke Velocity", command=lambda: [calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param),
+                                                                          self.dvdt_heatmap_window(cm_beats, upstroke_vel, heat_map, input_param),
+                                                                          graph_upstroke(self, heat_map, upstroke_vel, input_param)])
+        calc_menu.add_command(label="Local Activation Time", command=lambda: [calculate_lat(self, cm_beats, local_act_time, heat_map, input_param),
+                                                                              self.lat_heatmap_window(cm_beats, local_act_time, heat_map, input_param),
+                                                                              graph_local_act_time(self, heat_map, local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", command=lambda: calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param))
 
         advanced_tools_menu = tk.Menu(menu)
@@ -1125,7 +1123,6 @@ class ElecGUI120(tk.Frame):
     def pacemaker_heatmap_window(self, cm_beats, pace_maker, heat_map, input_param):
         pm_heatmap = tk.Toplevel(self)
         pm_heatmap.title("Pacemaker Heatmap")
-        # pm_heatmap.geometry('1250x850')
         pm_heatmap_frame = tk.Frame(pm_heatmap, width=1400, height=900, bg="white")
         pm_heatmap_frame.grid(row=0, column=0, padx=5, pady=5)
         pm_heatmap_frame.grid_propagate(False)
@@ -1135,11 +1132,38 @@ class ElecGUI120(tk.Frame):
                                             to=int(cm_beats.beat_count_dist_mode[0]),
                                         orient="horizontal", bg="white", label="Current Beat Number")
         self.pm_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
-        # print(dir(self))
         self.pm_solo_beat_select.bind("<ButtonRelease-1>",
                                   lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
 
-        # elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+    def dvdt_heatmap_window(self, cm_beats, upstroke_vel, heat_map, input_param):
+        dvdt_heatmap = tk.Toplevel(self)
+        dvdt_heatmap.title("Upstroke Velocity Heatmap")
+        dvdt_heatmap_frame = tk.Frame(dvdt_heatmap, width=1400, height=900, bg="white")
+        dvdt_heatmap_frame.grid(row=0, column=0, padx=5, pady=5)
+        dvdt_heatmap_frame.grid_propagate(False)
+        dvdt_heatmap_fig = FigureCanvasTkAgg(heat_map.dvdt_solo_plot, dvdt_heatmap_frame)
+        dvdt_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.dvdt_solo_beat_select = tk.Scale(dvdt_heatmap_frame, length=200, width=15, from_=1,
+                                              to=int(cm_beats.beat_count_dist_mode[0]),
+                                              orient="horizontal", bg="white", label="Current Beat Number")
+        self.dvdt_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.dvdt_solo_beat_select.bind("<ButtonRelease-1>",
+                                        lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
+
+    def lat_heatmap_window(self, cm_beats, local_act_time, heat_map, input_param):
+        lat_heatmap = tk.Toplevel(self)
+        lat_heatmap.title("Local Activation Time Heatmap")
+        lat_heatmap_frame = tk.Frame(lat_heatmap, width=1400, height=900, bg="white")
+        lat_heatmap_frame.grid(row=0, column=0, padx=5, pady=5)
+        lat_heatmap_frame.grid_propagate(False)
+        lat_heatmap_fig = FigureCanvasTkAgg(heat_map.lat_solo_plot, lat_heatmap_frame)
+        lat_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.lat_solo_beat_select = tk.Scale(lat_heatmap_frame, length=200, width=15, from_=1,
+                                              to=int(cm_beats.beat_count_dist_mode[0]),
+                                              orient="horizontal", bg="white", label="Current Beat Number")
+        self.lat_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.lat_solo_beat_select.bind("<ButtonRelease-1>",
+                                        lambda event: graph_local_act_time(self, heat_map, local_act_time, input_param))
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
@@ -1194,15 +1218,30 @@ def main():
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
 
+    # Heatmap axes for Calculate All (main window)
     heat_map.curr_plot = plt.Figure(figsize=(13, 6), dpi=120)
     heat_map.axis1 = heat_map.curr_plot.add_subplot(221)
     heat_map.axis2 = heat_map.curr_plot.add_subplot(222)
     heat_map.axis3 = heat_map.curr_plot.add_subplot(223)
     heat_map.axis4 = heat_map.curr_plot.add_subplot(224)
 
+    # Heatmap axis for only Pacemaker window
     heat_map.pm_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
     heat_map.pm_solo_axis = heat_map.pm_solo_plot.add_subplot(111)
 
+    # Heatmap axis for only Upstroke Velocity window
+    heat_map.dvdt_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
+    heat_map.dvdt_solo_axis = heat_map.dvdt_solo_plot.add_subplot(111)
+
+    # Heatmap axis for only Local Activation Time window
+    heat_map.lat_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
+    heat_map.lat_solo_axis = heat_map.lat_solo_plot.add_subplot(111)
+
+    # Heatmap axis for only Conduction Velocity window
+    heat_map.cv_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
+    heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(111)
+
+    # Subplot axes for Peak Finder (Beats) window
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies")
     cm_beats.axis1 = cm_beats.comp_plot.add_subplot(221)
