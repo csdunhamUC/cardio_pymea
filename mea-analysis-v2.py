@@ -825,7 +825,7 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
     heat_map.temp_4 = sns.heatmap(heatmap_pivot_table_4, cmap="jet", annot=electrode_names_4, fmt="", ax=heat_map.axis4,
                                   cbar=False)
     mappable_4 = heat_map.temp_4.get_children()[0]
-    heat_map.cbar_4 = heat_map.axis3.figure.colorbar(mappable_4, ax=heat_map.axis4)
+    heat_map.cbar_4 = heat_map.axis4.figure.colorbar(mappable_4, ax=heat_map.axis4)
     heat_map.cbar_4.ax.set_title("um/(ms)", fontsize=10)
 
     heat_map.axis4.set(title="Conduction Velocity, Beat " + str(input_param.beat_choice_4 + 1),
@@ -916,37 +916,38 @@ def graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param):
 
 def graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, input_param):
     try:
-        if hasattr(heat_map, 'cbar_4') is True:
-            heat_map.cbar_4.remove()
-        heat_map.axis4.cla()
-        input_param.beat_choice_4 = int(elecGUI120.mea_beat_select.get()) - 1
+        if hasattr(heat_map, 'cv_solo_cbar') is True:
+            heat_map.cv_solo_cbar.remove()
+        heat_map.cv_solo_axis.cla()
+        input_param.cv_solo_beat_choice = int(elecGUI120.cv_solo_beat_select.get()) - 1
 
         electrode_names_4 = conduction_vel.param_dist_raw.pivot(index='Y', columns='X', values='Electrode')
-        heatmap_pivot_table_4 = conduction_vel.param_dist_raw.pivot(index='Y', columns='X', values=local_act_time.final_dist_beat_count[input_param.beat_choice_4])
+        heatmap_pivot_table_4 = conduction_vel.param_dist_raw.pivot(index='Y', columns='X', values=local_act_time.final_dist_beat_count[input_param.cv_solo_beat_choice])
 
-        heat_map.temp_4 = sns.heatmap(heatmap_pivot_table_4, cmap="jet", annot=electrode_names_4, fmt="", ax=heat_map.axis4, cbar=False)
-        mappable_4 = heat_map.temp_4.get_children()[0]
-        heat_map.cbar_4 = heat_map.axis3.figure.colorbar(mappable_4, ax=heat_map.axis4)
-        heat_map.cbar_4.ax.set_title("um/(ms)", fontsize=10)
+        heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", annot=electrode_names_4, fmt="", ax=heat_map.cv_solo_axis, cbar=False)
+        mappable_4 = heat_map.cv_solo_temp.get_children()[0]
+        heat_map.cv_solo_cbar = heat_map.cv_solo_axis.figure.colorbar(mappable_4, ax=heat_map.cv_solo_axis)
+        heat_map.cv_solo_cbar.ax.set_title("um/(ms)", fontsize=10)
 
-        heat_map.axis4.set(title="Conduction Velocity, Beat " + str(input_param.beat_choice_4+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
-        heat_map.curr_plot.tight_layout()
-        heat_map.curr_plot.canvas.draw()
+        heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.cv_solo_plot.tight_layout()
+        heat_map.cv_solo_plot.canvas.draw()
 
     except AttributeError:
-        print("Please calculate conduction velocity first.")
+        print("Please make sure you've calculated Local Activation Time first.")
     except IndexError:
         print("You entered a beat that does not exist.")
 
 
 def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel):
     try:
+        cm_beats_dist_data = cm_beats.dist_beats
         pm_normalized = pace_maker.param_dist_normalized
         dVdt_normalized = upstroke_vel.param_dist_normalized
         lat_normalized = local_act_time.param_dist_normalized
         lat_distances = local_act_time.distance_from_min
         cv_raw = conduction_vel.param_dist_raw
-        pgui.show(pm_normalized, dVdt_normalized, lat_normalized, lat_distances, cv_raw, settings={'block': True})
+        pgui.show(cm_beats_dist_data, pm_normalized, dVdt_normalized, lat_normalized, lat_distances, cv_raw, settings={'block': True})
     except(AttributeError):
         print("Please run all of your calculations first.")
 
@@ -998,7 +999,9 @@ class ElecGUI120(tk.Frame):
         calc_menu.add_command(label="Local Activation Time", command=lambda: [calculate_lat(self, cm_beats, local_act_time, heat_map, input_param),
                                                                               self.lat_heatmap_window(cm_beats, local_act_time, heat_map, input_param),
                                                                               graph_local_act_time(self, heat_map, local_act_time, input_param)])
-        calc_menu.add_command(label="Conduction Velocity", command=lambda: calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param))
+        calc_menu.add_command(label="Conduction Velocity", command=lambda: [calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param),
+                                                                            self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, heat_map, input_param),
+                                                                            graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param)])
 
         advanced_tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)
@@ -1164,6 +1167,21 @@ class ElecGUI120(tk.Frame):
         self.lat_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.lat_solo_beat_select.bind("<ButtonRelease-1>",
                                         lambda event: graph_local_act_time(self, heat_map, local_act_time, input_param))
+
+    def cv_heatmap_window(self, cm_beats, local_act_time, conduction_vel, heat_map, input_param):
+        cv_heatmap = tk.Toplevel(self)
+        cv_heatmap.title("Conduction Velocity Heatmap")
+        cv_heatmap_frame = tk.Frame(cv_heatmap, width=1400, height=900, bg="white")
+        cv_heatmap_frame.grid(row=0, column=0, padx=5, pady=5)
+        cv_heatmap_frame.grid_propagate(False)
+        cv_heatmap_fig = FigureCanvasTkAgg(heat_map.cv_solo_plot, cv_heatmap_frame)
+        cv_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.cv_solo_beat_select = tk.Scale(cv_heatmap_frame, length=200, width=15, from_=1,
+                                            to=int(cm_beats.beat_count_dist_mode[0]),
+                                            orient="horizontal", bg="white", label="Current Beat Number")
+        self.cv_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.cv_solo_beat_select.bind("<ButtonRelease-1>",
+                                      lambda event: graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param))
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
