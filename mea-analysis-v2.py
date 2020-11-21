@@ -1,10 +1,14 @@
-# Original work (unless otherwise noted, e.g. Matplotlib example) by Christopher Stuart Dunham of the Gimzewski Lab.
+# Author: Christopher Stuart Dunham (CSD)
+# Organization: University of California, Los Angeles, Department of Chemistry & Biochemistry
+# Laboratory PI: James K. Gimzewski
+# This is an original work, unless otherwise noted in comments, by CSD.
 # Technical start date: 7/22/2020
 # Practical start date: 9/10/2020
 # Designed to run on Python 3.6 or newer.  Programmed under Python 3.8.
-# Biggest known issues with versions earlier than 3.6: use of dictionary to contain electrode coordinates.
+# Biggest known issues for Python versions earlier than 3.6:
+# 1) Use of dictionary to contain electrode coordinates (ordered vs unordered)
 # Consider using an OrderedDict instead if running under earlier versions of Python.
-# Second issue: tkinter vs Tkinter
+# 2) tkinter vs Tkinter for GUI.
 
 import numpy as np
 from matplotlib import pyplot as plt
