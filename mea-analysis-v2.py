@@ -61,6 +61,9 @@ class CondVelData:
 class MEAHeatMaps:
     pass
 
+class StatisticalAnalysis:
+    pass
+
 
 #######################################################################################################################
 # Class containing matplotlib example data.  Can be removed after heatmap mystery is resolved.
@@ -957,7 +960,7 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time
 
 
 class ElecGUI120(tk.Frame):
-    def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map):
+    def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, cm_stats):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past the number of widgets you have (or at
         # least I've yet to learn the way to do so, and will update if I find out how).  It's all relative geometry,
@@ -1007,10 +1010,15 @@ class ElecGUI120(tk.Frame):
                                                                             self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, heat_map, input_param),
                                                                             graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param)])
 
+        statistics_menu = tk.Menu(menu)
+        menu.add_cascade(label="Statistics", menu=statistics_menu)
+        statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", command=lambda: self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+        statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
+        statistics_menu.add_command(label="Q-Q Plot",  command=None)
+
         advanced_tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)
         advanced_tools_menu.add_command(label="Test Efficiency", command=lambda: time_test())
-        advanced_tools_menu.add_command(label="Statistics", command=None)
         advanced_tools_menu.add_command(label="K-Means Clustering", command=None)
         advanced_tools_menu.add_command(label="t-SNE", command=None)
         advanced_tools_menu.add_command(label="DBSCAN", command=None)
@@ -1103,6 +1111,7 @@ class ElecGUI120(tk.Frame):
         self.dvdt_solo_beat_select = None
         self.lat_solo_beat_select = None
         self.cv_solo_beat_select = None
+        self.param_vs_dist_beat_select = None
 
         # # print(dir(self))
 
@@ -1187,6 +1196,21 @@ class ElecGUI120(tk.Frame):
         self.cv_solo_beat_select.bind("<ButtonRelease-1>",
                                       lambda event: graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param))
 
+    def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
+        param_vs_dist= tk.Toplevel(self)
+        param_vs_dist.title("Parameter vs Distance Plot w/ R-Square")
+        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1400, height=100, bg="white")
+        param_vs_dist_options_frame.grid(row=0, column=0, padx=5, pady=5)
+        param_vs_dist_frame = tk.Frame(param_vs_dist, width=1400, height=800, bg="white")
+        param_vs_dist_frame.grid(row=1, column=0, padx=5, pady=5)
+        param_vs_dist_frame.grid_propagate(False)
+        param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_frame)
+        param_vs_dist_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_frame, length=200, width=15, from_=1,
+                                                  to=10, orient="horizontal", bg="white", label="Current Beat Number")
+        self.param_vs_dist_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: None)
+
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
         try:
@@ -1239,6 +1263,7 @@ def main():
     conduction_vel = CondVelData()
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
+    cm_stats = StatisticalAnalysis()
 
     # Heatmap axes for Calculate All (main window)
     heat_map.curr_plot = plt.Figure(figsize=(13, 6), dpi=120)
@@ -1271,12 +1296,18 @@ def main():
     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
 
+    cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5,6), dpi=120)
+    cm_stats.param_vs_dist_axis_pm = cm_stats.param_vs_dist_plot.add_subplot(221)
+    cm_stats.param_vs_dist_axis_lat = cm_stats.param_vs_dist_plot.add_subplot(222)
+    cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(223)
+    cm_stats.param_vs_dist_axis_cv = cm_stats.param_vs_dist_plot.add_subplot(224)
+
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from top of screen
     # root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI120 = ElecGUI120(root, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map)
+    elecGUI120 = ElecGUI120(root, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, cm_stats)
     # print(vars(elecGUI120))
     # print(dir(elecGUI120))
     # print(hasattr(elecGUI120 "elec_to_plot_entry"))
