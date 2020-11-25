@@ -9,6 +9,7 @@
 # 1) Use of dictionary to contain electrode coordinates (ordered vs unordered)
 # Consider using an OrderedDict instead if running under earlier versions of Python.
 # 2) tkinter vs Tkinter for GUI.
+# much wrangling occurred on 11/25...
 
 import numpy as np
 from matplotlib import pyplot as plt
