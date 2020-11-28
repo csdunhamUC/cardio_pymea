@@ -1,15 +1,17 @@
 # Author: Christopher Stuart Dunham (CSD)
+# Email: csdunham@chem.ucla.edu; azarhn@hotmail.com
+# Github: https://github.com/Sapphyric/Python_Learning
 # Organization: University of California, Los Angeles, Department of Chemistry & Biochemistry
 # Laboratory PI: James K. Gimzewski
 # This is an original work, unless otherwise noted in comments, by CSD.
 # Technical start date: 7/22/2020
-# Practical start date: 9/10/2020
+# Effective start date: 9/10/2020
 # Designed to run on Python 3.6 or newer.  Programmed under Python 3.8.
 # Biggest known issues for Python versions earlier than 3.6:
 # 1) Use of dictionary to contain electrode coordinates (ordered vs unordered)
 # Consider using an OrderedDict instead if running under earlier versions of Python.
 # 2) tkinter vs Tkinter for GUI.
-# much wrangling occurred on 11/25...
+# Program is currently set up to deal with 120 electrode MEAs from Multichannel Systems only.
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -62,7 +64,7 @@ class CondVelData:
 class MEAHeatMaps:
     pass
 
-class StatisticalAnalysis:
+class StatisticsData:
     pass
 
 
@@ -960,6 +962,26 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time
         print("Please run all of your calculations first.")
 
 
+def param_vs_distance_analysis(elecGUI120, heat_map, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time,
+                         conduction_vel, input_param):
+    print()
+    # Necessary operations:
+    # 1) Elimination of outliers (calculate mean, stdev, remove data > mean*3 sigma)
+    # 2) Calculate R^2 values, per beat, for each parameter vs distance
+    # 3) Plot data
+
+    # Necessary parameters:
+    # 1) Sigma
+    # 2) Percentile of R^2 to display/indicate
+
+    # Necessary readouts:
+    # 1) Dataset averages and standard deviation for each parameter (dV/dt, CV, PM, LAT)
+    # 2) Dataset average and standard deviation of R^2 for each parameter (sorted high to low).
+    # 3) Mode of PM (LAT) min & max channels.
+    # 4) Mode of CV min and max channels.
+    # 5) Number of unique min channels for PM (LAT)
+
+
 class ElecGUI120(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, cm_stats):
         tk.Frame.__init__(self, master)
@@ -1025,13 +1047,6 @@ class ElecGUI120(tk.Frame):
         advanced_tools_menu.add_command(label="DBSCAN", command=None)
         advanced_tools_menu.add_command(label="PCA", command=None)
 
-        # ############################################### Buttons #####################################################
-        # self.file_operations = tk.Frame(self, width=100, height=800, bg="white")
-        # self.file_operations.grid(row=1, column=0, padx=5, pady=5, sticky="nw")
-        # self.import_data_button = tk.Button(self.file_operations, text="Import Data", width=15, height=3, bg="skyblue",
-        #                                     command=lambda: data_import(raw_data))
-        # self.import_data_button.grid(row=0, column=0, padx=2, pady=2)
-
         # ############################################### Entry Fields ################################################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
         self.mea_parameters_frame = tk.Frame(self, width=1620, height=100, bg="white")
@@ -1092,14 +1107,14 @@ class ElecGUI120(tk.Frame):
         self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
-        # ############################################## Heatmap Frames ################################################
+        # ################################################# Heatmap ####################################################
         # Frame and elements for pacemaker heat map plot.
         self.mea_heatmap_frame = tk.Frame(self, width=1620, height=800, bg="white")
         self.mea_heatmap_frame.grid(row=1, column=0, padx=5, pady=5)
         self.mea_heatmap_frame.grid_propagate(False)
         self.gen_pm_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
         self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
-
+        # Beat select slider, belongs to different frame.
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=200, width=15, from_=1, to=20,
                                         orient="horizontal", bg="white", label="Current Beat Number")
         self.mea_beat_select.grid(row=0, column=8, rowspan=2, padx=400, pady=5)
@@ -1265,7 +1280,7 @@ def main():
     conduction_vel = CondVelData()
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
-    cm_stats = StatisticalAnalysis()
+    cm_stats = StatisticsData()
 
     # Heatmap axes for Calculate All (main window)
     heat_map.curr_plot = plt.Figure(figsize=(13, 6.5), dpi=120)
