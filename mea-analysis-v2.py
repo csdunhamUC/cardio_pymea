@@ -1092,16 +1092,17 @@ class ElecGUI120(tk.Frame):
         self.parameter_thresh_entry = tk.Entry(self.mea_parameters_frame, text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
-        # ############################################### Plot Frames #################################################
+        # ############################################## Heatmap Frames ################################################
         # Frame and elements for pacemaker heat map plot.
         self.mea_heatmap_frame = tk.Frame(self, width=1620, height=800, bg="white")
         self.mea_heatmap_frame.grid(row=1, column=0, padx=5, pady=5)
         self.mea_heatmap_frame.grid_propagate(False)
         self.gen_pm_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
         self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
-        self.mea_beat_select = tk.Scale(self.mea_heatmap_frame, length=200, width=15, from_=1, to=20,
+
+        self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=200, width=15, from_=1, to=20,
                                         orient="horizontal", bg="white", label="Current Beat Number")
-        self.mea_beat_select.grid(row=1, column=1, padx=5, pady=5)
+        self.mea_beat_select.grid(row=0, column=8, rowspan=2, padx=400, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
                                   lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
                                                           local_act_time, conduction_vel, input_param))
@@ -1267,7 +1268,7 @@ def main():
     cm_stats = StatisticalAnalysis()
 
     # Heatmap axes for Calculate All (main window)
-    heat_map.curr_plot = plt.Figure(figsize=(13, 6), dpi=120)
+    heat_map.curr_plot = plt.Figure(figsize=(13, 6.5), dpi=120)
     heat_map.axis1 = heat_map.curr_plot.add_subplot(221)
     heat_map.axis2 = heat_map.curr_plot.add_subplot(222)
     heat_map.axis3 = heat_map.curr_plot.add_subplot(223)
