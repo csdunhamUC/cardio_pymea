@@ -68,26 +68,6 @@ class StatisticsData:
     pass
 
 
-#######################################################################################################################
-# Class containing matplotlib example data.  Can be removed after heatmap mystery is resolved.
-class TestingStuff:
-    # Taken from matplotlib website for the sake of testing out a heatmap.  Still trying to figure out how to properly
-    # integrate this into a GUI.
-    vegetables = ["cucumber", "tomato", "lettuce", "asparagus",
-                  "potato", "wheat", "barley"]
-
-    farmers = ["Farmer Joe", "Upland Bros.", "Smith Gardening",
-               "Agrifun", "Organiculture", "BioGoods Ltd.", "Cornylee Corp."]
-
-    harvest = np.array([[0.8, 2.4, 2.5, 3.9, 0.0, 4.0, 0.0],
-                        [2.4, 0.0, 4.0, 1.0, 2.7, 0.0, 0.0],
-                        [1.1, 2.4, 0.8, 4.3, 1.9, 4.4, 0.0],
-                        [0.6, 0.0, 0.3, 0.0, 3.1, 0.0, 0.0],
-                        [0.7, 1.7, 0.6, 2.6, 2.2, 6.2, 0.0],
-                        [1.3, 1.2, 0.0, 0.0, 0.0, 3.2, 5.1],
-                        [0.1, 2.0, 0.0, 1.4, 0.0, 1.9, 6.3]])
-
-
 # Class containing electrode names and corresponding coordinates in x,y form, units of micrometers (microns, um)
 class ElectrodeConfig:
     # Electrode names and coordinates, using the system defined by CSD where origin (0,0) is at upper left corner of MEA
@@ -723,37 +703,6 @@ def data_print(elecGUI120, raw_data, pace_maker, input_param):
 
 def time_test():
     dis(calculate_lat)
-
-
-# Generates heatmap based on matplotlib example from website.
-# def graph_heatmap(heat_map):
-#     # imshow() is the key heatmap function here.
-#     heat_map.axis1.cla()
-#
-#     im = heat_map.axis1.imshow(TestingStuff.harvest, interpolation="nearest", aspect="auto", cmap="jet")
-#
-#     heat_map.cbar = heat_map.axis1.figure.colorbar(im)
-#     heat_map.cbar.remove()
-#
-#     heat_map.cbar = heat_map.axis1.figure.colorbar(im)
-#     heat_map.cbar.ax.set_ylabel("Harvested Crops (t/year)", rotation=-90, va="bottom")
-#
-#     heat_map.axis1.set_xticks(np.arange(len(TestingStuff.farmers)))
-#     heat_map.axis1.set_yticks(np.arange(len(TestingStuff.vegetables)))
-#     heat_map.axis1.set_xticklabels(TestingStuff.farmers)
-#     heat_map.axis1.set_yticklabels(TestingStuff.vegetables)
-#
-#     # Modifying x-axis presentation.
-#     plt.setp(heat_map.axis1.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-#
-#     for i in range(len(TestingStuff.vegetables)):
-#         for j in range(len(TestingStuff.farmers)):
-#             text = heat_map.axis1.text(j, i, TestingStuff.harvest[i, j], ha="center", va="center", color="w")
-#     heat_map.axis1.set_title("Harvest Demo from Matplotlib Website")
-#
-#     heat_map.curr_plot.tight_layout()
-#     heat_map.curr_plot.canvas.draw()
-#     return
 
 
 # This function is called following the use of "Calculate All Parameters" from the drop-down menu and from the GUI
