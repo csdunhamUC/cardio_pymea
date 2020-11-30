@@ -1112,17 +1112,20 @@ class ElecGUI120(tk.Frame):
         self.mea_heatmap_frame = tk.Frame(self, width=1620, height=800, bg="white")
         self.mea_heatmap_frame.grid(row=1, column=0, padx=5, pady=5)
         self.mea_heatmap_frame.grid_propagate(False)
-        self.gen_pm_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
-        self.gen_pm_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
+        self.gen_all_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
+        self.gen_all_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
         # Beat select slider, belongs to different frame.
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=200, width=15, from_=1, to=20,
                                         orient="horizontal", bg="white", label="Current Beat Number")
-        self.mea_beat_select.grid(row=0, column=8, rowspan=2, padx=400, pady=5)
+        self.mea_beat_select.grid(row=0, column=7, rowspan=2, padx=100, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
                                   lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
                                                           local_act_time, conduction_vel, input_param))
+        self.toolbar_all_heatmap_frame = tk.Frame(self.mea_parameters_frame)
+        self.toolbar_all_heatmap_frame.grid(row=0, column=8, rowspan=2, padx=50, pady=5)
+        self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
 
-        # The following 4 lines are for the slider controls from the child windows that open when doing the individual,
+        # The following lines are for the GUI controls found in child windows when doing beat detect or the individual,
         # or solo, calculations for the respective parameter.
         self.elec_to_plot_val = tk.StringVar()
         self.elec_to_plot_val.set("1")
