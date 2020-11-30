@@ -1054,13 +1054,13 @@ class ElecGUI120(tk.Frame):
         self.mea_parameters_frame.grid_propagate(False)
 
         # GUI elements in the mea_parameters_frame
-        self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white", wraplength=80)
-        self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=2)
-        self.elec_to_plot_val = tk.StringVar()
-        self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
-        self.elec_to_plot_val.set("1")
-        self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val, width=8)
-        self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
+        # self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white", wraplength=80)
+        # self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=2)
+        # self.elec_to_plot_val = tk.StringVar()
+        # self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
+        # self.elec_to_plot_val.set("1")
+        # self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val, width=8)
+        # self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
         # Min peak distance label, entry field, trace and positioning.
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, text="Min Peak Distance", bg="white", wraplength=80)
@@ -1124,6 +1124,9 @@ class ElecGUI120(tk.Frame):
 
         # The following 4 lines are for the slider controls from the child windows that open when doing the individual,
         # or solo, calculations for the respective parameter.
+        self.elec_to_plot_val = tk.StringVar()
+        self.elec_to_plot_val.set("1")
+        self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
         self.pm_solo_beat_select = None
         self.dvdt_solo_beat_select = None
         self.lat_solo_beat_select = None
@@ -1136,22 +1139,28 @@ class ElecGUI120(tk.Frame):
         beat_detect = tk.Toplevel(self)
         beat_detect.title('Beat Detect Window')
         beat_detect.geometry('1250x850')
-        beat_detect_frame = tk.Frame(beat_detect, width=1200, height=800, bg="white")
+        beat_detect_frame = tk.Frame(beat_detect, width=1200, height=850, bg="white")
         beat_detect_frame.grid(row=0, column=0, padx=5, pady=5)
         beat_detect_frame.grid_propagate(False)
         gen_beats_fig = FigureCanvasTkAgg(cm_beats.comp_plot, beat_detect_frame)
-        gen_beats_fig.get_tk_widget().grid(row=1, column=0, padx=5, pady=5)
+        gen_beats_fig.get_tk_widget().grid(row=2, column=0, columnspan=2, padx=5, pady=5)
         # NavigationToolbar2Tk calls pack internally, conflicts with grid.  Workaround: establish in own frame,
         # use grid to place that frame in_side of the chosen parent frame.  This works because the parent frame is still
         # a descent of "root", which is the overarching parent of all of these GUI elements.
         gen_beats_toolbar_frame = tk.Frame(beat_detect)
-        gen_beats_toolbar_frame.grid(row=3, column=0, in_=beat_detect_frame)
+        gen_beats_toolbar_frame.grid(row=4, column=0, columnspan=2, in_=beat_detect_frame)
         gen_beats_toolbar = NavigationToolbar2Tk(gen_beats_fig, gen_beats_toolbar_frame)
+
+        # Electrode entry field to change display for plot shown.
+        elec_to_plot_label = tk.Label(beat_detect_frame, text="Electrode Plotted", bg="white", wraplength=80)
+        elec_to_plot_label.grid(row=0, column=0, padx=5, pady=2)
+        elec_to_plot_entry = tk.Entry(beat_detect_frame, text=self.elec_to_plot_val, width=8)
+        elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
         # Invoke graph_peaks function for plotting only.  Meant to be used after find peaks, after switching columns.
         graph_beats_button = tk.Button(beat_detect_frame, text="Graph Beats", width=15, height=3, bg="red2",
                                             command=lambda: graph_beats(self, cm_beats, input_param))
-        graph_beats_button.grid(row=0, column=0, padx=2, pady=2)
+        graph_beats_button.grid(row=0, rowspan=2, column=1, padx=2, pady=2)
 
     def pacemaker_heatmap_window(self, cm_beats, pace_maker, heat_map, input_param):
         pm_heatmap = tk.Toplevel(self)
