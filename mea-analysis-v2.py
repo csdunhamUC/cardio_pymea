@@ -105,52 +105,54 @@ class ElectrodeConfig:
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
 def data_import(elecGUI120, raw_data):
-    data_filename_and_path = tk.filedialog.askopenfilename(initialdir=elecGUI120.file_path.get(), title="Select file",
-                                               filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
+    try:
+        data_filename_and_path = tk.filedialog.askopenfilename(initialdir=elecGUI120.file_path.get(), title="Select file",
+                                                   filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 
-    import_path, import_filename = os.path.split(data_filename_and_path)
+        import_path, import_filename = os.path.split(data_filename_and_path)
+        # start_time = time.process_time()
 
-    # start_time = time.process_time()
+        # Checks whether data was previously imported into program.  If True, the previous data is deleted.
+        if hasattr(raw_data, 'imported') is True:
+            print("Raw data is not empty; clearing before reading file.")
+            delattr(raw_data, 'imported')
+            delattr(raw_data, 'names')
 
-    # Checks whether data was previously imported into program.  If True, the previous data is deleted.
-    if hasattr(raw_data, 'imported') is True:
-        print("Raw data is not empty; clearing before reading file.")
-        delattr(raw_data, 'imported')
-        delattr(raw_data, 'names')
+        # print("Importing data...")
+        print("Import data began at: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-    print("Importing data...")
+        # Import electrodes for column headers from file.
+        raw_data.names = pd.read_csv(data_filename_and_path, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
+                                     nrows=1, encoding='iso-8859-15', skipinitialspace=True, engine='python')
 
-    print("Start of read: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+        # # Dask implementation, explanation to follow
+        # temp_import = dd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+        #                                 encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
+        # raw_data.imported = temp_import.compute()
+        #
+        # # Clear temp_import.  For reasons I don't understand, loading another file without deleting this causes the import
+        # # to take considerably longer (6x or more?).  Presumably the temp_import variable was still hanging around.
+        # del temp_import # didn't solve performance issue when opening another file...
 
-    # Import electrodes for column headers from file.
-    raw_data.names = pd.read_csv(data_filename_and_path, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
-                                 nrows=1, encoding='iso-8859-15', skipinitialspace=True, engine='python')
+        # # Import data from file.
+        raw_data.imported = pd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+                                        encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
 
-    # # Dask implementation, explanation to follow
-    # temp_import = dd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
-    #                                 encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
-    # raw_data.imported = temp_import.compute()
-    #
-    # # Clear temp_import.  For reasons I don't understand, loading another file without deleting this causes the import
-    # # to take considerably longer (6x or more?).  Presumably the temp_import variable was still hanging around.
-    # del temp_import # didn't solve performance issue when opening another file...
+        print("Import data completed at: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
-    # # Import data from file.
-    raw_data.imported = pd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
-                                    encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
-
-    print("End of read: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-    # Update file name display in GUI following import
-    elecGUI120.file_name_label.configure(text=import_filename)
-    elecGUI120.file_path.set(import_path)
-
-    new_data_size = np.shape(raw_data.imported)
-    print(new_data_size)
-    # end_time = time.process_time()
-    # print(end_time - start_time)
-    print("Import complete.")
-    # return raw_data.imported
+        # Update file name display in GUI following import
+        elecGUI120.file_name_label.configure(text=import_filename)
+        elecGUI120.file_path.set(import_path)
+        new_data_size = np.shape(raw_data.imported)
+        print(new_data_size)
+        # end_time = time.process_time()
+        # print(end_time - start_time)
+        # print("Import complete.")
+        # return raw_data.imported
+    except FileNotFoundError:
+        print()
+    except TypeError:
+        print()
 
 
 # Finds peaks based on given input parameters.
@@ -267,49 +269,6 @@ def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
         graph_beats(elecGUI120, cm_beats, input_param)
     except AttributeError:
         print("No data found. Please import data (.txt or .csv converted MCD file) first.")
-
-
-# Produces 4-subplot plot of peak finder data and graphs it.  Can be called via button.
-# Will throw exception of data does not exist.
-def graph_beats(elecGUI120, cm_beats, input_param):
-    try:
-        cm_beats.axis1.cla()
-        cm_beats.axis2.cla()
-        cm_beats.axis3.cla()
-        cm_beats.axis4.cla()
-
-        input_param.elec_choice = int(elecGUI120.elec_to_plot_val.get()) - 1
-        print("Will generate graph for electrode " + str(input_param.elec_choice + 1) + ".")
-        cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
-
-        mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
-        dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
-        cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
-        cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
-
-        mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values)
-        prom_without_nan = cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values[mask_prom].astype('int64')
-        cm_beats.axis2.plot(prom_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[prom_without_nan], "ob")
-        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis2.legend(['prominence = ' + str(input_param.parameter_prominence)], loc='lower left')
-
-        mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values)
-        width_without_nan = cm_beats.width_beats.iloc[0:, input_param.elec_choice].values[mask_width].astype('int64')
-        cm_beats.axis3.plot(width_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[width_without_nan], "vg")
-        cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis3.legend(['width = ' + str(input_param.parameter_width)], loc='lower left')
-
-        mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values)
-        thresh_without_nan = cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values[mask_thresh].astype('int64')
-        cm_beats.axis4.plot(thresh_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[thresh_without_nan], "xk")
-        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis4.legend(['threshold = ' + str(input_param.parameter_thresh)], loc='lower left')
-
-        cm_beats.comp_plot.canvas.draw()
-        print("Plotting complete.")
-    except AttributeError:
-        print("Please use Find Peaks first.")
 
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
@@ -713,6 +672,10 @@ def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, he
         print("Please calculate local activation time first.")
 
 
+# ######################################################################################################################
+# ################################################ Calculations End ####################################################
+# ######################################################################################################################
+
 # Usually just for debugging, a function that prints out values upon button press.
 def data_print(elecGUI120, raw_data, pace_maker, input_param):
     # adding .iloc to a data frame allows to reference [row, column], where rows and columns can be ranges separated
@@ -726,6 +689,53 @@ def data_print(elecGUI120, raw_data, pace_maker, input_param):
 
 def time_test():
     dis(calculate_lat)
+
+
+# ######################################################################################################################
+# ################################################# Graphing Starts ####################################################
+# ######################################################################################################################
+
+# Produces 4-subplot plot of peak finder data and graphs it.  Can be called via button.
+# Will throw exception of data does not exist.
+def graph_beats(elecGUI120, cm_beats, input_param):
+    try:
+        cm_beats.axis1.cla()
+        cm_beats.axis2.cla()
+        cm_beats.axis3.cla()
+        cm_beats.axis4.cla()
+
+        input_param.elec_choice = int(elecGUI120.elec_to_plot_val.get()) - 1
+        print("Will generate graph for electrode " + str(input_param.elec_choice + 1) + ".")
+        cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
+
+        mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
+        dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
+        cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
+        cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
+
+        mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values)
+        prom_without_nan = cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values[mask_prom].astype('int64')
+        cm_beats.axis2.plot(prom_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[prom_without_nan], "ob")
+        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis2.legend(['prominence = ' + str(input_param.parameter_prominence)], loc='lower left')
+
+        mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values)
+        width_without_nan = cm_beats.width_beats.iloc[0:, input_param.elec_choice].values[mask_width].astype('int64')
+        cm_beats.axis3.plot(width_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[width_without_nan], "vg")
+        cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis3.legend(['width = ' + str(input_param.parameter_width)], loc='lower left')
+
+        mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values)
+        thresh_without_nan = cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values[mask_thresh].astype('int64')
+        cm_beats.axis4.plot(thresh_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[thresh_without_nan], "xk")
+        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+        cm_beats.axis4.legend(['threshold = ' + str(input_param.parameter_thresh)], loc='lower left')
+
+        cm_beats.comp_plot.canvas.draw()
+        print("Plotting complete.")
+    except AttributeError:
+        print("Please use Find Peaks first.")
 
 
 # This function is called following the use of "Calculate All Parameters" from the drop-down menu and from the GUI
@@ -934,9 +944,44 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time
         print("Please run all of your calculations first.")
 
 
-def param_vs_distance_analysis(elecGUI120, heat_map, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time,
-                         conduction_vel, input_param):
+def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
     print()
+    input_param.stats_param_dist_slider = int(elecGUI120.param_vs_dist_beat_select.get()) - 1
+    # First thing first: plot stuff vs distance.  Distances must be x-values, parameters must be y-values from sel. beat
+    #         cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
+    #
+    #         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
+    #         dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
+    #         cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
+    #         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
+    #         cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
+
+
+    # x-values @: local_act_time.distance_from_min
+    # y-values @: pace_maker.param_dist_normalized, upstroke_vel.param_dist_normalized,
+    # local_act_time.param_dist_normalized, conduction_vel.param_dist_raw
+    cm_stats.param_vs_dist_axis_pm.cla()
+    cm_stats.param_vs_dist_axis_dvdt.cla()
+    cm_stats.param_vs_dist_axis_lat.cla()
+    cm_stats.param_vs_dist_axis_cv.cla()
+
+    # mask_coords = ~np.isnan(local_act_time.distance_from_min[input_param.stats_param_dist_slider])
+    cm_stats.param_vs_dist_plot.suptitle("Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
+    cm_stats.param_vs_dist_axis_pm.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                        pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]])
+    cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker")
+    cm_stats.param_vs_dist_axis_dvdt.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                         upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]])
+    cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity")
+    cm_stats.param_vs_dist_axis_lat.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                         local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]])
+    cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time")
+    cm_stats.param_vs_dist_axis_cv.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                        conduction_vel.param_dist_raw[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]])
+    cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity")
+
+    cm_stats.param_vs_dist_plot.canvas.draw()
+
     # Necessary operations:
     # 1) Elimination of outliers (calculate mean, stdev, remove data > mean*3 sigma)
     # 2) Calculate R^2 values, per beat, for each parameter vs distance
@@ -1011,7 +1056,8 @@ class ElecGUI120(tk.Frame):
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
-        statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", command=lambda: self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+        statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", command=lambda: [self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats),
+                                    param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -1033,15 +1079,6 @@ class ElecGUI120(tk.Frame):
         # self.file_name.set("No file")
         self.file_name_label = tk.Label(self.mea_parameters_frame, text="No file", bg="white", wraplength=200)
         self.file_name_label.grid(row=0, column=9, columnspan=4, padx=5, pady=5)
-
-        # GUI elements in the mea_parameters_frame
-        # self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white", wraplength=80)
-        # self.elec_to_plot_label.grid(row=0, column=0, padx=5, pady=2)
-        # self.elec_to_plot_val = tk.StringVar()
-        # self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
-        # self.elec_to_plot_val.set("1")
-        # self.elec_to_plot_entry = tk.Entry(self.mea_parameters_frame, text=self.elec_to_plot_val, width=8)
-        # self.elec_to_plot_entry.grid(row=1, column=0, padx=5, pady=2)
 
         # Min peak distance label, entry field, trace and positioning.
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, text="Min Peak Distance", bg="white", wraplength=80)
@@ -1209,17 +1246,17 @@ class ElecGUI120(tk.Frame):
     def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
         param_vs_dist= tk.Toplevel(self)
         param_vs_dist.title("Parameter vs Distance Plot w/ R-Square")
-        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1400, height=100, bg="white")
+        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1200, height=100, bg="white")
         param_vs_dist_options_frame.grid(row=0, column=0, padx=5, pady=5)
-        param_vs_dist_frame = tk.Frame(param_vs_dist, width=1400, height=800, bg="white")
+        param_vs_dist_frame = tk.Frame(param_vs_dist, width=1200, height=800, bg="white")
         param_vs_dist_frame.grid(row=1, column=0, padx=5, pady=5)
         param_vs_dist_frame.grid_propagate(False)
         param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_frame)
         param_vs_dist_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_frame, length=200, width=15, from_=1,
-                                                  to=10, orient="horizontal", bg="white", label="Current Beat Number")
+                                                  to=int(cm_beats.beat_count_dist_mode[0]), orient="horizontal", bg="white", label="Current Beat Number")
         self.param_vs_dist_beat_select.grid(row=1, column=0, padx=5, pady=5)
-        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: None)
+        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
@@ -1308,8 +1345,8 @@ def main():
 
     cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5,6), dpi=120)
     cm_stats.param_vs_dist_axis_pm = cm_stats.param_vs_dist_plot.add_subplot(221)
-    cm_stats.param_vs_dist_axis_lat = cm_stats.param_vs_dist_plot.add_subplot(222)
-    cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(223)
+    cm_stats.param_vs_dist_axis_lat = cm_stats.param_vs_dist_plot.add_subplot(223)
+    cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(222)
     cm_stats.param_vs_dist_axis_cv = cm_stats.param_vs_dist_plot.add_subplot(224)
 
     root = tk.Tk()
