@@ -968,18 +968,23 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     # mask_coords = ~np.isnan(local_act_time.distance_from_min[input_param.stats_param_dist_slider])
     cm_stats.param_vs_dist_plot.suptitle("Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
     cm_stats.param_vs_dist_axis_pm.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                        pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]])
+                                        pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                           c='red')
     cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker")
     cm_stats.param_vs_dist_axis_dvdt.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                         upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]])
+                                         upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                             c='green')
     cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity")
     cm_stats.param_vs_dist_axis_lat.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                         local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]])
+                                         local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                            c='orange')
     cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time")
     cm_stats.param_vs_dist_axis_cv.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                        conduction_vel.param_dist_raw[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]])
+                                        conduction_vel.param_dist_raw[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+                                           c='blue')
     cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity")
 
+    cm_stats.param_vs_dist_plot.tight_layout()
     cm_stats.param_vs_dist_plot.canvas.draw()
 
     # Necessary operations:
@@ -1246,9 +1251,9 @@ class ElecGUI120(tk.Frame):
     def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
         param_vs_dist= tk.Toplevel(self)
         param_vs_dist.title("Parameter vs Distance Plot w/ R-Square")
-        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1200, height=100, bg="white")
+        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1300, height=100, bg="white")
         param_vs_dist_options_frame.grid(row=0, column=0, padx=5, pady=5)
-        param_vs_dist_frame = tk.Frame(param_vs_dist, width=1200, height=800, bg="white")
+        param_vs_dist_frame = tk.Frame(param_vs_dist, width=1300, height=800, bg="white")
         param_vs_dist_frame.grid(row=1, column=0, padx=5, pady=5)
         param_vs_dist_frame.grid_propagate(False)
         param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_frame)
@@ -1343,7 +1348,7 @@ def main():
     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
 
-    cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5,6), dpi=120)
+    cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     cm_stats.param_vs_dist_axis_pm = cm_stats.param_vs_dist_plot.add_subplot(221)
     cm_stats.param_vs_dist_axis_lat = cm_stats.param_vs_dist_plot.add_subplot(223)
     cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(222)
