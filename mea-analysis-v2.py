@@ -17,16 +17,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import pandas as pd
-# import dask.dataframe as dd
+import dask.dataframe as dd
 import pandasgui as pgui
 import seaborn as sns
-# import os
+import os
 import time
 import tkinter as tk
 from numba import njit
 from scipy.signal import find_peaks
 from scipy import stats
 from dis import dis
+import datetime
 
 #######################################################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
@@ -103,31 +104,53 @@ class ElectrodeConfig:
 
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or checks to support more data types.
-def data_import(raw_data):
-    data_filename = tk.filedialog.askopenfilename(initialdir="/", title="Select file",
+def data_import(elecGUI120, raw_data):
+    data_filename_and_path = tk.filedialog.askopenfilename(initialdir=elecGUI120.file_path.get(), title="Select file",
                                                filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 
-    start_time = time.process_time()
+    import_path, import_filename = os.path.split(data_filename_and_path)
+
+    # start_time = time.process_time()
 
     # Checks whether data was previously imported into program.  If True, the previous data is deleted.
     if hasattr(raw_data, 'imported') is True:
         print("Raw data is not empty; clearing before reading file.")
         delattr(raw_data, 'imported')
+        delattr(raw_data, 'names')
 
     print("Importing data...")
+
+    print("Start of read: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
     # Import electrodes for column headers from file.
-    raw_data.names = pd.read_csv(data_filename, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
+    raw_data.names = pd.read_csv(data_filename_and_path, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
                                  nrows=1, encoding='iso-8859-15', skipinitialspace=True, engine='python')
-    # Import data from file.
-    raw_data.imported = pd.read_csv(data_filename, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+
+    # Dask implementation, explanation to follow
+    temp_import = dd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
                                     encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
+    raw_data.imported = temp_import.compute()
+
+    # Clear temp_import.  For reasons I don't understand, loading another file without deleting this causes the import
+    # to take considerably longer (6x or more?).  Presumably the temp_import variable was still hanging around.
+    del temp_import
+
+    # # # Import data from file.
+    # raw_data.imported = pd.read_csv(data_filename, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+    #                                 encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
+
+    print("End of read: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+    # Update file name display in GUI following import
+    elecGUI120.file_name_label.configure(text=import_filename)
+    elecGUI120.file_path.set(import_path)
 
     new_data_size = np.shape(raw_data.imported)
     print(new_data_size)
-    end_time = time.process_time()
-    print(end_time - start_time)
+    # end_time = time.process_time()
+    # print(end_time - start_time)
     print("Import complete.")
-    return raw_data.imported
+    # return raw_data.imported
 
 
 # Finds peaks based on given input parameters.
@@ -942,13 +965,17 @@ class ElecGUI120(tk.Frame):
         self.grid()
         self.winfo_toplevel().title("MEA Analysis - v2")
 
+        # Directory information for file import is stored here and called upon by import function.  Default/initial "/"
+        self.file_path = tk.StringVar()
+        self.file_path.set("/")
+
         # ############################################### Menu ########################################################
         self.master = master
         menu = tk.Menu(self.master, tearoff=False)
         self.master.config(menu=menu)
         file_menu = tk.Menu(menu)
         menu.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Import Data (.csv or .txt)", command=lambda: data_import(raw_data))
+        file_menu.add_command(label="Import Data (.csv or .txt)", command=lambda: data_import(self, raw_data))
         file_menu.add_command(label="Save Processed Data", command=None)
         file_menu.add_command(label="Save Heatmaps", command=None)
         file_menu.add_command(label="Print (Debug)", command=lambda: data_print(self, raw_data, pace_maker, input_param))
@@ -1001,6 +1028,11 @@ class ElecGUI120(tk.Frame):
         self.mea_parameters_frame = tk.Frame(self, width=1620, height=100, bg="white")
         self.mea_parameters_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
+
+        # self.file_name = tk.StringVar()
+        # self.file_name.set("No file")
+        self.file_name_label = tk.Label(self.mea_parameters_frame, text="No file", bg="white", wraplength=200)
+        self.file_name_label.grid(row=0, column=9, columnspan=4, padx=5, pady=5)
 
         # GUI elements in the mea_parameters_frame
         # self.elec_to_plot_label = tk.Label(self.mea_parameters_frame, text="Electrode Plotted", bg="white", wraplength=80)
