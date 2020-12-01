@@ -17,7 +17,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import pandas as pd
-import dask.dataframe as dd
+# import dask.dataframe as dd
 import pandasgui as pgui
 import seaborn as sns
 import os
@@ -126,18 +126,18 @@ def data_import(elecGUI120, raw_data):
     raw_data.names = pd.read_csv(data_filename_and_path, sep="\s+\t", lineterminator='\n', skiprows=[0, 1, 3], header=None,
                                  nrows=1, encoding='iso-8859-15', skipinitialspace=True, engine='python')
 
-    # Dask implementation, explanation to follow
-    temp_import = dd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
-                                    encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
-    raw_data.imported = temp_import.compute()
-
-    # Clear temp_import.  For reasons I don't understand, loading another file without deleting this causes the import
-    # to take considerably longer (6x or more?).  Presumably the temp_import variable was still hanging around.
-    del temp_import
-
-    # # # Import data from file.
-    # raw_data.imported = pd.read_csv(data_filename, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+    # # Dask implementation, explanation to follow
+    # temp_import = dd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
     #                                 encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
+    # raw_data.imported = temp_import.compute()
+    #
+    # # Clear temp_import.  For reasons I don't understand, loading another file without deleting this causes the import
+    # # to take considerably longer (6x or more?).  Presumably the temp_import variable was still hanging around.
+    # del temp_import # didn't solve performance issue when opening another file...
+
+    # # Import data from file.
+    raw_data.imported = pd.read_csv(data_filename_and_path, sep='\s+', lineterminator='\n', skiprows=3, header=0,
+                                    encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
 
     print("End of read: ", datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
