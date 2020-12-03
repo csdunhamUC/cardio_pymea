@@ -760,8 +760,8 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
     heat_map.cbar_1 = heat_map.axis1.figure.colorbar(mappable, ax=heat_map.axis1)
     heat_map.cbar_1.ax.set_title("Time Lag (ms)", fontsize=10)
 
-    heat_map.axis1.set(title="Pacemaker, Beat " + str(input_param.beat_choice + 1), xlabel="X coordinate (um)",
-                       ylabel="Y coordinate (um)")
+    heat_map.axis1.set(title="Pacemaker, Beat " + str(input_param.beat_choice + 1), xlabel="X coordinate (μm)",
+                       ylabel="Y coordinate (μm)")
 
     # Upstroke velocity
     if hasattr(heat_map, 'cbar_2') is True:
@@ -778,10 +778,10 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
                                   vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
     mappable_2 = heat_map.temp_2.get_children()[0]
     heat_map.cbar_2 = heat_map.axis2.figure.colorbar(mappable_2, ax=heat_map.axis2)
-    heat_map.cbar_2.ax.set_title("uV/ms", fontsize=10)
+    heat_map.cbar_2.ax.set_title("μV/ms", fontsize=10)
 
     heat_map.axis2.set(title="Upstroke Velocity, Beat " + str(input_param.beat_choice_2 + 1),
-                       xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+                       xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
 
     # Local activation time
     if hasattr(heat_map, 'cbar_3') is True:
@@ -801,7 +801,7 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
     heat_map.cbar_3.ax.set_title("Time Lag (ms)", fontsize=10)
 
     heat_map.axis3.set(title="Local Activation Time, Beat " + str(input_param.beat_choice_3 + 1),
-                       xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+                       xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
 
     # Conduction velocity
     if hasattr(heat_map, 'cbar_4') is True:
@@ -818,10 +818,10 @@ def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, co
                                   cbar=False)
     mappable_4 = heat_map.temp_4.get_children()[0]
     heat_map.cbar_4 = heat_map.axis4.figure.colorbar(mappable_4, ax=heat_map.axis4)
-    heat_map.cbar_4.ax.set_title("um/(ms)", fontsize=10)
+    heat_map.cbar_4.ax.set_title("μm/(ms)", fontsize=10)
 
     heat_map.axis4.set(title="Conduction Velocity, Beat " + str(input_param.beat_choice_4 + 1),
-                       xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+                       xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
 
     heat_map.curr_plot.tight_layout()
     heat_map.curr_plot.canvas.draw()
@@ -845,7 +845,7 @@ def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
         heat_map.pm_solo_cbar = heat_map.pm_solo_axis.figure.colorbar(mappable, ax=heat_map.pm_solo_axis)
         heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        heat_map.pm_solo_axis.set(title="Pacemaker, Beat " + str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.pm_solo_axis.set(title="Pacemaker, Beat " + str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
         heat_map.pm_solo_plot.tight_layout()
         heat_map.pm_solo_plot.canvas.draw()
 
@@ -869,9 +869,9 @@ def graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param):
         heat_map.dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", annot=electrode_names_2, fmt="", ax=heat_map.dvdt_solo_axis, vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
         mappable_2 = heat_map.dvdt_solo_temp.get_children()[0]
         heat_map.dvdt_solo_cbar = heat_map.dvdt_solo_axis.figure.colorbar(mappable_2, ax=heat_map.dvdt_solo_axis)
-        heat_map.dvdt_solo_cbar.ax.set_title("uV/ms", fontsize=10)
+        heat_map.dvdt_solo_cbar.ax.set_title("μV/ms", fontsize=10)
 
-        heat_map.dvdt_solo_axis.set(title="Upstroke Velocity, Beat " + str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.dvdt_solo_axis.set(title="Upstroke Velocity, Beat " + str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
         heat_map.dvdt_solo_plot.tight_layout()
         heat_map.dvdt_solo_plot.canvas.draw()
 
@@ -896,7 +896,7 @@ def graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param):
         heat_map.lat_solo_cbar = heat_map.lat_solo_axis.figure.colorbar(mappable_3, ax=heat_map.lat_solo_axis)
         heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        heat_map.lat_solo_axis.set(title="Local Activation Time, Beat " + str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.lat_solo_axis.set(title="Local Activation Time, Beat " + str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
         heat_map.lat_solo_plot.tight_layout()
         heat_map.lat_solo_plot.canvas.draw()
 
@@ -919,9 +919,9 @@ def graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, i
         heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", annot=electrode_names_4, fmt="", ax=heat_map.cv_solo_axis, cbar=False)
         mappable_4 = heat_map.cv_solo_temp.get_children()[0]
         heat_map.cv_solo_cbar = heat_map.cv_solo_axis.figure.colorbar(mappable_4, ax=heat_map.cv_solo_axis)
-        heat_map.cv_solo_cbar.ax.set_title("um/(ms)", fontsize=10)
+        heat_map.cv_solo_cbar.ax.set_title("μm/(ms)", fontsize=10)
 
-        heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (um)", ylabel="Y coordinate (um)")
+        heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", ylabel="Y coordinate (μm)")
         heat_map.cv_solo_plot.tight_layout()
         heat_map.cv_solo_plot.canvas.draw()
 
@@ -946,7 +946,6 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time
 
 def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
     print()
-    input_param.stats_param_dist_slider = int(elecGUI120.param_vs_dist_beat_select.get()) - 1
     # First thing first: plot stuff vs distance.  Distances must be x-values, parameters must be y-values from sel. beat
     #         cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
     #
@@ -959,38 +958,10 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
 
     # x-values @: local_act_time.distance_from_min
     # y-values @: pace_maker.param_dist_normalized, upstroke_vel.param_dist_normalized,
-    # local_act_time.param_dist_normalized, conduction_vel.param_dist_raw
-    cm_stats.param_vs_dist_axis_pm.cla()
-    cm_stats.param_vs_dist_axis_dvdt.cla()
-    cm_stats.param_vs_dist_axis_lat.cla()
-    cm_stats.param_vs_dist_axis_cv.cla()
-
-    # mask_coords = ~np.isnan(local_act_time.distance_from_min[input_param.stats_param_dist_slider])
-    cm_stats.param_vs_dist_plot.suptitle("Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
-    cm_stats.param_vs_dist_axis_pm.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                        pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                           c='red')
-    cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker")
-    cm_stats.param_vs_dist_axis_dvdt.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                         upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                             c='green')
-    cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity")
-    cm_stats.param_vs_dist_axis_lat.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                         local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                            c='orange')
-    cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time")
-    cm_stats.param_vs_dist_axis_cv.scatter(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                        conduction_vel.param_dist_raw[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-                                           c='blue')
-    cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity")
-
-    cm_stats.param_vs_dist_plot.tight_layout()
-    cm_stats.param_vs_dist_plot.canvas.draw()
 
     # Necessary operations:
     # 1) Elimination of outliers (calculate mean, stdev, remove data > mean*3 sigma)
     # 2) Calculate R^2 values, per beat, for each parameter vs distance
-    # 3) Plot data
 
     # Necessary parameters:
     # 1) Sigma
@@ -1002,6 +973,42 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
     # 5) Number of unique min channels for PM (LAT)
+
+
+def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
+    input_param.stats_param_dist_slider = int(elecGUI120.param_vs_dist_beat_select.get()) - 1
+
+    cm_stats.param_vs_dist_axis_pm.cla()
+    cm_stats.param_vs_dist_axis_dvdt.cla()
+    cm_stats.param_vs_dist_axis_lat.cla()
+    cm_stats.param_vs_dist_axis_cv.cla()
+
+    # mask_coords = ~np.isnan(local_act_time.distance_from_min[input_param.stats_param_dist_slider])
+    cm_stats.param_vs_dist_plot.suptitle(
+        "Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
+    cm_stats.param_vs_dist_axis_pm.scatter(
+        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        c='red')
+    cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker", ylabel="Time lag (ms)")
+    cm_stats.param_vs_dist_axis_dvdt.scatter(
+        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        c='green')
+    cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity", ylabel="μV/ms")
+    cm_stats.param_vs_dist_axis_lat.scatter(
+        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        c='orange')
+    cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time", xlabel="Distance from origin (μm)", ylabel="Activation time (ms)")
+    cm_stats.param_vs_dist_axis_cv.scatter(
+        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        conduction_vel.param_dist_raw[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        c='blue')
+    cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity", xlabel="Distance from origin (μm)", ylabel="μm/ms")
+
+    cm_stats.param_vs_dist_plot.tight_layout()
+    cm_stats.param_vs_dist_plot.canvas.draw()
 
 
 class ElecGUI120(tk.Frame):
@@ -1062,7 +1069,7 @@ class ElecGUI120(tk.Frame):
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
         statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", command=lambda: [self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats),
-                                    param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)])
+                                    param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -1261,7 +1268,7 @@ class ElecGUI120(tk.Frame):
         self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_frame, length=200, width=15, from_=1,
                                                   to=int(cm_beats.beat_count_dist_mode[0]), orient="horizontal", bg="white", label="Current Beat Number")
         self.param_vs_dist_beat_select.grid(row=1, column=0, padx=5, pady=5)
-        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
