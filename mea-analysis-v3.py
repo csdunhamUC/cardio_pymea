@@ -11,7 +11,8 @@
 # 1) Use of dictionary to contain electrode coordinates (ordered vs unordered)
 # Consider using an OrderedDict instead if running under earlier versions of Python.
 # 2) tkinter vs Tkinter for GUI.
-# Program is currently set up to deal with 120 electrode MEAs from Multichannel Systems only.
+# Program is currently set up to deal with data obtained from 120 electrode MEAs from Multichannel Systems only.
+# For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -23,11 +24,18 @@ import seaborn as sns
 import os
 import time
 import tkinter as tk
-from numba import njit
-from scipy.signal import find_peaks
+# from numba import njit
+# from scipy.signal import find_peaks
 from scipy import stats
 from dis import dis
 import datetime
+from determine_beats import determine_beats
+from calculate_pacemaker import calculate_pacemaker
+from calculate_upstroke_vel import calculate_upstroke_vel
+from calculate_lat import calculate_lat
+from calculate_conduction_velocity import calculate_conduction_velocity
+
+
 
 #######################################################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
@@ -155,526 +163,28 @@ def data_import(elecGUI120, raw_data):
         print()
 
 
-# Finds peaks based on given input parameters.
-def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
-    try:
-        print("Finding beats...\n")
-        start_time = time.process_time()
+# def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, heat_map, input_param):
+#     try:
+#         if hasattr(conduction_vel, 'param_dist_raw') is True:
+#             print("Clearing old CV data before running new calculation...")
+#             delattr(conduction_vel, 'param_dist_raw')
+#         start_time = time.process_time()
+#         conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(local_act_time.param_dist_normalized.loc[:, local_act_time.final_dist_beat_count])
+#         # Need to add a placeholder value for the minimum channel; currently gives NaN as a consequence of division by zero.
+#         # Want/need to display the origin for heat map purposes.  Question is how to do this efficiently.
+#
+#         conduction_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
+#         conduction_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+#         conduction_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
+#         conduction_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+#
+#         end_time = time.process_time()
+#         print("CV calculation complete.")
+#         print(end_time - start_time)
+#         # graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, input_param)
+#     except AttributeError:
+#         print("Please calculate local activation time first.")
 
-        if hasattr(cm_beats, 'x_axis') is True:
-            print("Beat data are not empty; clearing before finding beats.")
-            delattr(cm_beats, 'x_axis')
-            delattr(cm_beats, 'dist_beats')
-            delattr(cm_beats, 'prom_beats')
-            delattr(cm_beats, 'width_beats')
-            delattr(cm_beats, 'thresh_beats')
-
-        cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
-        # y_axis indexing ends at column -1, or second to last column, to remove the columns containing only \r
-        if '\r' in raw_data.imported.columns:
-            cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
-        else:
-            cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
-
-        print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
-        print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)) + "\n")
-
-        input_param.elec_choice = int(elecGUI120.elec_to_plot_val.get()) - 1
-        input_param.min_peak_dist = float(elecGUI120.min_peak_dist_val.get())
-        input_param.min_peak_height = float(elecGUI120.min_peak_height_val.get())
-        input_param.parameter_prominence = float(elecGUI120.parameter_prominence_val.get())
-        input_param.parameter_width = float(elecGUI120.parameter_width_val.get())
-        input_param.parameter_thresh = float(elecGUI120.parameter_thresh_val.get())
-
-        # Establish "strucs" as dataframes for subsequent operations.
-        cm_beats.dist_beats = pd.DataFrame()
-        cm_beats.prom_beats = pd.DataFrame()
-        cm_beats.width_beats = pd.DataFrame()
-        cm_beats.thresh_beats = pd.DataFrame()
-
-        print("Summary of parameters: " + str(input_param.min_peak_dist) + ", " + str(input_param.min_peak_height) +
-              ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
-              str(input_param.parameter_thresh) + ".\n")
-
-        # For loops for finding beats (peaks) in each channel (electrode).  Suitable for any given MCD-converted file
-        # in which only one MEA is recorded (i.e. works for a single 120 electrode MEA, or 60 electrode MEA, etc
-        # Caveat 1: have not tested for singular MEA60 data.
-        # Disclaimer: Not currently equipped to handle datasets with dual-recorded MEAs (e.g. dual MEA60s)
-        for column in range(len(cm_beats.y_axis.columns)):
-            dist_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                              distance=input_param.min_peak_dist)[0], name=column+1)
-            cm_beats.dist_beats = pd.concat([cm_beats.dist_beats, dist_beats], axis='columns')
-
-            prom_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                              distance=input_param.min_peak_dist, prominence=input_param.parameter_prominence)[0], name=column+1)
-            cm_beats.prom_beats = pd.concat([cm_beats.prom_beats, prom_beats], axis='columns')
-
-            width_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                               distance=input_param.min_peak_dist, width=input_param.parameter_width)[0], name=column+1)
-            cm_beats.width_beats = pd.concat([cm_beats.width_beats, width_beats], axis='columns')
-
-            thresh_beats = pd.Series(find_peaks(cm_beats.y_axis.iloc[0:, column], height=input_param.min_peak_height,
-                                                distance=input_param.min_peak_dist, threshold=input_param.parameter_thresh)[0], name=column+1)
-            cm_beats.thresh_beats = pd.concat([cm_beats.thresh_beats, thresh_beats], axis='columns')
-
-        # Data designation to ensure NaN values are properly handled by subsequent calculations.
-        cm_beats.dist_beats.astype('Int64')
-        cm_beats.prom_beats.astype('Int64')
-        cm_beats.width_beats.astype('Int64')
-        cm_beats.thresh_beats.astype('Int64')
-
-        # Generate beat counts for the different peakfinder methods by finding the length of each electrode (column).
-        cm_beats.beat_count_dist = np.zeros(len(cm_beats.dist_beats.columns))
-        for column in range(len(cm_beats.dist_beats.columns)):
-            cm_beats.beat_count_dist[column] = len(cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
-
-        cm_beats.beat_count_prom = np.zeros(len(cm_beats.prom_beats.columns))
-        for column in range(len(cm_beats.prom_beats.columns)):
-            cm_beats.beat_count_prom[column] = len(cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
-
-        cm_beats.beat_count_width = np.zeros(len(cm_beats.width_beats.columns))
-        for column in range(len(cm_beats.width_beats.columns)):
-            cm_beats.beat_count_width[column] = len(cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
-
-        cm_beats.beat_count_thresh = np.zeros(len(cm_beats.thresh_beats.columns))
-        for column in range(len(cm_beats.thresh_beats.columns)):
-            cm_beats.beat_count_thresh[column] = len(cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
-
-        # Finds the mode of beats across the dataset for each peakfinder parameter set.
-        cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
-        cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
-        cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
-        cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
-
-        # Prints the output from the preceding operations.
-        print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode))
-        print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode))
-        print("Mode of beats using width parameter: " + str(cm_beats.beat_count_width_mode))
-        print("Mode of beats using threshold parameter: " + str(cm_beats.beat_count_thresh_mode))
-
-        dist_beats_size = np.shape(cm_beats.dist_beats)
-        print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
-        prom_beats_size = np.shape(cm_beats.prom_beats)
-        print("Shape of cm_beats.prom_beats: " + str(prom_beats_size))
-        width_beats_size = np.shape(cm_beats.width_beats)
-        print("Shape of cm_beats.width_beats: " + str(width_beats_size) + ".\n")
-        thresh_beats_size = np.shape(cm_beats.thresh_beats)
-        print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
-
-        print("Finished.")
-        end_time = time.process_time()
-        print(end_time - start_time)
-        print("Plotting...")
-        elecGUI120.beat_detect_window(cm_beats, input_param)
-        graph_beats(elecGUI120, cm_beats, input_param)
-    except AttributeError:
-        print("No data found. Please import data (.txt or .csv converted MCD file) first.")
-
-
-# Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
-# electrodes based on mismatched beat counts relative to the mode of the beat count.
-def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param):
-    try:
-        if hasattr(pace_maker, 'param_dist_raw') is True:
-            print("Clearing old pacemaker data before running new calculation...")
-            delattr(pace_maker, 'param_dist_raw')
-            delattr(pace_maker, 'param_prom_raw')
-            delattr(pace_maker, 'param_width_raw')
-            delattr(pace_maker, 'param_thresh_raw')
-
-        # Clock the time it takes to run the calculation.
-        start_time = time.process_time()
-        print("Calculating pacemaker intervals per beat.")
-
-        # Establishing these attributes of the pace_maker class appropriately as DataFrames.
-        pace_maker.param_dist_raw = pd.DataFrame()
-        pace_maker.param_prom_raw = pd.DataFrame()
-        pace_maker.param_width_raw = pd.DataFrame()
-        pace_maker.param_thresh_raw = pd.DataFrame()
-
-        # Performs PM calculation for each detection parameter (peak distance, prominence, width, threshold)
-        for column in range(len(cm_beats.dist_beats.columns)):
-            if cm_beats.beat_count_dist_mode[0] == len(cm_beats.dist_beats.iloc[0:, column].dropna()):
-                pace_maker_dist_raw = pd.Series(cm_beats.dist_beats.iloc[0:, column].dropna(), name=column+1)
-                pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
-            else:
-                pace_maker_dist_raw = pd.Series(name=column+1, dtype='float64')
-                pace_maker.param_dist_raw = pd.concat([pace_maker.param_dist_raw, pace_maker_dist_raw], axis='columns')
-
-        for column in range(len(cm_beats.prom_beats.columns)):
-            if cm_beats.beat_count_prom_mode[0] == len(cm_beats.prom_beats.iloc[0:, column].dropna()):
-                pace_maker_prom_raw = pd.Series(cm_beats.prom_beats.iloc[0:, column].dropna(), name=column+1)
-                pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
-            else:
-                pace_maker_prom_raw = pd.Series(name=column+1, dtype='float64')
-                pace_maker.param_prom_raw = pd.concat([pace_maker.param_prom_raw, pace_maker_prom_raw], axis='columns')
-
-        for column in range(len(cm_beats.width_beats.columns)):
-            if cm_beats.beat_count_prom_mode[0] == len(cm_beats.width_beats.iloc[0:, column].dropna()):
-                pace_maker_width_raw = pd.Series(cm_beats.width_beats.iloc[0:, column].dropna(), name=column+1)
-                pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
-            else:
-                pace_maker_width_raw = pd.Series(name=column+1, dtype='float64')
-                pace_maker.param_width_raw = pd.concat([pace_maker.param_width_raw, pace_maker_width_raw], axis='columns')
-
-        for column in range(len(cm_beats.thresh_beats.columns)):
-            if cm_beats.beat_count_thresh_mode[0] == len(cm_beats.thresh_beats.iloc[0:, column].dropna()):
-                pace_maker_thresh_raw = pd.Series(cm_beats.thresh_beats.iloc[0:, column].dropna(), name=column+1)
-                pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
-            else:
-                pace_maker_thresh_raw = pd.Series(name=column+1, dtype='float64')
-                pace_maker.param_thresh_raw = pd.concat([pace_maker.param_thresh_raw, pace_maker_thresh_raw], axis='columns')
-
-        # Normalizes the values for each beat by subtracting the minimum time of a given beat from all other electrodes
-        pace_maker.param_dist_normalized = pace_maker.param_dist_raw.sub(pace_maker.param_dist_raw.min(axis=1), axis=0)
-        pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(pace_maker.param_prom_raw.min(axis=1), axis=0)
-        pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0)
-        pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0)
-
-        # Find maximum time lag (interval)
-        pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
-
-        # Set slider value to maximum number of beats
-        elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
-
-        # Assigns column headers (names) using the naming convention provided in the ElectrodeConfig class.
-        pace_maker.param_dist_normalized.columns = ElectrodeConfig.electrode_names
-        pace_maker.param_prom_normalized.columns = ElectrodeConfig.electrode_names
-        pace_maker.param_width_normalized.columns = ElectrodeConfig.electrode_names
-        pace_maker.param_thresh_normalized.columns = ElectrodeConfig.electrode_names
-
-        # Generate index (row) labels, as a list, in order to access chosen beat heatmaps in subsequent function.
-        pace_maker.final_dist_beat_count = []
-        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-            pace_maker.final_dist_beat_count.append('Beat ' + str(beat+1))
-
-        # Generate index (row) labels, as a list, for assignment to dataframe, prior to transpose.
-        dist_new_index = []
-        for row in pace_maker.param_dist_normalized.index:
-            dist_new_index.append('Beat ' + str(row+1))
-
-        prom_new_index = []
-        for row in pace_maker.param_prom_normalized.index:
-            prom_new_index.append('Beat ' + str(row+1))
-
-        width_new_index = []
-        for row in pace_maker.param_width_normalized.index:
-            width_new_index.append('Beat ' + str(row+1))
-
-        thresh_new_index = []
-        for row in pace_maker.param_thresh_normalized.index:
-            thresh_new_index.append('Beat ' + str(row+1))
-
-        # Adds beat number labeling to each row, pre-transpose.
-        pace_maker.param_dist_normalized.index = dist_new_index
-        pace_maker.param_prom_normalized.index = prom_new_index
-        pace_maker.param_width_normalized.index = width_new_index
-        pace_maker.param_thresh_normalized.index = thresh_new_index
-
-        # Transpose dataframe to make future plotting easier.  Makes rows = electrodes and columns = beat number.
-        pace_maker.param_dist_normalized = pace_maker.param_dist_normalized.transpose()
-        pace_maker.param_prom_normalized = pace_maker.param_prom_normalized.transpose()
-        pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
-        pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
-
-        # Insert electrode name as column to make future plotting easier when attempting to use pivot table.
-        pace_maker.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        pace_maker.param_prom_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        pace_maker.param_width_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        pace_maker.param_thresh_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-
-        # Insert electrode coordinates X,Y (in micrometers) as columns after electrode identifier.
-        pace_maker.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-        # Repeat for prominence parameter.
-        pace_maker.param_prom_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_prom_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-        # Repeat for width parameter.
-        pace_maker.param_width_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_width_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-        # Repeat for threshold parameter.
-        pace_maker.param_thresh_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_thresh_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
-        pace_maker.param_dist_normalized.name = 'Pacemaker (Normalized)'
-
-        print("Done.")
-        # Finishes tabulating time for the calculation and prints the time.
-        end_time = time.process_time()
-        print(end_time - start_time)
-    except AttributeError:
-        print("Please use Find Peaks first.")
-
-
-# For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
-# Calculates upstroke velocity (dV/dt)
-def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_param):
-    try:
-        if hasattr(upstroke_vel, 'param_dist_raw') is True:
-            print("Clearing old dV/dt max data before running new calculation...")
-            delattr(upstroke_vel, 'param_dist_raw')
-
-        # Clock the time it takes to run the calculation.
-        start_time = time.process_time()
-        print("Calculating upstroke velocity per beat.")
-
-        num_of_electrodes = len(cm_beats.dist_beats.columns)
-        mode_of_beats = int(cm_beats.beat_count_dist_mode[0])
-        cm_beats_dist_beats_as_array = cm_beats.dist_beats.to_numpy()
-        cm_beats_y_axis_as_array = cm_beats.y_axis.to_numpy()
-        per_electrode_mode_of_beats = np.zeros(num_of_electrodes)
-
-        for electrode in range(num_of_electrodes):
-            per_electrode_mode_of_beats[electrode] = len(cm_beats.dist_beats.iloc[0:, electrode].dropna())
-
-        dvdt_max = dvdt_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_array,
-                                       cm_beats_y_axis_as_array, per_electrode_mode_of_beats)
-
-        upstroke_vel.final_dist_beat_count = []
-        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-            upstroke_vel.final_dist_beat_count.append('Beat ' + str(beat + 1))
-
-        upstroke_vel.param_dist_raw = pd.DataFrame(dvdt_max, index=upstroke_vel.final_dist_beat_count).T
-        upstroke_vel.param_dist_normalized = upstroke_vel.param_dist_raw.sub(upstroke_vel.param_dist_raw.min(axis=0),
-                                                                             axis=1)
-
-        # Normalized dV/dt across the dataset.
-        upstroke_vel.param_dist_normalized_max = upstroke_vel.param_dist_normalized.max().max()
-
-        upstroke_vel.param_dist_normalized.index = ElectrodeConfig.electrode_names
-        upstroke_vel.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        upstroke_vel.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        upstroke_vel.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
-        # Assign name to resulting dataframe.
-        upstroke_vel.param_dist_normalized.name = 'Upstroke Velocity'
-
-        # Set slider value to maximum number of beats
-        elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
-
-        print("Done")
-        # Finishes tabulating time for the calculation and prints the time.
-        end_time = time.process_time()
-        print(end_time - start_time)
-    except AttributeError:
-        print("Please use Find Peaks first.")
-
-
-@njit
-def dvdt_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_array, cm_beats_y_axis_as_array, per_electrode_mode_of_beats):
-    temp_slope = np.zeros((num_of_electrodes, 5))
-    temp_dvdt_max = np.zeros(num_of_electrodes)
-    x_values = np.zeros((2, 5))
-    y_values = np.zeros((2, 5))
-    dvdt_max = np.zeros((mode_of_beats, num_of_electrodes))
-
-    for beat in range(mode_of_beats):
-        for electrode in range(num_of_electrodes):
-            if mode_of_beats == per_electrode_mode_of_beats[electrode]:
-                x_2_1 = cm_beats_dist_beats_as_array[beat, electrode]
-                x_2_2 = x_2_1 - 1
-                x_2_3 = x_2_2 - 1
-                x_2_4 = x_2_3 - 1
-                x_2_5 = x_2_4 - 1
-
-                x_1_1 = x_2_1 - 1
-                x_1_2 = x_2_2 - 1
-                x_1_3 = x_2_3 - 1
-                x_1_4 = x_2_4 - 1
-                x_1_5 = x_2_5 - 1
-
-                y_2_1 = cm_beats_y_axis_as_array[int(x_2_1), electrode]
-                y_2_2 = cm_beats_y_axis_as_array[int(x_2_2), electrode]
-                y_2_3 = cm_beats_y_axis_as_array[int(x_2_3), electrode]
-                y_2_4 = cm_beats_y_axis_as_array[int(x_2_4), electrode]
-                y_2_5 = cm_beats_y_axis_as_array[int(x_2_5), electrode]
-
-                y_1_1 = cm_beats_y_axis_as_array[int(x_1_1), electrode]
-                y_1_2 = cm_beats_y_axis_as_array[int(x_1_2), electrode]
-                y_1_3 = cm_beats_y_axis_as_array[int(x_1_3), electrode]
-                y_1_4 = cm_beats_y_axis_as_array[int(x_1_4), electrode]
-                y_1_5 = cm_beats_y_axis_as_array[int(x_1_5), electrode]
-
-                x_values[0, :] = [x_2_1, x_2_2, x_2_3, x_2_4, x_2_5]
-                x_values[1, :] = [x_1_1, x_1_2, x_1_3, x_1_4, x_1_5]
-                y_values[0, :] = [y_2_1, y_2_2, y_2_3, y_2_4, y_2_5]
-                y_values[1, :] = [y_1_1, y_1_2, y_1_3, y_1_4, y_1_5]
-
-                y_diff = y_values[0, :] - y_values[1, :]
-                x_diff = x_values[0, :] - x_values[1, :]
-
-                calc_slope = np.divide(y_diff, x_diff)
-                temp_slope[electrode] = calc_slope
-            else:
-                temp_slope[electrode] = [np.nan, np.nan, np.nan, np.nan, np.nan]
-            temp_dvdt_max[electrode] = max(temp_slope[electrode])
-
-        dvdt_max[beat] = temp_dvdt_max
-
-    return dvdt_max
-
-
-def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param):
-    try:
-        if hasattr(local_act_time, 'param_dist_raw') is True:
-            print("Clearing old LAT data before running new calculation...")
-            delattr(local_act_time, 'param_dist_raw')
-
-        # Clock the time it takes to run the calculation.
-        start_time = time.process_time()
-        print("Calculating LAT per beat.")
-
-        num_of_electrodes = len(cm_beats.dist_beats.columns)
-        mode_of_beats = int(cm_beats.beat_count_dist_mode[0])
-        cm_beats_dist_beats_as_array = cm_beats.dist_beats.to_numpy()
-        cm_beats_y_axis_as_array = cm_beats.y_axis.to_numpy()
-        per_electrode_mode_of_beats = np.zeros(num_of_electrodes)
-
-        for electrode in range(num_of_electrodes):
-            per_electrode_mode_of_beats[electrode] = len(cm_beats.dist_beats.iloc[0:, electrode].dropna())
-
-        local_at = lat_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_array,
-            cm_beats_y_axis_as_array, per_electrode_mode_of_beats)
-
-        local_act_time.final_dist_beat_count = []
-        for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-            local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
-
-        local_act_time.param_dist_raw = pd.DataFrame(local_at, index=local_act_time.final_dist_beat_count).T
-        local_act_time.param_dist_normalized = local_act_time.param_dist_raw.sub(local_act_time.param_dist_raw.min(axis=0), axis=1)
-
-        # Find maximum time lag, LAT version (interval)
-        local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
-
-        local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
-        local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        local_act_time.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        local_act_time.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
-        # Assign name to resulting dataframe.
-        local_act_time.param_dist_normalized.name = 'Local Activation Time'
-
-        # Set slider value to maximum number of beats
-        elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
-
-        print("Done")
-        # Finishes tabulating time for the calculation and prints the time.
-        end_time = time.process_time()
-        print(end_time - start_time)
-        calculate_distances(local_act_time, ElectrodeConfig)
-    except AttributeError:
-        print("Please use Find Peaks first.")
-
-
-@njit
-def lat_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_array, cm_beats_y_axis_as_array, per_electrode_mode_of_beats):
-    temp_slope = np.zeros((num_of_electrodes, 5))
-    temp_index = np.zeros((num_of_electrodes, 5))
-    temp_local_at = np.zeros(num_of_electrodes)
-    x_values = np.zeros((2, 5))
-    y_values = np.zeros((2, 5))
-    local_at = np.zeros((mode_of_beats, num_of_electrodes))
-
-    for beat in range(mode_of_beats):
-        for electrode in range(num_of_electrodes):
-            if mode_of_beats == per_electrode_mode_of_beats[electrode]:
-                x_2_1 = cm_beats_dist_beats_as_array[beat, electrode]
-                x_2_2 = x_2_1 + 1
-                x_2_3 = x_2_2 + 1
-                x_2_4 = x_2_3 + 1
-                x_2_5 = x_2_4 + 1
-
-                x_1_1 = x_2_1 + 1
-                x_1_2 = x_2_2 + 1
-                x_1_3 = x_2_3 + 1
-                x_1_4 = x_2_4 + 1
-                x_1_5 = x_2_5 + 1
-
-                y_2_1 = cm_beats_y_axis_as_array[int(x_2_1), electrode]
-                y_2_2 = cm_beats_y_axis_as_array[int(x_2_2), electrode]
-                y_2_3 = cm_beats_y_axis_as_array[int(x_2_3), electrode]
-                y_2_4 = cm_beats_y_axis_as_array[int(x_2_4), electrode]
-                y_2_5 = cm_beats_y_axis_as_array[int(x_2_5), electrode]
-
-                y_1_1 = cm_beats_y_axis_as_array[int(x_1_1), electrode]
-                y_1_2 = cm_beats_y_axis_as_array[int(x_1_2), electrode]
-                y_1_3 = cm_beats_y_axis_as_array[int(x_1_3), electrode]
-                y_1_4 = cm_beats_y_axis_as_array[int(x_1_4), electrode]
-                y_1_5 = cm_beats_y_axis_as_array[int(x_1_5), electrode]
-
-                x_values[0, :] = [x_2_1, x_2_2, x_2_3, x_2_4, x_2_5]
-                x_values[1, :] = [x_1_1, x_1_2, x_1_3, x_1_4, x_1_5]
-                y_values[0, :] = [y_2_1, y_2_2, y_2_3, y_2_4, y_2_5]
-                y_values[1, :] = [y_1_1, y_1_2, y_1_3, y_1_4, y_1_5]
-
-                y_diff = y_values[0, :] - y_values[1, :]
-                x_diff = x_values[0, :] - x_values[1, :]
-
-                calc_slope = np.divide(y_diff, x_diff)
-
-                temp_index[electrode] = x_values[0]
-                temp_slope[electrode] = calc_slope
-            else:
-                temp_index[electrode] = [np.nan, np.nan, np.nan, np.nan, np.nan]
-                temp_slope[electrode] = [np.nan, np.nan, np.nan, np.nan, np.nan]
-            temp_local_at[electrode] = temp_index[electrode, np.argmin(temp_slope[electrode])]
-
-        local_at[beat] = temp_local_at
-
-    return local_at
-
-
-# Function that calculates distances from the minimum electrode for each beat.  Values for use in conduction velocity.
-def calculate_distances(local_act_time, ElectrodeConfig):
-    if hasattr(local_act_time, 'distance_from_min') is True:
-        print("Clearing old distance data before running new calculation...")
-        delattr(local_act_time, 'distance_from_min')
-
-    start_time = time.process_time()
-    print("Calculating distances from electrode minimum, per beat.")
-
-    calc_dist_from_min = [0]*len(local_act_time.final_dist_beat_count)
-
-    for num, beat in enumerate(local_act_time.final_dist_beat_count):
-        min_beat_location = local_act_time.param_dist_normalized[[beat]].idxmin()
-        min_coords = np.array([local_act_time.param_dist_normalized.loc[min_beat_location[0], 'X'],
-                              local_act_time.param_dist_normalized.loc[min_beat_location[0], 'Y']])
-        calc_dist_from_min[num] = ((local_act_time.param_dist_normalized[['X', 'Y']] - min_coords).pow(2).sum(1).pow(0.5))
-
-    local_act_time.distance_from_min = pd.DataFrame(calc_dist_from_min, index=local_act_time.final_dist_beat_count,
-                                                    columns=ElectrodeConfig.electrode_names).T
-
-    print("Done.")
-    end_time = time.process_time()
-    print(end_time - start_time)
-
-
-def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, heat_map, input_param):
-    try:
-        if hasattr(conduction_vel, 'param_dist_raw') is True:
-            print("Clearing old CV data before running new calculation...")
-            delattr(conduction_vel, 'param_dist_raw')
-        start_time = time.process_time()
-        conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(local_act_time.param_dist_normalized.loc[:, local_act_time.final_dist_beat_count])
-        # Need to add a placeholder value for the minimum channel; currently gives NaN as a consequence of division by zero.
-        # Want/need to display the origin for heat map purposes.  Question is how to do this efficiently.
-
-        conduction_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
-        conduction_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        conduction_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        conduction_vel.param_dist_raw.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
-
-        end_time = time.process_time()
-        print("CV calculation complete.")
-        print(end_time - start_time)
-        # graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, input_param)
-    except AttributeError:
-        print("Please calculate local activation time first.")
-
-
-# ######################################################################################################################
-# ################################################ Calculations End ####################################################
-# ######################################################################################################################
 
 # Usually just for debugging, a function that prints out values upon button press.
 def data_print(elecGUI120, raw_data, pace_maker, input_param):
@@ -1043,26 +553,28 @@ class ElecGUI120(tk.Frame):
 
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
-        calc_menu.add_command(label="Beat Detect (Run First!)", command=lambda: determine_beats(self, raw_data, cm_beats, input_param))
+        calc_menu.add_command(label="Beat Detect (Run First!)", command=lambda: [determine_beats(self, raw_data, cm_beats, input_param),
+                                                                                 self.beat_detect_window(cm_beats, input_param),
+                                                                                 graph_beats(self, cm_beats, input_param)])
         calc_menu.add_command(label="Calculate All Parameters",
-                              command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param),
-                                               calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param),
-                                               calculate_lat(self, cm_beats, local_act_time, heat_map, input_param),
-                                               calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param),
+                              command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param, ElectrodeConfig),
+                                               calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param, ElectrodeConfig),
+                                               calculate_lat(self, cm_beats, local_act_time, heat_map, input_param, ElectrodeConfig),
+                                               calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param, ElectrodeConfig),
                                                graph_all(self, heat_map, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param)])
         # Add extra command for each solitary calculation that calls the appropriate graphing function.
         # The graphing function will call the appropriate method to open the window.  This will allow for individual
         # parameter analysis.
-        calc_menu.add_command(label="Pacemaker", command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param),
+        calc_menu.add_command(label="Pacemaker", command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param, ElectrodeConfig),
                                                                   self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, input_param),
                                                                   graph_pacemaker(self, heat_map, pace_maker, input_param)])
-        calc_menu.add_command(label="Upstroke Velocity", command=lambda: [calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param),
+        calc_menu.add_command(label="Upstroke Velocity", command=lambda: [calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param, ElectrodeConfig),
                                                                           self.dvdt_heatmap_window(cm_beats, upstroke_vel, heat_map, input_param),
                                                                           graph_upstroke(self, heat_map, upstroke_vel, input_param)])
-        calc_menu.add_command(label="Local Activation Time", command=lambda: [calculate_lat(self, cm_beats, local_act_time, heat_map, input_param),
+        calc_menu.add_command(label="Local Activation Time", command=lambda: [calculate_lat(self, cm_beats, local_act_time, heat_map, input_param, ElectrodeConfig),
                                                                               self.lat_heatmap_window(cm_beats, local_act_time, heat_map, input_param),
                                                                               graph_local_act_time(self, heat_map, local_act_time, input_param)])
-        calc_menu.add_command(label="Conduction Velocity", command=lambda: [calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param),
+        calc_menu.add_command(label="Conduction Velocity", command=lambda: [calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param, ElectrodeConfig),
                                                                             self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, heat_map, input_param),
                                                                             graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param)])
 
