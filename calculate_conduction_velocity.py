@@ -27,6 +27,5 @@ def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, he
         end_time = time.process_time()
         print("CV calculation complete.")
         print(end_time - start_time)
-        # graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, input_param)
     except AttributeError:
         print("Please calculate local activation time first.")

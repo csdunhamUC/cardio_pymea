@@ -24,8 +24,7 @@ import seaborn as sns
 import os
 import time
 import tkinter as tk
-# from numba import njit
-# from scipy.signal import find_peaks
+import importlib
 from scipy import stats
 from dis import dis
 import datetime
@@ -34,7 +33,6 @@ from calculate_pacemaker import calculate_pacemaker
 from calculate_upstroke_vel import calculate_upstroke_vel
 from calculate_lat import calculate_lat
 from calculate_conduction_velocity import calculate_conduction_velocity
-
 
 
 #######################################################################################################################
@@ -592,6 +590,11 @@ class ElecGUI120(tk.Frame):
         advanced_tools_menu.add_command(label="t-SNE", command=None)
         advanced_tools_menu.add_command(label="DBSCAN", command=None)
         advanced_tools_menu.add_command(label="PCA", command=None)
+
+        testing_menu = tk.Menu(menu)
+        menu.add_cascade(label="Testing", menu=testing_menu)
+        testing_menu.add_command(label="Test Implementation", command=None)
+
 
         # ############################################### Entry Fields ################################################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
