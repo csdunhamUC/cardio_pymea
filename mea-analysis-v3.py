@@ -14,6 +14,7 @@
 # Program is currently set up to deal with data obtained from 120 electrode MEAs from Multichannel Systems only.
 # For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
 
+# import colored_traceback
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -34,6 +35,9 @@ from calculate_upstroke_vel import calculate_upstroke_vel
 from calculate_lat import calculate_lat
 from calculate_conduction_velocity import calculate_conduction_velocity
 
+
+# For my own sake of having a more noticeable error message in terminal.
+# colored_traceback.add_hook()
 
 #######################################################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
@@ -458,6 +462,9 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
     # 5) Number of unique min channels for PM (LAT)
+    input_param.sigma_value = elecGUI120.param_vs_dist_sigma_value.get()
+
+    param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)
 
 
 def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
@@ -555,8 +562,8 @@ class ElecGUI120(tk.Frame):
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
-        statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", command=lambda: [self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats),
-                                    param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)])
+        statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", 
+            command=lambda: [self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -575,7 +582,7 @@ class ElecGUI120(tk.Frame):
 
         # ############################################### Entry Fields ################################################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, min peak amplitude, prominence, etc)
-        self.mea_parameters_frame = tk.Frame(self, width=1620, height=100, bg="white")
+        self.mea_parameters_frame = tk.Frame(self, width=1620, height=80, bg="white")
         self.mea_parameters_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
 
@@ -657,6 +664,9 @@ class ElecGUI120(tk.Frame):
         self.lat_solo_beat_select = None
         self.cv_solo_beat_select = None
         self.param_vs_dist_beat_select = None
+        self.param_vs_dist_sigma_value = tk.StringVar()
+        self.param_vs_dist_sigma_value.set("3")
+        # self.param_vs_dist_sigma_value.trace_add("write")
 
         # # print(dir(self))
 
@@ -750,8 +760,16 @@ class ElecGUI120(tk.Frame):
     def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
         param_vs_dist= tk.Toplevel(self)
         param_vs_dist.title("Parameter vs Distance Plot w/ R-Square")
-        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1300, height=100, bg="white")
-        param_vs_dist_options_frame.grid(row=0, column=0, padx=5, pady=5)
+        param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1300, height=80, bg="white")
+        param_vs_dist_options_frame.grid(row=0, column=0, columnspan=1, padx=5, pady=5)
+        param_vs_dist_options_frame.grid_propagate(False)
+        param_vs_dist_sigma_label = tk.Label(param_vs_dist_options_frame, text="Sigma Value", bg="white")
+        param_vs_dist_sigma_label.grid(row=0, column=0, padx=2, pady=2)
+        param_vs_dist_sigma_entry = tk.Entry(param_vs_dist_options_frame, text=self.param_vs_dist_sigma_value, width=8)
+        param_vs_dist_sigma_entry.grid(row=1, column=0, padx=5, pady=5)
+        param_vs_dist_remove_outliers = tk.Button(param_vs_dist_options_frame, text="Remove Outliers", bg="silver", height=2,
+            command=lambda: param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+        param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, padx=5, pady=5)
         param_vs_dist_frame = tk.Frame(param_vs_dist, width=1300, height=800, bg="white")
         param_vs_dist_frame.grid(row=1, column=0, padx=5, pady=5)
         param_vs_dist_frame.grid_propagate(False)
@@ -761,6 +779,7 @@ class ElecGUI120(tk.Frame):
                                                   to=int(cm_beats.beat_count_dist_mode[0]), orient="horizontal", bg="white", label="Current Beat Number")
         self.param_vs_dist_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
