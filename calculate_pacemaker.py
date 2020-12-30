@@ -4,6 +4,7 @@
 # Original work
 
 import time
+import numpy as np
 import pandas as pd
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
@@ -68,6 +69,9 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param,
 
         # Find maximum time lag (interval)
         pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
+
+        # Find the mean interval time.
+        pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized)
 
         # Set slider value to maximum number of beats
         elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
