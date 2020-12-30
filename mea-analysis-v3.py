@@ -14,7 +14,6 @@
 # Program is currently set up to deal with data obtained from 120 electrode MEAs from Multichannel Systems only.
 # For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
 
-# import colored_traceback
 import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
@@ -35,9 +34,6 @@ from calculate_upstroke_vel import calculate_upstroke_vel
 from calculate_lat import calculate_lat
 from calculate_conduction_velocity import calculate_conduction_velocity
 
-
-# For my own sake of having a more noticeable error message in terminal.
-# colored_traceback.add_hook()
 
 #######################################################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and allow it to be passed from
@@ -444,7 +440,20 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     #         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
     #         cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
 
+    input_param.sigma_value = int(elecGUI120.param_vs_dist_sigma_value.get())
+    print("Sigma value: " + str(input_param.sigma_value))
 
+    temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(columns=['Electrode', 'X', 'Y'])
+    temp_pacemaker_stddev = temp_pacemaker_pre_filtered.stack().std()
+    print("Mean (Time Lag): " + str(pace_maker.param_dist_normalized_mean))
+    print("Standard Deviation (Time Lag): " + str(temp_pacemaker_stddev))
+
+    outlier_threshold = (pace_maker.param_dist_normalized_mean + (input_param.sigma_value * temp_pacemaker_stddev))
+
+    cm_stats.pace_maker_filtered_data = pd.DataFrame(columns=temp_pacemaker_pre_filtered.columns, index=temp_pacemaker_pre_filtered.index)
+    cm_stats.pace_maker_filtered_data[temp_pacemaker_pre_filtered.columns] = np.where((temp_pacemaker_pre_filtered.values > outlier_threshold), 
+        np.nan, temp_pacemaker_pre_filtered.values)
+    print()
     # x-values @: local_act_time.distance_from_min
     # y-values @: pace_maker.param_dist_normalized, upstroke_vel.param_dist_normalized,
 
@@ -462,8 +471,6 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
     # 5) Number of unique min channels for PM (LAT)
-    input_param.sigma_value = elecGUI120.param_vs_dist_sigma_value.get()
-
     param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)
 
 
@@ -480,7 +487,7 @@ def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
         "Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
     cm_stats.param_vs_dist_axis_pm.scatter(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.pace_maker_filtered_data[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         c='red')
     cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker", ylabel="Time lag (ms)")
     cm_stats.param_vs_dist_axis_dvdt.scatter(
