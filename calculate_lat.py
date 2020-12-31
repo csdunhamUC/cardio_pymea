@@ -42,6 +42,10 @@ def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param, E
         # Find maximum time lag, LAT version (interval)
         local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
 
+        # Find the mean LAT
+        local_act_time.param_dist_normalized_mean = np.nanmean(local_act_time.param_dist_normalized)
+        # print("Mean LAT: " + str(local_act_time.param_dist_normalized_mean))
+
         local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
         local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
         local_act_time.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)

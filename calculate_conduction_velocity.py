@@ -19,6 +19,9 @@ def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, he
         # Need to add a placeholder value for the minimum channel; currently gives NaN as a consequence of division by zero.
         # Want/need to display the origin for heat map purposes.  Question is how to do this efficiently.
 
+        conduction_vel.param_dist_raw_max = conduction_vel.param_dist_raw.max().max()
+        conduction_vel.param_dist_raw_mean = np.nanmean(conduction_vel.param_dist_raw)
+
         conduction_vel.param_dist_raw.index = ElectrodeConfig.electrode_names
         conduction_vel.param_dist_raw.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
         conduction_vel.param_dist_raw.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
