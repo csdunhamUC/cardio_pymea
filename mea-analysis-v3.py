@@ -15,6 +15,7 @@
 # For future ref: numpy.polynomial.polynomial.polyfit(x,y,order) or scipy.stats.linregress(x,y)
 
 import numpy as np
+import importlib
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 import pandas as pd
@@ -33,6 +34,7 @@ from calculate_pacemaker import calculate_pacemaker
 from calculate_upstroke_vel import calculate_upstroke_vel
 from calculate_lat import calculate_lat
 from calculate_conduction_velocity import calculate_conduction_velocity
+import param_vs_distance_stats
 
 
 #######################################################################################################################
@@ -174,6 +176,13 @@ def data_print(elecGUI120, raw_data, pace_maker, input_param):
 
 def time_test():
     dis(calculate_lat)
+
+
+# Reloads given module.  This is used for testing/developing a module to save time vs re-running the program over and over.
+def reload_module():
+    importlib.reload(param_vs_distance_stats)
+    # from param_vs_distance_stats import param_vs_distance_graphing, param_vs_distance_analysis
+    print("Reloaded module.")
 
 
 # ######################################################################################################################
@@ -429,87 +438,6 @@ def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time
         print("Please run all of your calculations first.")
 
 
-def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
-    print()
-    # First thing first: plot stuff vs distance.  Distances must be x-values, parameters must be y-values from sel. beat
-    #         cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
-    #
-    #         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
-    #         dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
-    #         cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
-    #         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-    #         cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
-
-    input_param.sigma_value = int(elecGUI120.param_vs_dist_sigma_value.get())
-    print("Sigma value: " + str(input_param.sigma_value))
-
-    temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(columns=['Electrode', 'X', 'Y'])
-    temp_pacemaker_stddev = temp_pacemaker_pre_filtered.stack().std()
-    print("Mean (Time Lag): " + str(pace_maker.param_dist_normalized_mean))
-    print("Standard Deviation (Time Lag): " + str(temp_pacemaker_stddev))
-
-    outlier_threshold = (pace_maker.param_dist_normalized_mean + (input_param.sigma_value * temp_pacemaker_stddev))
-
-    cm_stats.pace_maker_filtered_data = pd.DataFrame(columns=temp_pacemaker_pre_filtered.columns, index=temp_pacemaker_pre_filtered.index)
-    cm_stats.pace_maker_filtered_data[temp_pacemaker_pre_filtered.columns] = np.where((temp_pacemaker_pre_filtered.values > outlier_threshold), 
-        np.nan, temp_pacemaker_pre_filtered.values)
-    print()
-    # x-values @: local_act_time.distance_from_min
-    # y-values @: pace_maker.param_dist_normalized, upstroke_vel.param_dist_normalized,
-
-    # Necessary operations:
-    # 1) Elimination of outliers (calculate mean, stdev, remove data > mean*3 sigma)
-    # 2) Calculate R^2 values, per beat, for each parameter vs distance
-
-    # Necessary parameters:
-    # 1) Sigma
-    # 2) Percentile of R^2 to display/indicate
-
-    # Necessary readouts:
-    # 1) Dataset averages and standard deviation for each parameter (dV/dt, CV, PM, LAT)
-    # 2) Dataset average and standard deviation of R^2 for each parameter (sorted high to low).
-    # 3) Mode of PM (LAT) min & max channels.
-    # 4) Mode of CV min and max channels.
-    # 5) Number of unique min channels for PM (LAT)
-    param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)
-
-
-def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
-    input_param.stats_param_dist_slider = int(elecGUI120.param_vs_dist_beat_select.get()) - 1
-
-    cm_stats.param_vs_dist_axis_pm.cla()
-    cm_stats.param_vs_dist_axis_dvdt.cla()
-    cm_stats.param_vs_dist_axis_lat.cla()
-    cm_stats.param_vs_dist_axis_cv.cla()
-
-    # mask_coords = ~np.isnan(local_act_time.distance_from_min[input_param.stats_param_dist_slider])
-    cm_stats.param_vs_dist_plot.suptitle(
-        "Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
-    cm_stats.param_vs_dist_axis_pm.scatter(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.pace_maker_filtered_data[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='red')
-    cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker", ylabel="Time lag (ms)")
-    cm_stats.param_vs_dist_axis_dvdt.scatter(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='green')
-    cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity", ylabel="μV/ms")
-    cm_stats.param_vs_dist_axis_lat.scatter(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='orange')
-    cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time", xlabel="Distance from origin (μm)", ylabel="Activation time (ms)")
-    cm_stats.param_vs_dist_axis_cv.scatter(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        conduction_vel.param_dist_raw[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='blue')
-    cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity", xlabel="Distance from origin (μm)", ylabel="μm/ms")
-
-    cm_stats.param_vs_dist_plot.tight_layout()
-    cm_stats.param_vs_dist_plot.canvas.draw()
-
-
 class ElecGUI120(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, cm_stats):
         tk.Frame.__init__(self, master)
@@ -584,7 +512,7 @@ class ElecGUI120(tk.Frame):
 
         testing_menu = tk.Menu(menu)
         menu.add_cascade(label="Testing", menu=testing_menu)
-        testing_menu.add_command(label="Test Implementation", command=None)
+        testing_menu.add_command(label="Reload Module", command=lambda: reload_module())
 
 
         # ############################################### Entry Fields ################################################
@@ -775,7 +703,7 @@ class ElecGUI120(tk.Frame):
         param_vs_dist_sigma_entry = tk.Entry(param_vs_dist_options_frame, text=self.param_vs_dist_sigma_value, width=8)
         param_vs_dist_sigma_entry.grid(row=1, column=0, padx=5, pady=5)
         param_vs_dist_remove_outliers = tk.Button(param_vs_dist_options_frame, text="Remove Outliers", bg="silver", height=2,
-            command=lambda: param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+            command=lambda: param_vs_distance_stats.param_vs_distance_analysis(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
         param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, padx=5, pady=5)
         param_vs_dist_frame = tk.Frame(param_vs_dist, width=1300, height=800, bg="white")
         param_vs_dist_frame.grid(row=1, column=0, padx=5, pady=5)
@@ -785,7 +713,7 @@ class ElecGUI120(tk.Frame):
         self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_frame, length=200, width=15, from_=1,
                                                   to=int(cm_beats.beat_count_dist_mode[0]), orient="horizontal", bg="white", label="Current Beat Number")
         self.param_vs_dist_beat_select.grid(row=1, column=0, padx=5, pady=5)
-        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
+        self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_stats.param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
 
 
     def col_sel_callback(self, *args):
