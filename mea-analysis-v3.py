@@ -579,8 +579,8 @@ class ElecGUI120(tk.Frame):
         self.gen_all_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
         self.gen_all_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
         # Beat select slider, belongs to different frame.
-        self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=200, width=15, from_=1, to=20,
-                                        orient="horizontal", bg="white", label="Current Beat Number")
+        self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=125, width=15, from_=1, to=20,
+                                        orient="horizontal", bg="white", label="Current Beat:")
         self.mea_beat_select.grid(row=0, column=7, rowspan=2, padx=100, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
                                   lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
@@ -640,9 +640,9 @@ class ElecGUI120(tk.Frame):
         pm_heatmap_frame.grid_propagate(False)
         pm_heatmap_fig = FigureCanvasTkAgg(heat_map.pm_solo_plot, pm_heatmap_frame)
         pm_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.pm_solo_beat_select = tk.Scale(pm_heatmap_frame, length=200, width=15, from_=1,
+        self.pm_solo_beat_select = tk.Scale(pm_heatmap_frame, length=125, width=15, from_=1,
                                             to=int(cm_beats.beat_count_dist_mode[0]),
-                                        orient="horizontal", bg="white", label="Current Beat Number")
+                                        orient="horizontal", bg="white", label="Current Beat")
         self.pm_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.pm_solo_beat_select.bind("<ButtonRelease-1>",
                                   lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
@@ -655,9 +655,9 @@ class ElecGUI120(tk.Frame):
         dvdt_heatmap_frame.grid_propagate(False)
         dvdt_heatmap_fig = FigureCanvasTkAgg(heat_map.dvdt_solo_plot, dvdt_heatmap_frame)
         dvdt_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.dvdt_solo_beat_select = tk.Scale(dvdt_heatmap_frame, length=200, width=15, from_=1,
+        self.dvdt_solo_beat_select = tk.Scale(dvdt_heatmap_frame, length=125, width=15, from_=1,
                                               to=int(cm_beats.beat_count_dist_mode[0]),
-                                              orient="horizontal", bg="white", label="Current Beat Number")
+                                              orient="horizontal", bg="white", label="Current Beat")
         self.dvdt_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.dvdt_solo_beat_select.bind("<ButtonRelease-1>",
                                         lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
@@ -670,9 +670,9 @@ class ElecGUI120(tk.Frame):
         lat_heatmap_frame.grid_propagate(False)
         lat_heatmap_fig = FigureCanvasTkAgg(heat_map.lat_solo_plot, lat_heatmap_frame)
         lat_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.lat_solo_beat_select = tk.Scale(lat_heatmap_frame, length=200, width=15, from_=1,
+        self.lat_solo_beat_select = tk.Scale(lat_heatmap_frame, length=125, width=15, from_=1,
                                               to=int(cm_beats.beat_count_dist_mode[0]),
-                                              orient="horizontal", bg="white", label="Current Beat Number")
+                                              orient="horizontal", bg="white", label="Current Beat")
         self.lat_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.lat_solo_beat_select.bind("<ButtonRelease-1>",
                                         lambda event: graph_local_act_time(self, heat_map, local_act_time, input_param))
@@ -685,9 +685,9 @@ class ElecGUI120(tk.Frame):
         cv_heatmap_frame.grid_propagate(False)
         cv_heatmap_fig = FigureCanvasTkAgg(heat_map.cv_solo_plot, cv_heatmap_frame)
         cv_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.cv_solo_beat_select = tk.Scale(cv_heatmap_frame, length=200, width=15, from_=1,
+        self.cv_solo_beat_select = tk.Scale(cv_heatmap_frame, length=125, width=15, from_=1,
                                             to=int(cm_beats.beat_count_dist_mode[0]),
-                                            orient="horizontal", bg="white", label="Current Beat Number")
+                                            orient="horizontal", bg="white", label="Current Beat")
         self.cv_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.cv_solo_beat_select.bind("<ButtonRelease-1>",
                                       lambda event: graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param))
@@ -710,9 +710,9 @@ class ElecGUI120(tk.Frame):
         param_vs_dist_frame.grid_propagate(False)
         param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_frame)
         param_vs_dist_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_frame, length=200, width=15, from_=1,
-                                                  to=int(cm_beats.beat_count_dist_mode[0]), orient="horizontal", bg="white", label="Current Beat Number")
-        self.param_vs_dist_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_options_frame, length=125, width=15, from_=1,
+                                                  to=int(cm_beats.beat_count_dist_mode[0]), orient="horizontal", bg="white", label="Current Beat")
+        self.param_vs_dist_beat_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
         self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", lambda event: param_vs_distance_stats.param_vs_distance_graphing(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats))
 
 
@@ -801,7 +801,7 @@ def main():
     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
 
-    cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
+    cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5, 6.5), dpi=120)
     cm_stats.param_vs_dist_axis_pm = cm_stats.param_vs_dist_plot.add_subplot(221)
     cm_stats.param_vs_dist_axis_lat = cm_stats.param_vs_dist_plot.add_subplot(223)
     cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(222)
