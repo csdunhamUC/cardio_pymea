@@ -6,6 +6,8 @@
 import numpy as np
 import pandas as pd
 import scipy as sp
+# import seaborn as sns
+from matplotlib import pyplot as plt
 
 def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
     input_param.sigma_value = int(elecGUI120.param_vs_dist_sigma_value.get())
@@ -55,7 +57,7 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     cm_stats.conduction_vel_filtered_data[temp_cv_pre_filtered.columns] = np.where((temp_cv_pre_filtered.values > outlier_threshold_cv), 
         np.nan, temp_cv_pre_filtered.values)
 
-    # Calculations for R-squared values.
+    # Calculations for R-squared values (Pacemaker).
     cm_stats.slope_pm = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
     cm_stats.intercept_pm = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
     cm_stats.r_value_pm = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
@@ -68,6 +70,20 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
         cm_stats.r_value_pm[num], cm_stats.p_value_pm[num], 
         cm_stats.std_err_pm[num]) = sp.stats.linregress(local_act_time.distance_from_min.loc[pm_without_nan.index, beat], 
             pm_without_nan)
+
+    # Calculations for R-squared values (Local Activation Time)
+    cm_stats.slope_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.intercept_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.r_value_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.p_value_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.std_err_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+
+    for num, beat in enumerate(cm_stats.pace_maker_filtered_data):
+        lat_without_nan = local_act_time.param_dist_normalized[beat].dropna()
+        (cm_stats.slope_lat[num], cm_stats.intercept_lat[num], 
+        cm_stats.r_value_lat[num], cm_stats.p_value_lat[num], 
+        cm_stats.std_err_lat[num]) = sp.stats.linregress(local_act_time.distance_from_min.loc[lat_without_nan.index, beat], 
+            lat_without_nan)
 
     print("Done x4")
 
@@ -97,9 +113,18 @@ def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     cm_stats.param_vs_dist_axis_cv.cla()
 
     # mask_coords = ~np.isnan(local_act_time.distance_from_min[input_param.stats_param_dist_slider])
-    # Plot for Pacemaker vs Distance.  Generates scatterplot, best-fit line and error bars.
+    # Plot for Paarameter vs Distance.  Generates scatterplot, best-fit line and error bars.
     cm_stats.param_vs_dist_plot.suptitle(
-        "Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".")
+        "Parameter vs. Distance from Minimum.  Beat: " + str(input_param.stats_param_dist_slider + 1) + ".") 
+    # cm_stats.pacemaker_reg_plot = sns.regplot(
+    #     x=local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+    #     y=cm_stats.pace_maker_filtered_data[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+    #     ax=cm_stats.param_vs_dist_axis_pm,
+    #     color="crimson",
+    #     label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[input_param.stats_param_dist_slider]) + 
+    #         "\n" + "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
+    # )
+    # Pacemaker plotting.
     cm_stats.param_vs_dist_axis_pm.scatter(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         cm_stats.pace_maker_filtered_data[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
@@ -117,22 +142,43 @@ def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
         cm_stats.intercept_pm[input_param.stats_param_dist_slider - 1] + 
         cm_stats.slope_pm[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         yerr=pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
-        c='black', ecolor='black'
+        ecolor='black', alpha=0.1, linewidth=0.8
     )
     cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker", ylabel="Time lag (ms)")
     cm_stats.param_vs_dist_axis_pm.legend(loc='upper left')
     
-    
+    # Upstroke velocity plotting.
     cm_stats.param_vs_dist_axis_dvdt.scatter(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
         cm_stats.upstroke_vel_filtered_data[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
         c='green')
     cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity", ylabel="μV/ms")
+    
+    # Local activation time plotting.
     cm_stats.param_vs_dist_axis_lat.scatter(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
         cm_stats.local_act_time_filtered_data[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='orange')
+        c='orange'
+    )
+    cm_stats.param_vs_dist_axis_lat.plot(
+        local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_lat[input_param.stats_param_dist_slider - 1] + 
+        cm_stats.slope_lat[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_lat[input_param.stats_param_dist_slider]) + 
+        "\n" + "Std Dev: {0:.2f}".format(local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
+    )
+    cm_stats.param_vs_dist_axis_lat.errorbar(
+        local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_lat[input_param.stats_param_dist_slider - 1] + 
+        cm_stats.slope_lat[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        yerr=local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
+        ecolor='black', alpha=0.1, linewidth=0.8
+    )
+    
     cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time", xlabel="Distance from origin (μm)", ylabel="Activation time (ms)")
+    cm_stats.param_vs_dist_axis_lat.legend(loc='upper left')
+
+    # Conduction velocity plotting.
     cm_stats.param_vs_dist_axis_cv.scatter(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         cm_stats.conduction_vel_filtered_data[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
