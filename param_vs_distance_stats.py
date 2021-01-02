@@ -6,6 +6,8 @@
 import numpy as np
 import pandas as pd
 import scipy as sp
+from scipy.optimize import curve_fit
+# import math
 # import seaborn as sns
 from matplotlib import pyplot as plt
 
@@ -123,8 +125,31 @@ local_act_time, conduction_vel, input_param, cm_stats):
             lat_without_nan)
 
     # Curve fitting and R-squared calculations for CV.
-
-    print("Done x4")
+    # cm_stats.cv_popt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    # cm_stats.cv_pcov = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.cv_popt = [0]*int(cm_beats.beat_count_dist_mode[0])
+    cm_stats.cv_pcov = [0]*int(cm_beats.beat_count_dist_mode[0])
+    cm_stats.r_value_cv = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    
+    for num, beat in enumerate(cm_stats.conduction_vel_filtered_data):
+        cv_without_nan = conduction_vel.param_dist_raw[beat].dropna()
+        cv_without_nan = cv_without_nan.sort_values(ascending=True)
+        x_sorted = local_act_time.distance_from_min.loc[cv_without_nan.index, beat].sort_values(ascending=True)
+        cm_stats.cv_popt[num], cm_stats.cv_pcov[num] = curve_fit(
+            fitting_func, 
+            x_sorted, cv_without_nan,
+            method="trf"
+        )
+        residuals = cv_without_nan - fitting_func(x_sorted, *cm_stats.cv_popt[num])
+        ss_res = np.sum(residuals**2)
+        ss_tot = np.sum((cv_without_nan - np.mean(cv_without_nan))**2)
+        cm_stats.r_value_cv[num] = 1 - (ss_res / ss_tot)
+    # p0 = [100, 6, 200] was somewhat useful when trying logistic function.
+    # Sadly, data just doesn't fit well there.  Reverting to 2nd-degree poly.
+    
+    print("CV POPT: " + str(cm_stats.cv_popt))
+    # print("CV PCOV: " + str(cm_stats.cv_pcov))
+    print("Done.")
 
     # Necessary operations:
     # 1) Elimination of outliers (calculate mean, stdev, 
@@ -175,15 +200,16 @@ local_act_time, conduction_vel, input_param, cm_stats):
     )
     cm_stats.param_vs_dist_axis_pm.plot(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.intercept_pm[input_param.stats_param_dist_slider - 1] + 
-        cm_stats.slope_pm[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_pm[input_param.stats_param_dist_slider] + 
+        cm_stats.slope_pm[input_param.stats_param_dist_slider]*local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[input_param.stats_param_dist_slider]) + 
             "\n" + "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
     )
+    print(pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider])
     cm_stats.param_vs_dist_axis_pm.errorbar(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.intercept_pm[input_param.stats_param_dist_slider - 1] + 
-        cm_stats.slope_pm[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_pm[input_param.stats_param_dist_slider] + 
+        cm_stats.slope_pm[input_param.stats_param_dist_slider]*local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         yerr=pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
         ecolor='black', alpha=0.1, linewidth=0.8
     )
@@ -198,15 +224,15 @@ local_act_time, conduction_vel, input_param, cm_stats):
     )
     cm_stats.param_vs_dist_axis_dvdt.plot(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider - 1] +
-        cm_stats.slope_dvdt[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider] +
+        cm_stats.slope_dvdt[input_param.stats_param_dist_slider]*local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
         c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_dvdt[input_param.stats_param_dist_slider]) + 
-        "\n" + "Std Dev: {0:.2f}".format(upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
+        "\n" + "Std Dev: {0:.2f}".format(upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]].std())),
     )
     cm_stats.param_vs_dist_axis_dvdt.errorbar(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider - 1] +
-        cm_stats.slope_dvdt[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider] +
+        cm_stats.slope_dvdt[input_param.stats_param_dist_slider]*local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
         yerr=upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
         ecolor='black', alpha=0.1, linewidth=0.8
     )
@@ -221,15 +247,15 @@ local_act_time, conduction_vel, input_param, cm_stats):
     )
     cm_stats.param_vs_dist_axis_lat.plot(
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.intercept_lat[input_param.stats_param_dist_slider - 1] + 
-        cm_stats.slope_lat[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_lat[input_param.stats_param_dist_slider] + 
+        cm_stats.slope_lat[input_param.stats_param_dist_slider]*local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
         c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_lat[input_param.stats_param_dist_slider]) + 
         "\n" + "Std Dev: {0:.2f}".format(local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
     )
     cm_stats.param_vs_dist_axis_lat.errorbar(
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        cm_stats.intercept_lat[input_param.stats_param_dist_slider - 1] + 
-        cm_stats.slope_lat[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_lat[input_param.stats_param_dist_slider] + 
+        cm_stats.slope_lat[input_param.stats_param_dist_slider]*local_act_time.distance_from_min[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
         yerr=local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
         ecolor='black', alpha=0.1, linewidth=0.8
     )
@@ -240,8 +266,37 @@ local_act_time, conduction_vel, input_param, cm_stats):
     cm_stats.param_vs_dist_axis_cv.scatter(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
         cm_stats.conduction_vel_filtered_data[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='blue')
+        c='blue'
+    )
+    L, k, x0 = cm_stats.cv_popt[input_param.stats_param_dist_slider]
+    print(L, k, x0)
+    y_fit = fitting_func(local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].sort_values(ascending=True),
+        L, k, x0)
+    x_sorted = local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].sort_values(ascending=True)
+    cm_stats.param_vs_dist_axis_cv.plot(
+        x_sorted, y_fit, linestyle='-', c='black',
+        label=("R-value: {0:.3f}".format(cm_stats.r_value_cv[input_param.stats_param_dist_slider]) +
+        "\n" + "Std Dev: {0:.2f}".format(conduction_vel.param_dist_raw[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
+    )
+    cm_stats.param_vs_dist_axis_cv.errorbar(
+        x_sorted, y_fit, yerr=conduction_vel.param_dist_raw[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
+        ecolor='black', alpha=0.1, linewidth=0.8
+    )
     cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity", xlabel="Distance from origin (μm)", ylabel="μm/ms")
+    cm_stats.param_vs_dist_axis_cv.legend(loc='lower right')
 
+    # Draw the plots.
     cm_stats.param_vs_dist_plot.tight_layout()
     cm_stats.param_vs_dist_plot.canvas.draw()
+
+# Function used by curve_fit from scipy.optimize for conduction velocity.
+# def fitting_func(x, a, b, c):
+#     return a*x + b*x**2 + c
+
+# Potential saturation equation
+def fitting_func(x, a, b, c):
+    return a*x / (b + (x/c))
+# Tried to fit data to a logistic equation, e.g. logistic growth, but doesn't
+# fit very well. That is what the function below is for.
+# def fitting_func(x, L, k, x0):
+#     return L/(1 + np.exp(-k * (x-x0)))
