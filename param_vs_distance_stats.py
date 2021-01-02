@@ -9,52 +9,72 @@ import scipy as sp
 # import seaborn as sns
 from matplotlib import pyplot as plt
 
-def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
+def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
+local_act_time, conduction_vel, input_param, cm_stats):
     input_param.sigma_value = int(elecGUI120.param_vs_dist_sigma_value.get())
-    print("Sigma value: " + str(input_param.sigma_value) + "\n")
+    print("\n" + "Sigma value: " + str(input_param.sigma_value) + "\n")
     
     # Filter outliers for pacemaker.
-    temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(columns=['Electrode', 'X', 'Y'])
+    temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(
+        columns=['Electrode', 'X', 'Y'])
     temp_pacemaker_stddev = temp_pacemaker_pre_filtered.stack().std()
-    print("Mean (Time Lag): " + str(pace_maker.param_dist_normalized_mean))
+    print("Dataset Mean (Time Lag): " + str(pace_maker.param_dist_normalized_mean))
     print("Std Dev (Time Lag): " + str(temp_pacemaker_stddev))
 
-    outlier_threshold_pm = (pace_maker.param_dist_normalized_mean + (input_param.sigma_value * temp_pacemaker_stddev))
-    cm_stats.pace_maker_filtered_data = pd.DataFrame(columns=temp_pacemaker_pre_filtered.columns, index=temp_pacemaker_pre_filtered.index)
-    cm_stats.pace_maker_filtered_data[temp_pacemaker_pre_filtered.columns] = np.where((temp_pacemaker_pre_filtered.values > outlier_threshold_pm), 
+    outlier_threshold_pm = (pace_maker.param_dist_normalized_mean + 
+        (input_param.sigma_value * temp_pacemaker_stddev))
+    cm_stats.pace_maker_filtered_data = pd.DataFrame(
+        columns=temp_pacemaker_pre_filtered.columns, 
+        index=temp_pacemaker_pre_filtered.index)
+    cm_stats.pace_maker_filtered_data[temp_pacemaker_pre_filtered.columns] = np.where(
+        (temp_pacemaker_pre_filtered.values > outlier_threshold_pm), 
         np.nan, temp_pacemaker_pre_filtered.values)
     
     # Filter outliers for LAT.
-    temp_lat_pre_filtered = local_act_time.param_dist_normalized.drop(columns=['Electrode', 'X', 'Y'])
+    temp_lat_pre_filtered = local_act_time.param_dist_normalized.drop(
+        columns=['Electrode', 'X', 'Y'])
     temp_lat_stddev = temp_lat_pre_filtered.stack().std()
-    print("Mean (LAT): " + str(local_act_time.param_dist_normalized_mean))
+    print("Dataset Mean (LAT): " + str(local_act_time.param_dist_normalized_mean))
     print("Std Dev (LAT): " + str(temp_lat_stddev) + "\n")
 
-    outlier_threshold_lat = (local_act_time.param_dist_normalized_mean + (input_param.sigma_value * temp_lat_stddev))
-    cm_stats.local_act_time_filtered_data = pd.DataFrame(columns=temp_lat_pre_filtered.columns, index=temp_lat_pre_filtered.index)
-    cm_stats.local_act_time_filtered_data[temp_lat_pre_filtered.columns] = np.where((temp_lat_pre_filtered.values > outlier_threshold_lat), 
+    outlier_threshold_lat = (local_act_time.param_dist_normalized_mean + 
+        (input_param.sigma_value * temp_lat_stddev))
+    cm_stats.local_act_time_filtered_data = pd.DataFrame(
+        columns=temp_lat_pre_filtered.columns, 
+        index=temp_lat_pre_filtered.index)
+    cm_stats.local_act_time_filtered_data[temp_lat_pre_filtered.columns] = np.where(
+        (temp_lat_pre_filtered.values > outlier_threshold_lat), 
         np.nan, temp_lat_pre_filtered.values)
     
     # Filter outliers for dV/dt.
-    temp_dvdt_pre_filtered = upstroke_vel.param_dist_normalized.drop(columns=['Electrode', 'X', 'Y'])
+    temp_dvdt_pre_filtered = upstroke_vel.param_dist_normalized.drop(
+        columns=['Electrode', 'X', 'Y'])
     temp_dvdt_stddev = temp_dvdt_pre_filtered.stack().std()
-    print("Mean (dV/dt): " + str(upstroke_vel.param_dist_normalized_mean))
+    print("Dataset Mean (dV/dt): " + str(upstroke_vel.param_dist_normalized_mean))
     print("Std Dev (dV/dt): " + str(temp_dvdt_stddev))
 
-    outlier_threshold_dvdt = (upstroke_vel.param_dist_normalized_mean + (input_param.sigma_value * temp_dvdt_stddev))
-    cm_stats.upstroke_vel_filtered_data = pd.DataFrame(columns=temp_dvdt_pre_filtered.columns, index=temp_dvdt_pre_filtered.index)
-    cm_stats.upstroke_vel_filtered_data[temp_dvdt_pre_filtered.columns] = np.where((temp_dvdt_pre_filtered.values > outlier_threshold_dvdt), 
+    outlier_threshold_dvdt = (upstroke_vel.param_dist_normalized_mean + 
+        (input_param.sigma_value * temp_dvdt_stddev))
+    cm_stats.upstroke_vel_filtered_data = pd.DataFrame(
+        columns=temp_dvdt_pre_filtered.columns, 
+        index=temp_dvdt_pre_filtered.index)
+    cm_stats.upstroke_vel_filtered_data[temp_dvdt_pre_filtered.columns] = np.where(
+        (temp_dvdt_pre_filtered.values > outlier_threshold_dvdt), 
         np.nan, temp_dvdt_pre_filtered.values)
 
     # Filter outliers for CV.
-    temp_cv_pre_filtered = conduction_vel.param_dist_raw.drop(columns=['Electrode', 'X', 'Y'])
+    temp_cv_pre_filtered = conduction_vel.param_dist_raw.drop(
+        columns=['Electrode', 'X', 'Y'])
     temp_cv_stddev = temp_cv_pre_filtered.stack().std()
-    print("Mean (CV): " + str(conduction_vel.param_dist_raw_mean))
+    print("Dataset Mean (CV): " + str(conduction_vel.param_dist_raw_mean))
     print("Std Dev (CV): " + str(temp_cv_stddev) + "\n")
 
-    outlier_threshold_cv = (conduction_vel.param_dist_raw_mean + (input_param.sigma_value * temp_cv_stddev))
-    cm_stats.conduction_vel_filtered_data = pd.DataFrame(columns=temp_cv_pre_filtered.columns, index=temp_cv_pre_filtered.index)
-    cm_stats.conduction_vel_filtered_data[temp_cv_pre_filtered.columns] = np.where((temp_cv_pre_filtered.values > outlier_threshold_cv), 
+    outlier_threshold_cv = (conduction_vel.param_dist_raw_mean + 
+        (input_param.sigma_value * temp_cv_stddev))
+    cm_stats.conduction_vel_filtered_data = pd.DataFrame(
+        columns=temp_cv_pre_filtered.columns, index=temp_cv_pre_filtered.index)
+    cm_stats.conduction_vel_filtered_data[temp_cv_pre_filtered.columns] = np.where(
+        (temp_cv_pre_filtered.values > outlier_threshold_cv), 
         np.nan, temp_cv_pre_filtered.values)
 
     # Calculations for R-squared values (Pacemaker).
@@ -68,8 +88,24 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
         pm_without_nan = pace_maker.param_dist_normalized[beat].dropna()
         (cm_stats.slope_pm[num], cm_stats.intercept_pm[num], 
         cm_stats.r_value_pm[num], cm_stats.p_value_pm[num], 
-        cm_stats.std_err_pm[num]) = sp.stats.linregress(local_act_time.distance_from_min.loc[pm_without_nan.index, beat], 
+        cm_stats.std_err_pm[num]) = sp.stats.linregress(
+            local_act_time.distance_from_min.loc[pm_without_nan.index, beat], 
             pm_without_nan)
+
+    # Calculations for R-squared values (Upstroke Velocity)
+    cm_stats.slope_dvdt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.intercept_dvdt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.r_value_dvdt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.p_value_dvdt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+    cm_stats.std_err_dvdt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
+
+    for num, beat in enumerate(cm_stats.upstroke_vel_filtered_data):
+        dvdt_without_nan = upstroke_vel.param_dist_normalized[beat].dropna()
+        (cm_stats.slope_dvdt[num], cm_stats.intercept_dvdt[num], 
+        cm_stats.r_value_dvdt[num], cm_stats.p_value_dvdt[num], 
+        cm_stats.std_err_dvdt[num]) = sp.stats.linregress(
+            local_act_time.distance_from_min.loc[dvdt_without_nan.index, beat],
+            dvdt_without_nan)
 
     # Calculations for R-squared values (Local Activation Time)
     cm_stats.slope_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
@@ -78,17 +114,21 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     cm_stats.p_value_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
     cm_stats.std_err_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
 
-    for num, beat in enumerate(cm_stats.pace_maker_filtered_data):
+    for num, beat in enumerate(cm_stats.local_act_time_filtered_data):
         lat_without_nan = local_act_time.param_dist_normalized[beat].dropna()
         (cm_stats.slope_lat[num], cm_stats.intercept_lat[num], 
         cm_stats.r_value_lat[num], cm_stats.p_value_lat[num], 
-        cm_stats.std_err_lat[num]) = sp.stats.linregress(local_act_time.distance_from_min.loc[lat_without_nan.index, beat], 
+        cm_stats.std_err_lat[num]) = sp.stats.linregress(
+            local_act_time.distance_from_min.loc[lat_without_nan.index, beat], 
             lat_without_nan)
+
+    # Curve fitting and R-squared calculations for CV.
 
     print("Done x4")
 
     # Necessary operations:
-    # 1) Elimination of outliers (calculate mean, stdev, remove data > mean*3 sigma) ***DONE***
+    # 1) Elimination of outliers (calculate mean, stdev, 
+    # remove data > mean*3 sigma) ***DONE***
     # 2) Calculate R^2 values, per beat, for each parameter vs distance
 
     # Necessary parameters:
@@ -101,10 +141,12 @@ def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
     # 5) Number of unique min channels for PM (LAT)
-    param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)
+    param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
+    local_act_time, conduction_vel, input_param, cm_stats)
 
 
-def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
+def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
+local_act_time, conduction_vel, input_param, cm_stats):
     input_param.stats_param_dist_slider = int(elecGUI120.param_vs_dist_beat_select.get()) - 1
 
     cm_stats.param_vs_dist_axis_pm.cla()
@@ -124,6 +166,7 @@ def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     #     label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[input_param.stats_param_dist_slider]) + 
     #         "\n" + "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
     # )
+    
     # Pacemaker plotting.
     cm_stats.param_vs_dist_axis_pm.scatter(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
@@ -151,8 +194,24 @@ def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
     cm_stats.param_vs_dist_axis_dvdt.scatter(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
         cm_stats.upstroke_vel_filtered_data[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
-        c='green')
+        c='green'
+    )
+    cm_stats.param_vs_dist_axis_dvdt.plot(
+        local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider - 1] +
+        cm_stats.slope_dvdt[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_dvdt[input_param.stats_param_dist_slider]) + 
+        "\n" + "Std Dev: {0:.2f}".format(upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
+    )
+    cm_stats.param_vs_dist_axis_dvdt.errorbar(
+        local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider - 1] +
+        cm_stats.slope_dvdt[input_param.stats_param_dist_slider - 1]*local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]],
+        yerr=upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
+        ecolor='black', alpha=0.1, linewidth=0.8
+    )
     cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity", ylabel="μV/ms")
+    cm_stats.param_vs_dist_axis_dvdt.legend(loc='upper left')
     
     # Local activation time plotting.
     cm_stats.param_vs_dist_axis_lat.scatter(
@@ -174,7 +233,6 @@ def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, l
         yerr=local_act_time.param_dist_normalized[local_act_time.final_dist_beat_count[input_param.stats_param_dist_slider]].std(),
         ecolor='black', alpha=0.1, linewidth=0.8
     )
-    
     cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time", xlabel="Distance from origin (μm)", ylabel="Activation time (ms)")
     cm_stats.param_vs_dist_axis_lat.legend(loc='upper left')
 
