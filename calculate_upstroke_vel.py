@@ -43,6 +43,9 @@ def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_p
         # Normalized dV/dt across the dataset.
         upstroke_vel.param_dist_normalized_max = upstroke_vel.param_dist_normalized.max().max()
 
+        # Mean dV/dt across the dataset.
+        upstroke_vel.param_dist_normalized_mean = np.nanmean(upstroke_vel.param_dist_normalized)
+
         upstroke_vel.param_dist_normalized.index = ElectrodeConfig.electrode_names
         upstroke_vel.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
         upstroke_vel.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
