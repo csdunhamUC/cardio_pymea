@@ -576,7 +576,9 @@ class ElecGUI120(tk.Frame):
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
         statistics_menu.add_command(label="Parameter vs Distance Plot w/ R-Square", 
-            command=lambda: [self.param_vs_dist_stats_window(cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats)])
+            command=lambda: [self.param_vs_dist_stats_window(cm_beats, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, cm_stats)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -787,9 +789,11 @@ class ElecGUI120(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.cv_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.cv_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param))
+            lambda event: graph_conduction_vel(self, heat_map, local_act_time, 
+            conduction_vel, input_param))
 
-    def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats):
+    def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, 
+    local_act_time, conduction_vel, input_param, cm_stats):
         param_vs_dist= tk.Toplevel(self)
         param_vs_dist.title("Parameter vs Distance Plot w/ R-Square")
         param_vs_dist_options_frame = tk.Frame(param_vs_dist, width=1300, 
