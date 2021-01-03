@@ -837,7 +837,7 @@ class ElecGUI120(tk.Frame):
         param_vs_dist_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         
         self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_options_frame, 
-            length=125, width=15, from_=1, to=int(cm_beats.beat_count_dist_mode[0]), 
+            length=125, width=15, from_=1, to=20, 
             orient="horizontal", bg="white", label="Current Beat")
         self.param_vs_dist_beat_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
         self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", 
