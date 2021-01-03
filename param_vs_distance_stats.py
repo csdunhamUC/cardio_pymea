@@ -12,7 +12,15 @@ from matplotlib import pyplot as plt
 
 def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, cm_stats):
+    if hasattr(cm_stats, 'pace_maker_filtered_data') is True:
+            print("Clearing old statistics data before running new calculation...")
+            delattr(cm_stats, 'upstroke_vel_filtered_data')
+            delattr(cm_stats, 'local_act_time_filtered_data')
+            delattr(cm_stats, 'conduction_vel_filtered_data')
+    
     input_param.sigma_value = int(elecGUI120.param_vs_dist_sigma_value.get())
+    elecGUI120.param_vs_dist_beat_select.configure(
+        to=int(cm_beats.beat_count_dist_mode[0]))
     print("\n" + "Sigma value: " + str(input_param.sigma_value) + "\n")
     
     # Filter outliers for pacemaker.
@@ -193,18 +201,17 @@ local_act_time, conduction_vel, input_param, cm_stats):
     )
     cm_stats.param_vs_dist_axis_pm.plot(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
+            input_param.stats_param_dist_slider]].sort_values(ascending=True),
         cm_stats.intercept_pm[input_param.stats_param_dist_slider] + 
         cm_stats.slope_pm[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
+            input_param.stats_param_dist_slider]].sort_values(ascending=True),
         c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[
             input_param.stats_param_dist_slider]) + 
             "\n" + "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[
                 pace_maker.final_dist_beat_count[
                     input_param.stats_param_dist_slider]].std()))
     )
-    print(pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider])
     cm_stats.param_vs_dist_axis_pm.errorbar(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
@@ -229,11 +236,11 @@ local_act_time, conduction_vel, input_param, cm_stats):
     )
     cm_stats.param_vs_dist_axis_dvdt.plot(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
+            input_param.stats_param_dist_slider]].sort_values(ascending=True),
         cm_stats.intercept_dvdt[input_param.stats_param_dist_slider] +
         cm_stats.slope_dvdt[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
+            input_param.stats_param_dist_slider]].sort_values(ascending=True),
         c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_dvdt[
             input_param.stats_param_dist_slider]) + 
         "\n" + "Std Dev: {0:.2f}".format(upstroke_vel.param_dist_normalized[
@@ -264,11 +271,11 @@ local_act_time, conduction_vel, input_param, cm_stats):
     )
     cm_stats.param_vs_dist_axis_lat.plot(
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
+            input_param.stats_param_dist_slider]].sort_values(ascending=True),
         cm_stats.intercept_lat[input_param.stats_param_dist_slider] + 
         cm_stats.slope_lat[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
+            input_param.stats_param_dist_slider]].sort_values(ascending=True),
         c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_lat[
             input_param.stats_param_dist_slider]) + 
         "\n" + "Std Dev: {0:.2f}".format(local_act_time.param_dist_normalized[
