@@ -145,12 +145,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
         ss_tot = np.sum((cv_without_nan - np.mean(cv_without_nan))**2)
         cm_stats.r_value_cv[num] = 1 - (ss_res / ss_tot)
     
-    # print("CV POPT: " + str(cm_stats.cv_popt))
-    # print("CV PCOV: " + str(cm_stats.cv_pcov))
     print("Done.")
-
-    # Necessary operations:
-    # 2) Calculate R^2 values, per beat, for each parameter vs distance
 
     # Necessary parameters:
     # 2) Percentile of R^2 to display/indicate
@@ -304,12 +299,11 @@ local_act_time, conduction_vel, input_param, cm_stats):
             input_param.stats_param_dist_slider]],
         c='blue'
     )
-    L, k, x0 = cm_stats.cv_popt[input_param.stats_param_dist_slider]
-    print(L, k, x0)
+    a, b, c = cm_stats.cv_popt[input_param.stats_param_dist_slider]
     y_fit = fitting_func(local_act_time.distance_from_min[
         pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        L, k, x0)
+        a, b, c)
     x_sorted = local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
         input_param.stats_param_dist_slider]].sort_values(ascending=True)
     cm_stats.param_vs_dist_axis_cv.plot(
