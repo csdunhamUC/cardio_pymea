@@ -533,6 +533,7 @@ class ElecGUI120(tk.Frame):
         file_menu.add_command(label="Save Heatmaps", command=None)
         file_menu.add_command(label="Print (Debug)", 
             command=lambda: data_print(self, raw_data, pace_maker, input_param))
+        file_menu.add_command(label="Truncate Data", command=None)
 
         view_menu = tk.Menu(menu)
         menu.add_cascade(label="View", menu=view_menu)
@@ -547,31 +548,45 @@ class ElecGUI120(tk.Frame):
                 self.beat_detect_window(cm_beats, input_param),
                 graph_beats(self, cm_beats, input_param)])
         calc_menu.add_command(label="Calculate All Parameters",
-            command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param, ElectrodeConfig),
-                calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param, ElectrodeConfig),
-                calculate_lat(self, cm_beats, local_act_time, heat_map, input_param, ElectrodeConfig),
-                calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param, ElectrodeConfig),
-                graph_all(self, heat_map, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param)])
+            command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, 
+                heat_map, input_param, ElectrodeConfig),
+                calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, 
+                input_param, ElectrodeConfig),
+                calculate_lat(self, cm_beats, local_act_time, heat_map, 
+                input_param, ElectrodeConfig),
+                calculate_conduction_velocity(self, conduction_vel, 
+                local_act_time, heat_map, input_param, ElectrodeConfig),
+                graph_all(self, heat_map, pace_maker, upstroke_vel, 
+                local_act_time, conduction_vel, input_param)])
         # Add extra command for each solitary calculation that calls the 
         # appropriate graphing function. The graphing function will call the 
         # appropriate method to open the window.  This will allow for individual
         # parameter analysis.
         calc_menu.add_command(label="Pacemaker", 
-            command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, heat_map, input_param, ElectrodeConfig),
-                self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, input_param),
+            command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, 
+                heat_map, input_param, ElectrodeConfig),
+                self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, 
+                input_param),
                 graph_pacemaker(self, heat_map, pace_maker, input_param)])
         calc_menu.add_command(label="Upstroke Velocity", 
-            command=lambda: [calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, input_param, ElectrodeConfig),
-                self.dvdt_heatmap_window(cm_beats, upstroke_vel, heat_map, input_param),
+            command=lambda: [calculate_upstroke_vel(self, cm_beats, upstroke_vel, 
+                heat_map, input_param, ElectrodeConfig),
+                self.dvdt_heatmap_window(cm_beats, upstroke_vel, heat_map, 
+                input_param),
                 graph_upstroke(self, heat_map, upstroke_vel, input_param)])
         calc_menu.add_command(label="Local Activation Time", 
-            command=lambda: [calculate_lat(self, cm_beats, local_act_time, heat_map, input_param, ElectrodeConfig),
-                self.lat_heatmap_window(cm_beats, local_act_time, heat_map, input_param),
+            command=lambda: [calculate_lat(self, cm_beats, local_act_time, 
+                heat_map, input_param, ElectrodeConfig),
+                self.lat_heatmap_window(cm_beats, local_act_time, heat_map, 
+                input_param),
                 graph_local_act_time(self, heat_map, local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", 
-            command=lambda: [calculate_conduction_velocity(self, conduction_vel, local_act_time, heat_map, input_param, ElectrodeConfig),
-                self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, heat_map, input_param),
-                graph_conduction_vel(self, heat_map, local_act_time, conduction_vel, input_param)])
+            command=lambda: [calculate_conduction_velocity(self, conduction_vel, 
+                local_act_time, heat_map, input_param, ElectrodeConfig),
+                self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, 
+                heat_map, input_param),
+                graph_conduction_vel(self, heat_map, local_act_time, 
+                conduction_vel, input_param)])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -579,6 +594,7 @@ class ElecGUI120(tk.Frame):
             command=lambda: [self.param_vs_dist_stats_window(cm_beats, 
             pace_maker, upstroke_vel, local_act_time, conduction_vel, 
             input_param, cm_stats)])
+        statistics_menu.add_command(label="Power Law Plot", command=None)
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -813,11 +829,13 @@ class ElecGUI120(tk.Frame):
                 cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                 input_param, cm_stats))
         param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, padx=5, pady=5)
-        param_vs_dist_frame = tk.Frame(param_vs_dist, width=1300, height=800, bg="white")
-        param_vs_dist_frame.grid(row=1, column=0, padx=5, pady=5)
-        param_vs_dist_frame.grid_propagate(False)
-        param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_frame)
+        
+        param_vs_dist_fig_frame = tk.Frame(param_vs_dist, width=1300, height=800, bg="white")
+        param_vs_dist_fig_frame.grid(row=1, column=0, padx=5, pady=5)
+        param_vs_dist_fig_frame.grid_propagate(False)
+        param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_fig_frame)
         param_vs_dist_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        
         self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_options_frame, 
             length=125, width=15, from_=1, to=int(cm_beats.beat_count_dist_mode[0]), 
             orient="horizontal", bg="white", label="Current Beat")
@@ -826,6 +844,11 @@ class ElecGUI120(tk.Frame):
             lambda event: param_vs_distance_stats.param_vs_distance_graphing(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                     input_param, cm_stats))
+        param_vs_dist_toolbar_frame = tk.Frame(param_vs_dist)
+        param_vs_dist_toolbar_frame.grid(row=0, rowspan=2, column=3, columnspan=2, 
+            in_=param_vs_dist_options_frame)
+        param_vs_dist_toolbar = NavigationToolbar2Tk(param_vs_dist_fig, 
+            param_vs_dist_toolbar_frame)
 
 
     def col_sel_callback(self, *args):
@@ -924,7 +947,8 @@ def main():
     # root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI120 = ElecGUI120(root, raw_data, cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, cm_stats)
+    elecGUI120 = ElecGUI120(root, raw_data, cm_beats, pace_maker, upstroke_vel, 
+        local_act_time, conduction_vel, input_param, heat_map, cm_stats)
     # print(vars(elecGUI120))
     # print(dir(elecGUI120))
     # print(hasattr(elecGUI120 "elec_to_plot_entry"))
