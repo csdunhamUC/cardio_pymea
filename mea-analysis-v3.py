@@ -691,12 +691,12 @@ class ElecGUI120(tk.Frame):
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=125, 
             width=15, from_=1, to=20,
             orient="horizontal", bg="white", label="Current Beat:")
-        self.mea_beat_select.grid(row=0, column=9, rowspan=2, padx=100, pady=5)
+        self.mea_beat_select.grid(row=0, column=9, rowspan=2, padx=5, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
             lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
                 local_act_time, conduction_vel, input_param))
         self.toolbar_all_heatmap_frame = tk.Frame(self.mea_parameters_frame)
-        self.toolbar_all_heatmap_frame.grid(row=0, column=10, rowspan=2, padx=50, pady=5)
+        self.toolbar_all_heatmap_frame.grid(row=0, column=10, rowspan=2, padx=5, pady=5)
         self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
 
         # The following lines are for the GUI controls found in child 
