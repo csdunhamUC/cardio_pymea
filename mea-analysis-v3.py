@@ -256,7 +256,8 @@ def graph_beats(elecGUI120, cm_beats, input_param):
 # the heat maps observed in the main window of the program. The code is largely 
 # identical with the individual functions, which (will soon) open their own 
 # windows for each calculation.
-def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, conduction_vel, input_param):
+def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, 
+conduction_vel, input_param):
     # ----------------------------- Pacemaker ----------------------------------
     if hasattr(heat_map, 'cbar_1') is True:
         heat_map.cbar_1.remove()
@@ -486,6 +487,7 @@ input_param):
         print("You entered a beat that does not exist.")
 
 
+# Calls the PandasGUI function from the pandasgui library (external dev!)
 def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel):
     try:
@@ -499,6 +501,16 @@ local_act_time, conduction_vel):
             lat_normalized, lat_distances, cv_raw, settings={'block': True})
     except(AttributeError):
         print("Please run all of your calculations first.")
+
+
+# Toggles display of truncation start and end entry fields.
+def trunc_toggle(elecGUI120):
+    if elecGUI120.trunc_toggle_on_off.get() == True:
+        elecGUI120.trunc_start_value.grid()
+        elecGUI120.trunc_end_value.grid()
+    if elecGUI120.trunc_toggle_on_off.get() == False:
+        elecGUI120.trunc_start_value.grid_remove()
+        elecGUI120.trunc_end_value.grid_remove()
 
 
 class ElecGUI120(tk.Frame):
@@ -679,6 +691,26 @@ class ElecGUI120(tk.Frame):
             text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
+        self.trunc_toggle_on_off = tk.BooleanVar()
+        self.trunc_toggle_box = tk.Checkbutton(self.mea_parameters_frame,
+            text="Truncate Data", variable=self.trunc_toggle_on_off,
+            onvalue=True, offvalue=False, background="white", width=18,
+            justify="left", command=lambda: trunc_toggle(self))
+        self.trunc_toggle_box.grid(row=0, column=6, columnspan=2, padx=5, pady=2)
+
+        self.trunc_start_text = tk.StringVar()
+        self.trunc_start_text.set("Start (Min)")
+        self.trunc_start_value = tk.Entry(self.mea_parameters_frame, width=9,
+            bg="white", textvariable=self.trunc_start_text)
+        self.trunc_start_value.grid(row=1, column=6, padx=5, pady=2)
+        self.trunc_start_value.grid_remove()
+        self.trunc_end_text = tk.StringVar()
+        self.trunc_end_text.set("End (Min)")
+        self.trunc_end_value = tk.Entry(self.mea_parameters_frame, width=9,
+            bg="white", textvariable=self.trunc_end_text)
+        self.trunc_end_value.grid(row=1, column=7, padx=5, pady=2)
+        self.trunc_end_value.grid_remove()
+
         # ############################# Heatmap ################################
         # Frame and elements for pacemaker heat map plot.
         self.mea_heatmap_frame = tk.Frame(self, width=1620, height=800, bg="white")
@@ -690,12 +722,12 @@ class ElecGUI120(tk.Frame):
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=125, 
             width=15, from_=1, to=20,
             orient="horizontal", bg="white", label="Current Beat:")
-        self.mea_beat_select.grid(row=0, column=7, rowspan=2, padx=100, pady=5)
+        self.mea_beat_select.grid(row=0, column=8, rowspan=2, padx=100, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
             lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
                 local_act_time, conduction_vel, input_param))
         self.toolbar_all_heatmap_frame = tk.Frame(self.mea_parameters_frame)
-        self.toolbar_all_heatmap_frame.grid(row=0, column=8, rowspan=2, padx=50, pady=5)
+        self.toolbar_all_heatmap_frame.grid(row=0, column=9, rowspan=2, padx=50, pady=5)
         self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
 
         # The following lines are for the GUI controls found in child 
@@ -790,9 +822,11 @@ class ElecGUI120(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.lat_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.lat_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_local_act_time(self, heat_map, local_act_time, input_param))
+            lambda event: graph_local_act_time(self, heat_map, local_act_time, 
+            input_param))
 
-    def cv_heatmap_window(self, cm_beats, local_act_time, conduction_vel, heat_map, input_param):
+    def cv_heatmap_window(self, cm_beats, local_act_time, conduction_vel, 
+    heat_map, input_param):
         cv_heatmap = tk.Toplevel(self)
         cv_heatmap.title("Conduction Velocity Heatmap")
         cv_heatmap_frame = tk.Frame(cv_heatmap, width=1400, height=900, bg="white")
@@ -800,7 +834,8 @@ class ElecGUI120(tk.Frame):
         cv_heatmap_frame.grid_propagate(False)
         cv_heatmap_fig = FigureCanvasTkAgg(heat_map.cv_solo_plot, cv_heatmap_frame)
         cv_heatmap_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.cv_solo_beat_select = tk.Scale(cv_heatmap_frame, length=125, width=15, from_=1,
+        self.cv_solo_beat_select = tk.Scale(cv_heatmap_frame, length=125, 
+            width=15, from_=1,
             to=int(cm_beats.beat_count_dist_mode[0]),
             orient="horizontal", bg="white", label="Current Beat")
         self.cv_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
@@ -828,12 +863,15 @@ class ElecGUI120(tk.Frame):
             command=lambda: param_vs_distance_stats.param_vs_distance_analysis(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                 input_param, cm_stats))
-        param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, padx=5, pady=5)
+        param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, 
+            padx=5, pady=5)
         
-        param_vs_dist_fig_frame = tk.Frame(param_vs_dist, width=1300, height=800, bg="white")
+        param_vs_dist_fig_frame = tk.Frame(param_vs_dist, width=1300, 
+            height=800, bg="white")
         param_vs_dist_fig_frame.grid(row=1, column=0, padx=5, pady=5)
         param_vs_dist_fig_frame.grid_propagate(False)
-        param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, param_vs_dist_fig_frame)
+        param_vs_dist_fig = FigureCanvasTkAgg(cm_stats.param_vs_dist_plot, 
+            param_vs_dist_fig_frame)
         param_vs_dist_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         
         self.param_vs_dist_beat_select = tk.Scale(param_vs_dist_options_frame, 
@@ -943,7 +981,8 @@ def main():
     cm_stats.param_vs_dist_axis_cv = cm_stats.param_vs_dist_plot.add_subplot(224)
 
     root = tk.Tk()
-    # Dimensions width x height, distance position from right of screen + from top of screen
+    # Dimensions width x height, distance position from right of screen + from 
+    # top of screen
     # root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
