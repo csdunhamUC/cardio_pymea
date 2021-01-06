@@ -590,7 +590,7 @@ class ElecGUI120(tk.Frame):
             text="No file", bg="white", wraplength=200)
         self.file_name_label.grid(row=0, column=11, columnspan=4, padx=5, pady=5)
         self.file_length_label = tk.Label(self.mea_parameters_frame, 
-            text="No file", bg="white", wraplength=200)
+            text="TBD", bg="white", wraplength=200)
         self.file_length_label.grid(row=1, column=11, columnspan=4, padx=5, pady=5)
 
         # Min peak distance label, entry field, trace and positioning.
@@ -714,7 +714,8 @@ class ElecGUI120(tk.Frame):
         self.param_vs_dist_beat_select = None
         self.param_vs_dist_sigma_value = tk.StringVar()
         self.param_vs_dist_sigma_value.set("3")
-        # self.param_vs_dist_sigma_value.trace_add("write")
+        self.stat_readout_text = tk.StringVar()
+        self.stat_readout_text.set("TBD")
 
         # # print(dir(self))
 
@@ -837,6 +838,7 @@ class ElecGUI120(tk.Frame):
         param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, 
             padx=5, pady=5)
         
+        # Figure frame for statistical best-fit plots.
         param_vs_dist_fig_frame = tk.Frame(param_vs_dist, width=1300, 
             height=800, bg="white")
         param_vs_dist_fig_frame.grid(row=1, column=0, padx=5, pady=5)
@@ -858,6 +860,33 @@ class ElecGUI120(tk.Frame):
             in_=param_vs_dist_options_frame)
         param_vs_dist_toolbar = NavigationToolbar2Tk(param_vs_dist_fig, 
             param_vs_dist_toolbar_frame)
+
+        # Frame and canvas for text printout, with scrollbar.
+        param_vs_dist_readout_frame = tk.Frame(param_vs_dist, width=200,
+            height=890, bg="white")
+        param_vs_dist_readout_frame.grid(row=0, rowspan=2, column=1, padx=5, 
+            pady=5)
+        param_vs_dist_readout_canvas = tk.Canvas(param_vs_dist_readout_frame, 
+            width=200, height=890, bg="white")
+        param_vs_dist_readout_canvas.grid(row=0, column=0, sticky="nesw")
+        param_vs_dist_readout_scrollbar = tk.Scrollbar(
+            param_vs_dist_readout_frame, orient="vertical", 
+            command=param_vs_dist_readout_canvas.yview)
+        param_vs_dist_readout_scrollbar.grid(row=0, rowspan=2, column=1, sticky="ns")
+        param_vs_dist_readout_scrollframe = tk.Frame(param_vs_dist_readout_canvas)
+        param_vs_dist_readout_scrollframe.bind("<Configure>", 
+            lambda event: param_vs_dist_readout_canvas.configure(
+                scrollregion=param_vs_dist_readout_canvas.bbox("all")))
+        param_vs_dist_readout_canvas.create_window((0, 0), 
+            window=param_vs_dist_readout_scrollframe, anchor="nw")
+        param_vs_dist_readout_canvas.configure(
+            yscrollcommand=param_vs_dist_readout_scrollbar.set)
+        param_vs_dist_readout_text = tk.Label(param_vs_dist_readout_scrollframe,
+            bg="white", textvariable=self.stat_readout_text).grid(row=0)
+        
+        # for i in range(50):
+        #     tk.Label(param_vs_dist_readout_scrollframe, bg="white",
+        #     text="This is a test and I said this is a test").grid(row=i)
 
 
     def col_sel_callback(self, *args):
