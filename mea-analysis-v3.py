@@ -31,7 +31,7 @@ import importlib
 from scipy import stats
 from dis import dis
 import datetime
-from determine_beats import determine_beats
+import determine_beats
 from calculate_pacemaker import calculate_pacemaker
 from calculate_upstroke_vel import calculate_upstroke_vel
 from calculate_lat import calculate_lat
@@ -140,7 +140,6 @@ def data_import(elecGUI120, raw_data):
             filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 
         import_path, import_filename = os.path.split(data_filename_and_path)
-        # start_time = time.process_time()
 
         # Checks whether data was previously imported into program.  If True, 
         # the previous data is deleted.
@@ -171,10 +170,7 @@ def data_import(elecGUI120, raw_data):
         elecGUI120.file_path.set(import_path)
         new_data_size = np.shape(raw_data.imported)
         print(new_data_size)
-        # end_time = time.process_time()
-        # print(end_time - start_time)
-        # print("Import complete.")
-        # return raw_data.imported
+
     except FileNotFoundError:
         print()
     except TypeError:
@@ -200,6 +196,7 @@ def time_test():
 # time vs re-running the program over and over.
 def reload_module():
     importlib.reload(param_vs_distance_stats)
+    importlib.reload(determine_beats)
     # from param_vs_distance_stats import param_vs_distance_graphing, param_vs_distance_analysis
     print("Reloaded module.")
 
@@ -207,49 +204,6 @@ def reload_module():
 # ##############################################################################
 # ############################# Graphing Starts ################################
 # ##############################################################################
-
-# Produces 4-subplot plot of peak finder data and graphs it.  Can be called via 
-# button. Will throw exception of data does not exist.
-def graph_beats(elecGUI120, cm_beats, input_param):
-    try:
-        cm_beats.axis1.cla()
-        cm_beats.axis2.cla()
-        cm_beats.axis3.cla()
-        cm_beats.axis4.cla()
-
-        input_param.elec_choice = int(elecGUI120.elec_to_plot_val.get()) - 1
-        print("Will generate graph for electrode " + str(input_param.elec_choice + 1) + ".")
-        cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
-
-        mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
-        dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
-        cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
-        cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
-
-        mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values)
-        prom_without_nan = cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values[mask_prom].astype('int64')
-        cm_beats.axis2.plot(prom_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[prom_without_nan], "ob")
-        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis2.legend(['prominence = ' + str(input_param.parameter_prominence)], loc='lower left')
-
-        mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values)
-        width_without_nan = cm_beats.width_beats.iloc[0:, input_param.elec_choice].values[mask_width].astype('int64')
-        cm_beats.axis3.plot(width_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[width_without_nan], "vg")
-        cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis3.legend(['width = ' + str(input_param.parameter_width)], loc='lower left')
-
-        mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values)
-        thresh_without_nan = cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values[mask_thresh].astype('int64')
-        cm_beats.axis4.plot(thresh_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[thresh_without_nan], "xk")
-        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis4.legend(['threshold = ' + str(input_param.parameter_thresh)], loc='lower left')
-
-        cm_beats.comp_plot.canvas.draw()
-        print("Plotting complete.")
-    except AttributeError:
-        print("Please use Find Peaks first.")
-
 
 # This function is called following the use of "Calculate All Parameters" from 
 # the drop-down menu and from the GUI slider on the main window.  It generates 
@@ -556,9 +510,9 @@ class ElecGUI120(tk.Frame):
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
         calc_menu.add_command(label="Beat Detect (Run First!)", 
-            command=lambda: [determine_beats(self, raw_data, cm_beats, input_param),
+            command=lambda: [determine_beats.determine_beats(self, raw_data, cm_beats, input_param),
                 self.beat_detect_window(cm_beats, input_param),
-                graph_beats(self, cm_beats, input_param)])
+                determine_beats.graph_beats(self, cm_beats, input_param)])
         calc_menu.add_command(label="Calculate All Parameters",
             command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, 
                 heat_map, input_param, ElectrodeConfig),
@@ -630,11 +584,12 @@ class ElecGUI120(tk.Frame):
         self.mea_parameters_frame.grid(row=0, column=0, columnspan=2, padx=5, pady=5)
         self.mea_parameters_frame.grid_propagate(False)
 
-        # self.file_name = tk.StringVar()
-        # self.file_name.set("No file")
         self.file_name_label = tk.Label(self.mea_parameters_frame, 
             text="No file", bg="white", wraplength=200)
-        self.file_name_label.grid(row=0, column=9, columnspan=4, padx=5, pady=5)
+        self.file_name_label.grid(row=0, column=11, columnspan=4, padx=5, pady=5)
+        self.file_length_label = tk.Label(self.mea_parameters_frame, 
+            text="No file", bg="white", wraplength=200)
+        self.file_length_label.grid(row=1, column=11, columnspan=4, padx=5, pady=5)
 
         # Min peak distance label, entry field, trace and positioning.
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, 
@@ -691,24 +646,38 @@ class ElecGUI120(tk.Frame):
             text=self.parameter_thresh_val, width=8)
         self.parameter_thresh_entry.grid(row=1, column=5, padx=5, pady=2)
 
+        # Sample Frequency label, entry field and positioning.
+        self.sample_frequency_label = tk.Label(self.mea_parameters_frame,
+            text="Sample Freq. (Hz)", bg="white", wraplength=100)
+        self.sample_frequency_label.grid(row=0, column=6, padx=5, pady=2)
+        self.sample_frequency_val = tk.StringVar()
+        self.sample_frequency_val.set("1000")
+        self.sample_frequency_entry = tk.Entry(self.mea_parameters_frame,
+            text=self.sample_frequency_val, width=8)
+        self.sample_frequency_entry.grid(row=1, column=6, padx=5, pady=2)
+
+        # Truncation on/off toggle checkbox and positioning.
         self.trunc_toggle_on_off = tk.BooleanVar()
         self.trunc_toggle_box = tk.Checkbutton(self.mea_parameters_frame,
             text="Truncate Data", variable=self.trunc_toggle_on_off,
             onvalue=True, offvalue=False, background="white", width=18,
             justify="left", command=lambda: trunc_toggle(self))
-        self.trunc_toggle_box.grid(row=0, column=6, columnspan=2, padx=5, pady=2)
+        self.trunc_toggle_box.grid(row=0, column=7, columnspan=2, padx=5, pady=2)
 
+        # Truncation start value entry text, field and positioning.
         self.trunc_start_text = tk.StringVar()
         self.trunc_start_text.set("Start (Min)")
         self.trunc_start_value = tk.Entry(self.mea_parameters_frame, width=9,
             bg="white", textvariable=self.trunc_start_text)
-        self.trunc_start_value.grid(row=1, column=6, padx=5, pady=2)
+        self.trunc_start_value.grid(row=1, column=7, padx=5, pady=2)
         self.trunc_start_value.grid_remove()
+        
+        # Truncation end value entry text, field and positioning.
         self.trunc_end_text = tk.StringVar()
         self.trunc_end_text.set("End (Min)")
         self.trunc_end_value = tk.Entry(self.mea_parameters_frame, width=9,
             bg="white", textvariable=self.trunc_end_text)
-        self.trunc_end_value.grid(row=1, column=7, padx=5, pady=2)
+        self.trunc_end_value.grid(row=1, column=8, padx=5, pady=2)
         self.trunc_end_value.grid_remove()
 
         # ############################# Heatmap ################################
@@ -722,12 +691,12 @@ class ElecGUI120(tk.Frame):
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=125, 
             width=15, from_=1, to=20,
             orient="horizontal", bg="white", label="Current Beat:")
-        self.mea_beat_select.grid(row=0, column=8, rowspan=2, padx=100, pady=5)
+        self.mea_beat_select.grid(row=0, column=9, rowspan=2, padx=100, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
             lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
                 local_act_time, conduction_vel, input_param))
         self.toolbar_all_heatmap_frame = tk.Frame(self.mea_parameters_frame)
-        self.toolbar_all_heatmap_frame.grid(row=0, column=9, rowspan=2, padx=50, pady=5)
+        self.toolbar_all_heatmap_frame.grid(row=0, column=10, rowspan=2, padx=50, pady=5)
         self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
 
         # The following lines are for the GUI controls found in child 
@@ -776,7 +745,7 @@ class ElecGUI120(tk.Frame):
         # find peaks, after switching columns.
         graph_beats_button = tk.Button(beat_detect_frame, text="Graph Beats", 
             width=15, height=3, bg="red2",
-            command=lambda: graph_beats(self, cm_beats, input_param))
+            command=lambda: determine_beats.graph_beats(self, cm_beats, input_param))
         graph_beats_button.grid(row=0, rowspan=2, column=1, padx=2, pady=2)
 
     def pacemaker_heatmap_window(self, cm_beats, pace_maker, heat_map, input_param):
