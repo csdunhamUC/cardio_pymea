@@ -27,8 +27,8 @@ local_act_time, conduction_vel, input_param, cm_stats):
     temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(
         columns=['Electrode', 'X', 'Y'])
     temp_pacemaker_stddev = temp_pacemaker_pre_filtered.stack().std()
-    print("Dataset Mean (Time Lag): " + str(pace_maker.param_dist_normalized_mean))
-    print("Std Dev (Time Lag): " + str(temp_pacemaker_stddev))
+    # print("Dataset Mean (Time Lag): " + str(pace_maker.param_dist_normalized_mean))
+    # print("Std Dev (Time Lag): " + str(temp_pacemaker_stddev))
 
     outlier_threshold_pm = (pace_maker.param_dist_normalized_mean + 
         (input_param.sigma_value * temp_pacemaker_stddev))
@@ -43,8 +43,8 @@ local_act_time, conduction_vel, input_param, cm_stats):
     temp_lat_pre_filtered = local_act_time.param_dist_normalized.drop(
         columns=['Electrode', 'X', 'Y'])
     temp_lat_stddev = temp_lat_pre_filtered.stack().std()
-    print("Dataset Mean (LAT): " + str(local_act_time.param_dist_normalized_mean))
-    print("Std Dev (LAT): " + str(temp_lat_stddev) + "\n")
+    # print("Dataset Mean (LAT): " + str(local_act_time.param_dist_normalized_mean))
+    # print("Std Dev (LAT): " + str(temp_lat_stddev) + "\n")
 
     outlier_threshold_lat = (local_act_time.param_dist_normalized_mean + 
         (input_param.sigma_value * temp_lat_stddev))
@@ -59,8 +59,8 @@ local_act_time, conduction_vel, input_param, cm_stats):
     temp_dvdt_pre_filtered = upstroke_vel.param_dist_normalized.drop(
         columns=['Electrode', 'X', 'Y'])
     temp_dvdt_stddev = temp_dvdt_pre_filtered.stack().std()
-    print("Dataset Mean (dV/dt): " + str(upstroke_vel.param_dist_normalized_mean))
-    print("Std Dev (dV/dt): " + str(temp_dvdt_stddev))
+    # print("Dataset Mean (dV/dt): " + str(upstroke_vel.param_dist_normalized_mean))
+    # print("Std Dev (dV/dt): " + str(temp_dvdt_stddev))
 
     outlier_threshold_dvdt = (upstroke_vel.param_dist_normalized_mean + 
         (input_param.sigma_value * temp_dvdt_stddev))
@@ -75,8 +75,8 @@ local_act_time, conduction_vel, input_param, cm_stats):
     temp_cv_pre_filtered = conduction_vel.param_dist_raw.drop(
         columns=['Electrode', 'X', 'Y'])
     temp_cv_stddev = temp_cv_pre_filtered.stack().std()
-    print("Dataset Mean (CV): " + str(conduction_vel.param_dist_raw_mean))
-    print("Std Dev (CV): " + str(temp_cv_stddev) + "\n")
+    # print("Dataset Mean (CV): " + str(conduction_vel.param_dist_raw_mean))
+    # print("Std Dev (CV): " + str(temp_cv_stddev) + "\n")
 
     outlier_threshold_cv = (conduction_vel.param_dist_raw_mean + 
         (input_param.sigma_value * temp_cv_stddev))
@@ -155,11 +155,24 @@ local_act_time, conduction_vel, input_param, cm_stats):
     
     print("Done.")
 
+    cm_stats.complete_stats_readout = [ 
+    "Mean Time Lag: {0:.2f}".format(pace_maker.param_dist_normalized_mean) + "\n",
+    "Std Dev: {0:.2f}".format(temp_pacemaker_stddev) + "\n" + "\n",
+    "Mean LAT: {0:.2f}".format(local_act_time.param_dist_normalized_mean) + "\n",
+    "Std Dev: {0:.2f}".format(temp_lat_stddev) + "\n" + "\n",
+    "Mean dV/dt: {0:.2f}".format(upstroke_vel.param_dist_normalized_mean) + "\n",
+    "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n" + "\n",
+    "Mean CV: {0:.2f}".format(conduction_vel.param_dist_raw_mean) + "\n",
+    "Std Dev: {0:.2f}".format(temp_cv_stddev) + "\n" + "\n"]
+
     # Necessary parameters:
     # 2) Percentile of R^2 to display/indicate
+    
+    # Display stats readout as text in scrollable frame by unpacking list.
+    elecGUI120.stat_readout_text.set("".join(map(str, 
+        cm_stats.complete_stats_readout)))
 
     # Necessary readouts:
-    # 1) Dataset averages and standard deviation for each parameter (dV/dt, CV, PM, LAT)
     # 2) Dataset average and standard deviation of R^2 for each parameter (sorted high to low).
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
