@@ -881,8 +881,13 @@ class ElecGUI120(tk.Frame):
             window=param_vs_dist_readout_scrollframe, anchor="nw")
         param_vs_dist_readout_canvas.configure(
             yscrollcommand=param_vs_dist_readout_scrollbar.set)
+        param_vs_dist_readout_header = tk.Label(param_vs_dist_readout_scrollframe,
+            bg="white", anchor="nw", justify="left", width=24,
+            text="Data Set-Wide Outputs:", 
+            font=('Helvetica', '11', 'bold')).grid(row=0, column=0, sticky="nw")
         param_vs_dist_readout_text = tk.Label(param_vs_dist_readout_scrollframe,
-            bg="white", textvariable=self.stat_readout_text).grid(row=0)
+            bg="white", anchor="w", justify="left", width=24,
+            textvariable=self.stat_readout_text).grid(row=1, column=0, sticky="w")
         
         # for i in range(50):
         #     tk.Label(param_vs_dist_readout_scrollframe, bg="white",
