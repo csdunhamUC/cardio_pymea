@@ -465,6 +465,8 @@ def trunc_toggle(elecGUI120):
     if elecGUI120.trunc_toggle_on_off.get() == False:
         elecGUI120.trunc_start_value.grid_remove()
         elecGUI120.trunc_end_value.grid_remove()
+        elecGUI120.trunc_start_text.set("Start (Min)")
+        elecGUI120.trunc_end_text.set("End (Min)")
 
 
 class ElecGUI120(tk.Frame):
