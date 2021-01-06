@@ -155,15 +155,35 @@ local_act_time, conduction_vel, input_param, cm_stats):
     
     print("Done.")
 
+    average_pm_r_value = np.mean(cm_stats.r_value_pm)
+    top_10_indices_pm = np.argpartition(cm_stats.r_value_pm, -10)[-10:]
+    top_10_indices_pm = list(top_10_indices_pm[np.argsort(-cm_stats.r_value_pm[top_10_indices_pm])])
+    top_10_r_value_pm = list(cm_stats.r_value_pm[top_10_indices_pm])
+    print("Top Indices: " + str(top_10_indices_pm))
+    print("Top R-values: " + str(top_10_r_value_pm))
+    
+    average_lat_r_value = np.mean(cm_stats.r_value_lat)
+    average_dvdt_r_value = np.mean(cm_stats.r_value_dvdt)
+    average_cv_r_value = np.mean(cm_stats.r_value_cv)
+
     cm_stats.complete_stats_readout = [ 
     "Mean Time Lag: {0:.2f}".format(pace_maker.param_dist_normalized_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_pacemaker_stddev) + "\n" + "\n",
+    "Std Dev: {0:.2f}".format(temp_pacemaker_stddev) + "\n",
+    "Avg R-value: {0:.3f}".format(average_pm_r_value) + "\n" + "\n",
     "Mean LAT: {0:.2f}".format(local_act_time.param_dist_normalized_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_lat_stddev) + "\n" + "\n",
+    "Std Dev: {0:.2f}".format(temp_lat_stddev) + "\n",
+    "Avg R-value: {0:.3f}".format(average_lat_r_value) + "\n" + "\n",
     "Mean dV/dt: {0:.2f}".format(upstroke_vel.param_dist_normalized_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n" + "\n",
+    "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n",
+    "Avg R-value: {0:.3f}".format(average_dvdt_r_value) + "\n" + "\n",
     "Mean CV: {0:.2f}".format(conduction_vel.param_dist_raw_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_cv_stddev) + "\n" + "\n"]
+    "Std Dev: {0:.2f}".format(temp_cv_stddev) + "\n",
+    "Avg R-value: {0:.3f}".format(average_cv_r_value) + "\n" + "\n",
+    "Top 10 PM R-values:" + "\n" + "\n".join(
+        'Beat {0:.0f}, R-Value {1:.4f}'.format(beat, r_value) 
+        for beat, r_value in zip(top_10_indices_pm, top_10_r_value_pm))
+    
+    ]
 
     # Necessary parameters:
     # 2) Percentile of R^2 to display/indicate
@@ -219,11 +239,12 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.slope_pm[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[
-            input_param.stats_param_dist_slider]) + 
-            "\n" + "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[
+        c='black', label=(
+            "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[
                 pace_maker.final_dist_beat_count[
-                    input_param.stats_param_dist_slider]].std()))
+                input_param.stats_param_dist_slider]].std()) + "\n" +
+            "R-value: {0:.3f}".format(cm_stats.r_value_pm[
+            input_param.stats_param_dist_slider]))
     )
     cm_stats.param_vs_dist_axis_pm.errorbar(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
@@ -254,11 +275,12 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.slope_dvdt[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_dvdt[
-            input_param.stats_param_dist_slider]) + 
-        "\n" + "Std Dev: {0:.2f}".format(upstroke_vel.param_dist_normalized[
-            upstroke_vel.final_dist_beat_count[
-                input_param.stats_param_dist_slider]].std())),
+        c='black', label=(
+            "Std Dev: {0:.2f}".format(upstroke_vel.param_dist_normalized[
+                upstroke_vel.final_dist_beat_count[
+                input_param.stats_param_dist_slider]].std()) + "\n" +
+            "R-value: {0:.3f}".format(cm_stats.r_value_dvdt[
+            input_param.stats_param_dist_slider])),
     )
     cm_stats.param_vs_dist_axis_dvdt.errorbar(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
@@ -289,11 +311,12 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.slope_lat[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_lat[
-            input_param.stats_param_dist_slider]) + 
-        "\n" + "Std Dev: {0:.2f}".format(local_act_time.param_dist_normalized[
-            local_act_time.final_dist_beat_count[
-                input_param.stats_param_dist_slider]].std()))
+        c='black', label=(
+            "Std Dev: {0:.2f}".format(local_act_time.param_dist_normalized[
+                local_act_time.final_dist_beat_count[
+                input_param.stats_param_dist_slider]].std()) + "\n" +
+            "R-value: {0:.3f}".format(cm_stats.r_value_lat[
+            input_param.stats_param_dist_slider]))
     )
     cm_stats.param_vs_dist_axis_lat.errorbar(
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
@@ -328,11 +351,12 @@ local_act_time, conduction_vel, input_param, cm_stats):
         input_param.stats_param_dist_slider]].sort_values(ascending=True)
     cm_stats.param_vs_dist_axis_cv.plot(
         x_sorted, y_fit, linestyle='-', c='black',
-        label=("R-value: {0:.3f}".format(cm_stats.r_value_cv[
-            input_param.stats_param_dist_slider]) + "\n" + 
+        label=(
             "Std Dev: {0:.2f}".format(conduction_vel.param_dist_raw[
                 pace_maker.final_dist_beat_count[
-                    input_param.stats_param_dist_slider]].std()))
+                input_param.stats_param_dist_slider]].std()) + "\n" +
+            "R-value: {0:.3f}".format(cm_stats.r_value_cv[
+            input_param.stats_param_dist_slider]))
     )
     cm_stats.param_vs_dist_axis_cv.errorbar(
         x_sorted, y_fit, yerr=conduction_vel.param_dist_raw[
