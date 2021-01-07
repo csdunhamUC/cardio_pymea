@@ -6,6 +6,13 @@
 import time
 import numpy as np
 import pandas as pd
+from colorama import Fore
+from colorama import Style
+from colorama import init
+from colorama import deinit
+
+# Comment out init() if using Pycharm on Windows.
+init()
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
 # electrodes based on mismatched beat counts relative to the mode of the beat count.
@@ -141,5 +148,10 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param,
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
+        print("{}Maximum time lag in data set: {} {}".format(
+            Fore.MAGENTA, pace_maker.param_dist_normalized_max, 
+            Style.RESET_ALL))
+        # print(f"{Fore.MAGENTA}Maximum time lag in data set: {pace_maker.param_dist_normalized_max}{Style.RESET_ALL}")
+        deinit()
     except AttributeError:
         print("Please use Find Peaks first.")
