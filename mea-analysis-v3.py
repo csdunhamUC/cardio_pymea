@@ -587,33 +587,33 @@ class ElecGUI120(tk.Frame):
         self.mea_parameters_frame.grid_propagate(False)
 
         self.file_name_label = tk.Label(self.mea_parameters_frame, 
-            text="No file", bg="white", wraplength=200)
+            text="No file", bg="white", wraplength=300)
         self.file_name_label.grid(row=0, column=11, columnspan=4, padx=5, pady=5)
         self.file_length_label = tk.Label(self.mea_parameters_frame, 
             text="TBD", bg="white", wraplength=200)
         self.file_length_label.grid(row=1, column=11, columnspan=4, padx=5, pady=5)
 
-        # Min peak distance label, entry field, trace and positioning.
-        self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, 
-            text="Min Peak Distance", bg="white", wraplength=80)
-        self.min_peak_dist_label.grid(row=0, column=1, padx=5, pady=2)
-        self.min_peak_dist_val = tk.StringVar()
-        self.min_peak_dist_val.trace_add("write", self.min_peak_dist_callback)
-        self.min_peak_dist_val.set("1000")
-        self.min_peak_dist_entry = tk.Entry(self.mea_parameters_frame, 
-            text=self.min_peak_dist_val, width=8)
-        self.min_peak_dist_entry.grid(row=1, column=1, padx=5, pady=2)
-
         # Min peak height label, entry field, trace and positioning.
         self.min_peak_height_label = tk.Label(self.mea_parameters_frame, 
             text="Min Peak Height", bg="white", wraplength=80)
-        self.min_peak_height_label.grid(row=0, column=2, padx=5, pady=2)
+        self.min_peak_height_label.grid(row=0, column=1, padx=5, pady=2)
         self.min_peak_height_val = tk.StringVar()
         self.min_peak_height_val.trace_add("write", self.min_peak_height_callback)
         self.min_peak_height_val.set("100")
         self.min_peak_height_entry = tk.Entry(self.mea_parameters_frame, 
             text=self.min_peak_height_val, width=8)
-        self.min_peak_height_entry.grid(row=1, column=2, padx=5, pady=2)
+        self.min_peak_height_entry.grid(row=1, column=1, padx=5, pady=2)
+
+        # Min peak distance label, entry field, trace and positioning.
+        self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, 
+            text="Min Peak Distance", bg="white", wraplength=80)
+        self.min_peak_dist_label.grid(row=0, column=2, padx=5, pady=2)
+        self.min_peak_dist_val = tk.StringVar()
+        self.min_peak_dist_val.trace_add("write", self.min_peak_dist_callback)
+        self.min_peak_dist_val.set("1000")
+        self.min_peak_dist_entry = tk.Entry(self.mea_parameters_frame, 
+            text=self.min_peak_dist_val, width=8)
+        self.min_peak_dist_entry.grid(row=1, column=2, padx=5, pady=2)
 
         # Peak prominence label, entry field, trace and positioning.
         self.parameter_prominence_label = tk.Label(self.mea_parameters_frame, 
