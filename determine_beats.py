@@ -79,9 +79,12 @@ def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
         cm_beats.width_beats = pd.DataFrame()
         cm_beats.thresh_beats = pd.DataFrame()
 
-        print("Summary of parameters: " + str(input_param.min_peak_dist) + ", " + str(input_param.min_peak_height) +
-              ", " + str(input_param.parameter_prominence) + ", " + str(input_param.parameter_width) + ", " +
-              str(input_param.parameter_thresh) + ".\n" + str(input_param.sample_frequency) + "\n")
+        print("Summary of parameters: " + str(input_param.min_peak_height) 
+            + ", " + str(input_param.min_peak_dist) +
+            ", " + str(input_param.parameter_prominence) + ", " + 
+            str(input_param.parameter_width) + ", " +
+            str(input_param.parameter_thresh) + ", " + 
+            str(input_param.sample_frequency) + "\n")
 
         # For loops for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
