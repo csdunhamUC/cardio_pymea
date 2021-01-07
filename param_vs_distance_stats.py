@@ -132,8 +132,6 @@ local_act_time, conduction_vel, input_param, cm_stats):
             lat_without_nan)
 
     # Curve fitting and R-squared calculations for CV.
-    # cm_stats.cv_popt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
-    # cm_stats.cv_pcov = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
     cm_stats.cv_popt = [0]*int(cm_beats.beat_count_dist_mode[0])
     cm_stats.cv_pcov = [0]*int(cm_beats.beat_count_dist_mode[0])
     cm_stats.r_value_cv = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
@@ -159,34 +157,55 @@ local_act_time, conduction_vel, input_param, cm_stats):
     top_10_indices_pm = np.argpartition(cm_stats.r_value_pm, -10)[-10:]
     top_10_indices_pm = list(top_10_indices_pm[np.argsort(-cm_stats.r_value_pm[top_10_indices_pm])])
     top_10_r_value_pm = list(cm_stats.r_value_pm[top_10_indices_pm])
-    print("Top Indices: " + str(top_10_indices_pm))
-    print("Top R-values: " + str(top_10_r_value_pm))
     
-    average_lat_r_value = np.mean(cm_stats.r_value_lat)
-    average_dvdt_r_value = np.mean(cm_stats.r_value_dvdt)
     average_cv_r_value = np.mean(cm_stats.r_value_cv)
+    top_10_indices_cv = np.argpartition(cm_stats.r_value_cv, -10)[-10:]
+    top_10_indices_cv = list(top_10_indices_cv[np.argsort(-cm_stats.r_value_cv[top_10_indices_cv])])
+    top_10_r_value_cv = list(cm_stats.r_value_cv[top_10_indices_cv])
 
-    cm_stats.complete_stats_readout = [ 
-    "Mean Time Lag: {0:.2f}".format(pace_maker.param_dist_normalized_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_pacemaker_stddev) + "\n",
-    "Avg R-value: {0:.3f}".format(average_pm_r_value) + "\n" + "\n",
-    "Mean LAT: {0:.2f}".format(local_act_time.param_dist_normalized_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_lat_stddev) + "\n",
-    "Avg R-value: {0:.3f}".format(average_lat_r_value) + "\n" + "\n",
-    "Mean dV/dt: {0:.2f}".format(upstroke_vel.param_dist_normalized_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n",
-    "Avg R-value: {0:.3f}".format(average_dvdt_r_value) + "\n" + "\n",
-    "Mean CV: {0:.2f}".format(conduction_vel.param_dist_raw_mean) + "\n",
-    "Std Dev: {0:.2f}".format(temp_cv_stddev) + "\n",
-    "Avg R-value: {0:.3f}".format(average_cv_r_value) + "\n" + "\n",
-    "Top 10 PM R-values:" + "\n" + "\n".join(
-        'Beat {0:.0f}, R-Value {1:.4f}'.format(beat, r_value) 
-        for beat, r_value in zip(top_10_indices_pm, top_10_r_value_pm))
-    
+    average_lat_r_value = np.mean(cm_stats.r_value_lat)
+    top_10_indices_lat = np.argpartition(cm_stats.r_value_lat, -10)[-10:]
+    top_10_indices_lat = list(top_10_indices_lat[np.argsort(-cm_stats.r_value_lat[top_10_indices_lat])])
+    top_10_r_value_lat = list(cm_stats.r_value_lat[top_10_indices_lat])
+
+    average_dvdt_r_value = np.mean(cm_stats.r_value_dvdt)
+    top_10_indices_dvdt = np.argpartition(cm_stats.r_value_dvdt, -10)[-10:]
+    top_10_indices_dvdt = list(top_10_indices_dvdt[np.argsort(-cm_stats.r_value_dvdt[top_10_indices_dvdt])])
+    top_10_r_value_dvdt = list(cm_stats.r_value_dvdt[top_10_indices_dvdt])
+
+    cm_stats.complete_stats_readout = [
+        "Max Time Lag: {}".format(pace_maker.param_dist_normalized_max) + "\n",
+        "Mean Time Lag: {0:.2f}".format(pace_maker.param_dist_normalized_mean) 
+        + "\n",
+        "Std Dev: {0:.2f}".format(temp_pacemaker_stddev) + "\n",
+        "Avg R-value: {0:.3f}".format(average_pm_r_value) + "\n" + "\n",
+        "Mean CV: {0:.2f}".format(conduction_vel.param_dist_raw_mean) + "\n",
+        "Std Dev: {0:.2f}".format(temp_cv_stddev) + "\n",
+        "Avg R-value: {0:.3f}".format(average_cv_r_value) + "\n" + "\n",
+        "Mean LAT: {0:.2f}".format(local_act_time.param_dist_normalized_mean) 
+        + "\n",
+        "Std Dev: {0:.2f}".format(temp_lat_stddev) + "\n",
+        "Avg R-value: {0:.3f}".format(average_lat_r_value) + "\n" + "\n",
+        "Mean dV/dt: {0:.2f}".format(upstroke_vel.param_dist_normalized_mean) 
+        + "\n",
+        "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n",
+        "Avg R-value: {0:.3f}".format(average_dvdt_r_value) + "\n" + "\n",
+        "Top 10 PM R-values:" + "\n" + "\n".join(
+        'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+            for beat, r_value in zip(top_10_indices_pm, top_10_r_value_pm)) 
+            + "\n" + "\n",
+        "Top 10 CV R-values:" + "\n" + "\n".join(
+        'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+            for beat, r_value in zip(top_10_indices_cv, top_10_r_value_cv))
+            + "\n" + "\n",
+        "Top 10 LAT R-values:" + "\n" + "\n".join(
+        'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+            for beat, r_value in zip(top_10_indices_lat, top_10_r_value_lat))
+            + "\n" + "\n",
+        "Top 10 dV/dt R-values:" + "\n" + "\n".join(
+            'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+            for beat, r_value in zip(top_10_indices_dvdt, top_10_r_value_dvdt))
     ]
-
-    # Necessary parameters:
-    # 2) Percentile of R^2 to display/indicate
     
     # Display stats readout as text in scrollable frame by unpacking list.
     elecGUI120.stat_readout_text.set("".join(map(str, 
