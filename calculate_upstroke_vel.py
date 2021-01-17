@@ -10,7 +10,7 @@ import pandas as pd
 
 
 # Calculates upstroke velocity (dV/dt)
-def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_param, electrode_config):
+def calculate_upstroke_vel(analysisGUI, cm_beats, upstroke_vel, heat_map, input_param, electrode_config):
     try:
         if hasattr(upstroke_vel, 'param_dist_raw') is True:
             print("Clearing old dV/dt max data before running new calculation...")
@@ -55,7 +55,7 @@ def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_p
         upstroke_vel.param_dist_normalized.name = 'Upstroke Velocity'
 
         # Set slider value to maximum number of beats
-        elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.

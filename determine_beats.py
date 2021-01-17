@@ -11,7 +11,7 @@ from scipy import stats
 
 
 # Finds peaks based on given input parameters.
-def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
+def determine_beats(analysisGUI, raw_data, cm_beats, input_param):
     try:
         print("Finding beats...\n")
         start_time = time.process_time()
@@ -25,22 +25,22 @@ def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
             delattr(cm_beats, 'width_beats')
             delattr(cm_beats, 'thresh_beats')
 
-        input_param.elec_choice = int(elecGUI120.elec_to_plot_val.get()) - 1
-        input_param.min_peak_dist = float(elecGUI120.min_peak_dist_val.get())
-        input_param.min_peak_height = float(elecGUI120.min_peak_height_val.get())
-        input_param.parameter_prominence = float(elecGUI120.parameter_prominence_val.get())
-        input_param.parameter_width = float(elecGUI120.parameter_width_val.get())
-        input_param.parameter_thresh = float(elecGUI120.parameter_thresh_val.get())
-        input_param.sample_frequency = float(elecGUI120.sample_frequency_val.get())
+        input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
+        input_param.min_peak_dist = float(analysisGUI.min_peak_dist_val.get())
+        input_param.min_peak_height = float(analysisGUI.min_peak_height_val.get())
+        input_param.parameter_prominence = float(analysisGUI.parameter_prominence_val.get())
+        input_param.parameter_width = float(analysisGUI.parameter_width_val.get())
+        input_param.parameter_thresh = float(analysisGUI.parameter_thresh_val.get())
+        input_param.sample_frequency = float(analysisGUI.sample_frequency_val.get())
 
         # file_length = # of rows / sample_freq --> # of seconds in data set 
         # multiply by 60s in 1 min --> number of minutes in data set (rounded)
         file_length = ((len(raw_data.imported.index) / 
             input_param.sample_frequency) / 60)
-        elecGUI120.file_length_label.configure(text=str(round(file_length, 2)) +
+        analysisGUI.file_length_label.configure(text=str(round(file_length, 2)) +
             " minutes")
 
-        if elecGUI120.trunc_toggle_on_off.get() == False:
+        if analysisGUI.trunc_toggle_on_off.get() == False:
             print("Calculating using full data set.")
             cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
             # y_axis indexing ends at column -1, or second to last column, to 
@@ -49,9 +49,9 @@ def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
                 cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
             else:
                 cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
-        elif elecGUI120.trunc_toggle_on_off.get() == True:
-            trunc_start = int(elecGUI120.trunc_start_value.get())
-            trunc_end = int(elecGUI120.trunc_end_value.get())
+        elif analysisGUI.trunc_toggle_on_off.get() == True:
+            trunc_start = int(analysisGUI.trunc_start_value.get())
+            trunc_end = int(analysisGUI.trunc_end_value.get())
             print("Truncating between {} and {} minutes.".format(
                 trunc_start, trunc_end))
             
@@ -172,14 +172,14 @@ def determine_beats(elecGUI120, raw_data, cm_beats, input_param):
 
 # Produces 4-subplot plot of peak finder data and graphs it.  Can be called via 
 # button. Will throw exception of data does not exist.
-def graph_beats(elecGUI120, cm_beats, input_param):
+def graph_beats(analysisGUI, cm_beats, input_param):
     try:
         cm_beats.axis1.cla()
         cm_beats.axis2.cla()
         cm_beats.axis3.cla()
         cm_beats.axis4.cla()
 
-        input_param.elec_choice = int(elecGUI120.elec_to_plot_val.get()) - 1
+        input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
         print("Generating graph for electrode " + str(input_param.elec_choice + 1) + ".")
         cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
 
@@ -187,7 +187,7 @@ def graph_beats(elecGUI120, cm_beats, input_param):
         dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
         cm_beats.axis1.plot(dist_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[dist_without_nan], "xr")
         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        cm_beats.axis1.legend(['distance = ' + str(elecGUI120.min_peak_dist_val.get())], loc='lower left')
+        cm_beats.axis1.legend(['distance = ' + str(analysisGUI.min_peak_dist_val.get())], loc='lower left')
 
         mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values)
         prom_without_nan = cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values[mask_prom].astype('int64')

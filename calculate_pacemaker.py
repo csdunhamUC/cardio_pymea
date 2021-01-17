@@ -16,7 +16,7 @@ init()
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
 # electrodes based on mismatched beat counts relative to the mode of the beat count.
-def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param, electrode_config):
+def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param, electrode_config):
     try:
         if hasattr(pace_maker, 'param_dist_raw') is True:
             print("Clearing old pacemaker data before running new calculation...")
@@ -81,7 +81,7 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param,
         pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized)
 
         # Set slider value to maximum number of beats
-        elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
         # Assigns column headers (names) using the naming convention provided in the electrode_config class.
         pace_maker.param_dist_normalized.columns = electrode_config.electrode_names

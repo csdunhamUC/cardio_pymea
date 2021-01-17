@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 
 
-def calculate_conduction_velocity(elecGUI120, conduction_vel, local_act_time, heat_map, input_param, electrode_config):
+def calculate_conduction_velocity(analysisGUI, conduction_vel, local_act_time, heat_map, input_param, electrode_config):
     try:
         if hasattr(conduction_vel, 'param_dist_raw') is True:
             print("Clearing old CV data before running new calculation...")

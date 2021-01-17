@@ -1,5 +1,5 @@
 # Author: Christopher Stuart Dunham (CSD)
-# Email: csdunham@chem.ucla.edu; azarhn@hotmail.com
+# Emails: csdunham@chem.ucla.edu; azarhn@hotmail.com
 # Github: https://github.com/Sapphyric/Python_Learning
 # Organization: University of California, Los Angeles, Department of Chemistry & 
 # Biochemistry
@@ -12,9 +12,10 @@
 # 1) Use of dictionary to contain electrode coordinates (ordered vs unordered)
 # Consider using an OrderedDict instead if running under earlier versions of 
 # Python.
-# 2) tkinter vs Tkinter for GUI.
-# Program is currently set up to deal with data obtained from 120 electrode MEAs 
-# from Multichannel Systems only.
+# 2) If Python 2, tkinter vs Tkinter for GUI.
+# Program is configured to work with both MEA120 and MEA60 systems from 
+# Multichannel Systems for dimensions 200x30um (spacing and electrode width) 
+# only.
 
 import numpy as np
 import importlib
@@ -76,6 +77,7 @@ class CondVelData:
 class MEAHeatMaps:
     pass
 
+
 class StatisticsData:
     pass
 
@@ -84,73 +86,8 @@ class StatisticsData:
 # units of micrometers (microns, um)
 class ElectrodeConfig:
     # Electrode names and coordinates, using the system defined by CSD where 
-    # origin (0,0) is at upper left corner of MEA
-    # mea_120_coordinates = {
-    #     'F7': [1150, 1380], 'F8': [1150, 1610], 'F12': [1150, 2530], 
-    #     'F11': [1150, 2300], 'F10': [1150, 2070], 'F9': [1150, 1840], 
-    #     'E12': [920, 2530], 'E11': [920, 2300], 'E10': [920, 2070], 
-    #     'E9': [920, 1840], 'D12': [690, 2530], 'D11': [690, 2300], 
-    #     'D10': [690, 2070], 'D9': [690, 1840], 'C11': [460, 2300],
-    #     'C10': [460, 2070], 'B10': [230, 2070], 'E8': [920, 1610], 
-    #     'C9': [460, 1840], 'B9': [230, 1840], 'A9': [0, 1840], 
-    #     'D8': [690, 1610], 'C8': [460, 1610], 'B8': [230, 1610], 
-    #     'A8': [0, 1610], 'D7': [690, 1380], 'C7': [460, 1380], 
-    #     'B7': [230, 1380], 'A7': [0, 1380], 'E7': [920, 1380], 
-    #     'F6': [1150, 1150], 'E6': [920, 1150], 'A6': [0, 1150], 
-    #     'B6': [230, 1150], 'C6': [460, 1150], 'D6': [690, 1150], 'A5': [0, 920],
-    #     'B5': [230, 920], 'C5': [460, 920], 'D5': [690, 920], 'A4': [0, 690], 
-    #     'B4': [230, 690], 'C4': [460, 690], 'D4': [690, 690], 'B3': [230, 460],
-    #     'C3': [460, 460], 'C2': [460, 230], 'E5': [920, 920], 'D3': [690, 460], 
-    #     'D2': [690, 230], 'D1': [690, 0], 'E4': [920, 690], 'E3': [920, 460], 
-    #     'E2': [920, 230], 'E1': [920, 0], 'F4': [1150, 690], 'F3': [1150, 460], 
-    #     'F2': [1150, 230], 'F1': [1150, 0], 'F5': [1150, 920], 
-    #     'G6': [1380, 1150], 'G5': [1380, 920], 'G1': [1380, 0], 
-    #     'G2': [1380, 230], 'G3': [1380, 460], 'G4': [1380, 690], 
-    #     'H1': [1610, 0], 'H2': [1610, 230], 'H3': [1610, 460], 
-    #     'H4': [1610, 690], 'J1': [1840, 0], 'J2': [1840, 230], 
-    #     'J3': [1840, 460], 'J4': [1840, 690], 'K2': [2070, 230], 
-    #     'K3': [2070, 460], 'L3': [2300, 460], 'H5': [1610, 920], 
-    #     'K4': [2070, 690], 'L4': [2300, 690], 'M4': [2530, 690], 
-    #     'J5': [1840, 920], 'K5': [2070, 920], 'L5': [2300, 920], 
-    #     'M5': [2530, 920], 'J6': [1840, 1150], 'K6': [2070, 1150], 
-    #     'L6': [2300, 1150], 'M6': [2530, 1150], 'H6': [1610, 1150],
-    #     'G7': [1380, 1380], 'H7': [1610, 1380], 'M7': [2530, 1380], 
-    #     'L7': [2300, 1380], 'K7': [2070, 1380], 'J7': [1840, 1380], 
-    #     'M8': [2530, 1610], 'L8': [2300, 1610], 'K8': [2070, 1610], 
-    #     'J8': [1840, 1610], 'M9': [2530, 1840], 'L9': [2300, 1840], 
-    #     'K9': [2070, 1840], 'J9': [1840, 1840], 'L10': [2300, 2070],
-    #     'K10': [2070, 2070], 'K11': [2070, 2300], 'H8': [1610, 1610], 
-    #     'J10': [1840, 2070], 'J11': [1840, 2300], 'J12': [1840, 2530], 
-    #     'H9': [1610, 1840], 'H10': [1610, 2070], 'H11': [1610, 2300], 
-    #     'H12': [1610, 2530], 'G9': [1380, 1840], 'G10': [1380, 2070], 
-    #     'G11': [1380, 2300], 'G12': [1380, 2530], 'G8': [1380, 1610]}
-    
-    # mea_60_coordinates = {
-    #     '47A': [690, 1380], '48A': [690, 1610], '46A': [690, 1150], 
-    #     '45A': [690, 920], '38A': [460, 1610], '37A': [460, 1380], 
-    #     '28A': [230, 1610], '36A': [460, 1150], '27A': [230, 1380], 
-    #     '17A': [0, 1380], '26A': [230, 1150], '16A': [0, 1150], 
-    #     '35A': [460, 920], '25A': [230, 920], '15A': [0, 920], '14A': [0, 690],
-    #     '24A': [230, 690], '34A': [460, 690], '13A': [0, 460], 
-    #     '23A': [230, 460], '12A': [0, 230], '22A': [230, 230], 
-    #     '33A': [460, 460], '21A': [230, 0], '32A': [460, 230], '31A': [460, 0], 
-    #     '44A': [690, 690], '43A': [690, 460], '41A': [690, 0], 
-    #     '42A': [690, 230], '52A': [920, 230], '51A': [920, 0], 
-    #     '53A': [920, 460], '54A': [920, 690], '61A': [1150, 0], 
-    #     '62A': [1150, 230], '71A': [1380, 0], '63A': [1150, 460], 
-    #     '72A': [1380, 230], '82A': [1610, 230], '73A': [1380, 460], 
-    #     '83A': [1610, 460], '64A': [1150, 690], '74A': [1380, 690], 
-    #     '84A': [1610, 690], '85A': [1610, 920], '75A': [1380, 920], 
-    #     '65A': [1150, 920], '86A': [1610, 1150], '76A': [1380, 1150], 
-    #     '87A': [1610, 1380], '77A': [1380, 1380], '66A': [1150, 1150], 
-    #     '78A': [1380, 1610], '67A': [1150, 1380], '68A': [1150, 1610], 
-    #     '55A': [920, 920], '56A': [920, 1150], '58A': [920, 1610], 
-    #     '57A': [920, 1380]}
-
-    # # Key values (electrode names) from mea_120_coordinates only.
-    # electrode_names = list(mea_120_coordinates.keys())
-    # electrode_coords_x = np.array([i[0] for i in mea_120_coordinates.values()])
-    # electrode_coords_y = np.array([i[1] for i in mea_120_coordinates.values()])
+    # origin (0,0) is at upper left corner of MEA.  Configured for 200x30um 
+    # inter-electrode spacing and electrode diameter, respectively.
 
     def __init__(self, raw_data):
         self.mea_120_coordinates = {
@@ -229,10 +166,10 @@ class ElectrodeConfig:
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or 
 # checks to support more data types.
-def data_import(elecGUI120, raw_data, electrode_config):
+def data_import(analysisGUI, raw_data, electrode_config):
     try:
         data_filename_and_path = tk.filedialog.askopenfilename(
-            initialdir=elecGUI120.file_path.get(), title="Select file",
+            initialdir=analysisGUI.file_path.get(), title="Select file",
             filetypes=(("txt files", "*.txt"), ("all files", "*.*")))
 
         import_path, import_filename = os.path.split(data_filename_and_path)
@@ -262,8 +199,8 @@ def data_import(elecGUI120, raw_data, electrode_config):
             datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         # Update file name display in GUI following import
-        elecGUI120.file_name_label.configure(text=import_filename)
-        elecGUI120.file_path.set(import_path)
+        analysisGUI.file_name_label.configure(text=import_filename)
+        analysisGUI.file_path.set(import_path)
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
         electrode_config.electrode_toggle(raw_data)
@@ -275,10 +212,10 @@ def data_import(elecGUI120, raw_data, electrode_config):
 
 
 # Usually just for debugging, prints out values upon button press.
-def data_print(elecGUI120, raw_data, pace_maker, input_param, electrode_config):
+def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config):
     # adding .iloc to a data frame allows to reference [row, column], 
     # where rows and columns can be ranges separated by colons
-    # input_param.beat_choice = int(elecGUI120.mea_beat_select.get()) - 1
+    # input_param.beat_choice = int(analysisGUI.mea_beat_select.get()) - 1
     # print(pace_maker.param_dist_normalized.name)
     print(electrode_config.electrode_names[0])
     print(electrode_config.electrode_names[5])
@@ -307,14 +244,14 @@ def reload_module():
 # the heat maps observed in the main window of the program. The code is largely 
 # identical with the individual functions, which (will soon) open their own 
 # windows for each calculation.
-def graph_all(elecGUI120, heat_map, pace_maker, upstroke_vel, local_act_time, 
+def graph_all(analysisGUI, heat_map, pace_maker, upstroke_vel, local_act_time, 
 conduction_vel, input_param):
     # ----------------------------- Pacemaker ----------------------------------
     if hasattr(heat_map, 'cbar_1') is True:
         heat_map.cbar_1.remove()
 
     heat_map.axis1.cla()
-    input_param.beat_choice = int(elecGUI120.mea_beat_select.get()) - 1
+    input_param.beat_choice = int(analysisGUI.mea_beat_select.get()) - 1
 
     electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
         columns='X', values='Electrode')
@@ -337,7 +274,7 @@ conduction_vel, input_param):
     if hasattr(heat_map, 'cbar_2') is True:
         heat_map.cbar_2.remove()
     heat_map.axis2.cla()
-    input_param.beat_choice_2 = int(elecGUI120.mea_beat_select.get()) - 1
+    input_param.beat_choice_2 = int(analysisGUI.mea_beat_select.get()) - 1
 
     electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
         columns='X', values='Electrode')
@@ -360,7 +297,7 @@ conduction_vel, input_param):
     if hasattr(heat_map, 'cbar_3') is True:
         heat_map.cbar_3.remove()
     heat_map.axis3.cla()
-    input_param.beat_choice_3 = int(elecGUI120.mea_beat_select.get()) - 1
+    input_param.beat_choice_3 = int(analysisGUI.mea_beat_select.get()) - 1
 
     electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', 
         columns='X', values='Electrode')
@@ -383,7 +320,7 @@ conduction_vel, input_param):
     if hasattr(heat_map, 'cbar_4') is True:
         heat_map.cbar_4.remove()
     heat_map.axis4.cla()
-    input_param.beat_choice_4 = int(elecGUI120.mea_beat_select.get()) - 1
+    input_param.beat_choice_4 = int(analysisGUI.mea_beat_select.get()) - 1
 
     electrode_names_4 = conduction_vel.param_dist_raw.pivot(index='Y', 
         columns='X', values='Electrode')
@@ -407,13 +344,13 @@ conduction_vel, input_param):
 
 # Construct heatmap from previously calculated pacemaker data.  Function is 
 # called each time the slider is moved to select a new beat.
-def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
+def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
     try:
         if hasattr(heat_map, 'pm_solo_cbar') is True:
             heat_map.pm_solo_cbar.remove()
 
         heat_map.pm_solo_axis.cla()
-        input_param.pm_solo_beat_choice = int(elecGUI120.pm_solo_beat_select.get()) - 1
+        input_param.pm_solo_beat_choice = int(analysisGUI.pm_solo_beat_select.get()) - 1
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
@@ -440,13 +377,13 @@ def graph_pacemaker(elecGUI120, heat_map, pace_maker, input_param):
         print("You entered a beat that does not exist.")
 
 
-def graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param):
+def graph_upstroke(analysisGUI, heat_map, upstroke_vel, input_param):
     try:
         if hasattr(heat_map, 'dvdt_solo_cbar') is True:
             heat_map.dvdt_solo_cbar.remove()
 
         heat_map.dvdt_solo_axis.cla()
-        input_param.dvdt_solo_beat_choice = int(elecGUI120.dvdt_solo_beat_select.get()) - 1
+        input_param.dvdt_solo_beat_choice = int(analysisGUI.dvdt_solo_beat_select.get()) - 1
 
         electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
@@ -473,12 +410,12 @@ def graph_upstroke(elecGUI120, heat_map, upstroke_vel, input_param):
         print("You entered a beat that does not exist.")
 
 
-def graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param):
+def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
     try:
         if hasattr(heat_map, 'lat_solo_cbar') is True:
             heat_map.lat_solo_cbar.remove()
         heat_map.lat_solo_axis.cla()
-        input_param.lat_solo_beat_choice = int(elecGUI120.lat_solo_beat_select.get()) - 1
+        input_param.lat_solo_beat_choice = int(analysisGUI.lat_solo_beat_select.get()) - 1
 
         electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
@@ -506,13 +443,13 @@ def graph_local_act_time(elecGUI120, heat_map, local_act_time, input_param):
         print("You entered a beat that does not exist.")
 
 
-def graph_conduction_vel(elecGUI120, heat_map, local_act_time, conduction_vel, 
+def graph_conduction_vel(analysisGUI, heat_map, local_act_time, conduction_vel, 
 input_param):
     try:
         if hasattr(heat_map, 'cv_solo_cbar') is True:
             heat_map.cv_solo_cbar.remove()
         heat_map.cv_solo_axis.cla()
-        input_param.cv_solo_beat_choice = int(elecGUI120.cv_solo_beat_select.get()) - 1
+        input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
 
         electrode_names_4 = conduction_vel.param_dist_raw.pivot(index='Y', 
             columns='X', values='Electrode')
@@ -555,18 +492,18 @@ local_act_time, conduction_vel):
 
 
 # Toggles display of truncation start and end entry fields.
-def trunc_toggle(elecGUI120):
-    if elecGUI120.trunc_toggle_on_off.get() == True:
-        elecGUI120.trunc_start_value.grid()
-        elecGUI120.trunc_end_value.grid()
-    if elecGUI120.trunc_toggle_on_off.get() == False:
-        elecGUI120.trunc_start_value.grid_remove()
-        elecGUI120.trunc_end_value.grid_remove()
-        elecGUI120.trunc_start_text.set("Start (Min)")
-        elecGUI120.trunc_end_text.set("End (Min)")
+def trunc_toggle(analysisGUI):
+    if analysisGUI.trunc_toggle_on_off.get() == True:
+        analysisGUI.trunc_start_value.grid()
+        analysisGUI.trunc_end_value.grid()
+    if analysisGUI.trunc_toggle_on_off.get() == False:
+        analysisGUI.trunc_start_value.grid_remove()
+        analysisGUI.trunc_end_value.grid_remove()
+        analysisGUI.trunc_start_text.set("Start (Min)")
+        analysisGUI.trunc_end_text.set("End (Min)")
 
 
-class ElecGUI120(tk.Frame):
+class MainGUI(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
     electrode_config):
@@ -580,7 +517,7 @@ class ElecGUI120(tk.Frame):
         # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change 
         # mouse-over color effects.
         self.grid()
-        self.winfo_toplevel().title("MEA Analysis - v3.9")
+        self.winfo_toplevel().title("MEA Analysis - v4")
 
         # Directory information for file import is stored here and called upon 
         # by import function.  Default/initial "/"
@@ -1091,12 +1028,12 @@ def main():
     # root.geometry("2700x1000+900+900")
 
     # Calls class to create the GUI window. *********
-    elecGUI120 = ElecGUI120(root, raw_data, cm_beats, pace_maker, upstroke_vel, 
+    analysisGUI = MainGUI(root, raw_data, cm_beats, pace_maker, upstroke_vel, 
         local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
         electrode_config)
-    # print(vars(elecGUI120))
-    # print(dir(elecGUI120))
-    # print(hasattr(elecGUI120 "elec_to_plot_entry"))
+    # print(vars(analysisGUI))
+    # print(dir(analysisGUI))
+    # print(hasattr(analysisGUI "elec_to_plot_entry"))
     root.mainloop()
 
 

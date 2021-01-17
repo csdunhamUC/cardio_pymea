@@ -10,7 +10,7 @@ from scipy.optimize import curve_fit
 # import seaborn as sns
 from matplotlib import pyplot as plt
 
-def param_vs_distance_analysis(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
+def param_vs_distance_analysis(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, cm_stats):
     if hasattr(cm_stats, 'pace_maker_filtered_data') is True:
             print("Clearing old statistics data before running new calculation...")
@@ -18,8 +18,8 @@ local_act_time, conduction_vel, input_param, cm_stats):
             delattr(cm_stats, 'local_act_time_filtered_data')
             delattr(cm_stats, 'conduction_vel_filtered_data')
     
-    input_param.sigma_value = int(elecGUI120.param_vs_dist_sigma_value.get())
-    elecGUI120.param_vs_dist_beat_select.configure(
+    input_param.sigma_value = int(analysisGUI.param_vs_dist_sigma_value.get())
+    analysisGUI.param_vs_dist_beat_select.configure(
         to=int(cm_beats.beat_count_dist_mode[0]))
     print("\n" + "Sigma value: " + str(input_param.sigma_value) + "\n")
     
@@ -208,7 +208,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
     ]
     
     # Display stats readout as text in scrollable frame by unpacking list.
-    elecGUI120.stat_readout_text.set("".join(map(str, 
+    analysisGUI.stat_readout_text.set("".join(map(str, 
         cm_stats.complete_stats_readout)))
 
     # Necessary readouts:
@@ -216,14 +216,14 @@ local_act_time, conduction_vel, input_param, cm_stats):
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
     # 5) Number of unique min channels for PM (LAT)
-    param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
+    param_vs_distance_graphing(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats)
 
 
-def param_vs_distance_graphing(elecGUI120, cm_beats, pace_maker, upstroke_vel, 
+def param_vs_distance_graphing(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, cm_stats):
     input_param.stats_param_dist_slider = int(
-        elecGUI120.param_vs_dist_beat_select.get()) - 1
+        analysisGUI.param_vs_dist_beat_select.get()) - 1
 
     cm_stats.param_vs_dist_axis_pm.cla()
     cm_stats.param_vs_dist_axis_dvdt.cla()
