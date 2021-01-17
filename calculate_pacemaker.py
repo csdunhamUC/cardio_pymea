@@ -16,7 +16,7 @@ init()
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
 # electrodes based on mismatched beat counts relative to the mode of the beat count.
-def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param, ElectrodeConfig):
+def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param, electrode_config):
     try:
         if hasattr(pace_maker, 'param_dist_raw') is True:
             print("Clearing old pacemaker data before running new calculation...")
@@ -83,11 +83,11 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param,
         # Set slider value to maximum number of beats
         elecGUI120.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
-        # Assigns column headers (names) using the naming convention provided in the ElectrodeConfig class.
-        pace_maker.param_dist_normalized.columns = ElectrodeConfig.electrode_names
-        pace_maker.param_prom_normalized.columns = ElectrodeConfig.electrode_names
-        pace_maker.param_width_normalized.columns = ElectrodeConfig.electrode_names
-        pace_maker.param_thresh_normalized.columns = ElectrodeConfig.electrode_names
+        # Assigns column headers (names) using the naming convention provided in the electrode_config class.
+        pace_maker.param_dist_normalized.columns = electrode_config.electrode_names
+        pace_maker.param_prom_normalized.columns = electrode_config.electrode_names
+        pace_maker.param_width_normalized.columns = electrode_config.electrode_names
+        pace_maker.param_thresh_normalized.columns = electrode_config.electrode_names
 
         # Generate index (row) labels, as a list, in order to access chosen beat heatmaps in subsequent function.
         pace_maker.final_dist_beat_count = []
@@ -124,23 +124,23 @@ def calculate_pacemaker(elecGUI120, cm_beats, pace_maker, heat_map, input_param,
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
 
         # Insert electrode name as column to make future plotting easier when attempting to use pivot table.
-        pace_maker.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        pace_maker.param_prom_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        pace_maker.param_width_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        pace_maker.param_thresh_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
+        pace_maker.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
+        pace_maker.param_prom_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
+        pace_maker.param_width_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
+        pace_maker.param_thresh_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
 
         # Insert electrode coordinates X,Y (in micrometers) as columns after electrode identifier.
-        pace_maker.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_dist_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
+        pace_maker.param_dist_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
         # Repeat for prominence parameter.
-        pace_maker.param_prom_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_prom_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_prom_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
+        pace_maker.param_prom_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
         # Repeat for width parameter.
-        pace_maker.param_width_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_width_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_width_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
+        pace_maker.param_width_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
         # Repeat for threshold parameter.
-        pace_maker.param_thresh_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        pace_maker.param_thresh_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        pace_maker.param_thresh_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
+        pace_maker.param_thresh_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
 
         pace_maker.param_dist_normalized.name = 'Pacemaker (Normalized)'
 

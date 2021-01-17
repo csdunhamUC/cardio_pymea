@@ -10,7 +10,7 @@ import pandas as pd
 
 
 # Calculates upstroke velocity (dV/dt)
-def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_param, ElectrodeConfig):
+def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_param, electrode_config):
     try:
         if hasattr(upstroke_vel, 'param_dist_raw') is True:
             print("Clearing old dV/dt max data before running new calculation...")
@@ -46,10 +46,10 @@ def calculate_upstroke_vel(elecGUI120, cm_beats, upstroke_vel, heat_map, input_p
         # Mean dV/dt across the dataset.
         upstroke_vel.param_dist_normalized_mean = np.nanmean(upstroke_vel.param_dist_normalized)
 
-        upstroke_vel.param_dist_normalized.index = ElectrodeConfig.electrode_names
-        upstroke_vel.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        upstroke_vel.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        upstroke_vel.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        upstroke_vel.param_dist_normalized.index = electrode_config.electrode_names
+        upstroke_vel.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
+        upstroke_vel.param_dist_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
+        upstroke_vel.param_dist_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
 
         # Assign name to resulting dataframe.
         upstroke_vel.param_dist_normalized.name = 'Upstroke Velocity'

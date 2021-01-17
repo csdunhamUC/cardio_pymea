@@ -10,7 +10,7 @@ import pandas as pd
 
 
 # Calculates local activation time (LAT)
-def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param, ElectrodeConfig):
+def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param, electrode_config):
     try:
         if hasattr(local_act_time, 'param_dist_raw') is True:
             print("Clearing old LAT data before running new calculation...")
@@ -46,10 +46,10 @@ def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param, E
         local_act_time.param_dist_normalized_mean = np.nanmean(local_act_time.param_dist_normalized)
         # print("Mean LAT: " + str(local_act_time.param_dist_normalized_mean))
 
-        local_act_time.param_dist_normalized.index = ElectrodeConfig.electrode_names
-        local_act_time.param_dist_normalized.insert(0, 'Electrode', ElectrodeConfig.electrode_names)
-        local_act_time.param_dist_normalized.insert(1, 'X', ElectrodeConfig.electrode_coords_x)
-        local_act_time.param_dist_normalized.insert(2, 'Y', ElectrodeConfig.electrode_coords_y)
+        local_act_time.param_dist_normalized.index = electrode_config.electrode_names
+        local_act_time.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
+        local_act_time.param_dist_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
+        local_act_time.param_dist_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
 
         # Assign name to resulting dataframe.
         local_act_time.param_dist_normalized.name = 'Local Activation Time'
@@ -61,7 +61,7 @@ def calculate_lat(elecGUI120, cm_beats, local_act_time, heat_map, input_param, E
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
         print(end_time - start_time)
-        calculate_distances(local_act_time, ElectrodeConfig)
+        calculate_distances(local_act_time, electrode_config)
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -124,7 +124,7 @@ def lat_calc_for_numba(mode_of_beats, num_of_electrodes, cm_beats_dist_beats_as_
     return local_at
 
 # Function that calculates distances from the minimum electrode for each beat.  Values for use in conduction velocity.
-def calculate_distances(local_act_time, ElectrodeConfig):
+def calculate_distances(local_act_time, electrode_config):
     if hasattr(local_act_time, 'distance_from_min') is True:
         print("Clearing old distance data before running new calculation...")
         delattr(local_act_time, 'distance_from_min')
@@ -141,7 +141,7 @@ def calculate_distances(local_act_time, ElectrodeConfig):
         calc_dist_from_min[num] = ((local_act_time.param_dist_normalized[['X', 'Y']] - min_coords).pow(2).sum(1).pow(0.5))
 
     local_act_time.distance_from_min = pd.DataFrame(calc_dist_from_min, index=local_act_time.final_dist_beat_count,
-                                                    columns=ElectrodeConfig.electrode_names).T
+                                                    columns=electrode_config.electrode_names).T
 
     print("Done.")
     end_time = time.process_time()
