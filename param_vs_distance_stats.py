@@ -191,19 +191,19 @@ local_act_time, conduction_vel, input_param, cm_stats):
         "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n",
         "Avg R-value: {0:.3f}".format(average_dvdt_r_value) + "\n" + "\n",
         "Top 10 PM R-values:" + "\n" + "\n".join(
-        'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+        'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
             for beat, r_value in zip(top_10_indices_pm, top_10_r_value_pm)) 
             + "\n" + "\n",
         "Top 10 CV R-values:" + "\n" + "\n".join(
-        'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+        'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
             for beat, r_value in zip(top_10_indices_cv, top_10_r_value_cv))
             + "\n" + "\n",
         "Top 10 LAT R-values:" + "\n" + "\n".join(
-        'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+        'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
             for beat, r_value in zip(top_10_indices_lat, top_10_r_value_lat))
             + "\n" + "\n",
         "Top 10 dV/dt R-values:" + "\n" + "\n".join(
-            'Beat {0:.0f}, R-value {1:.4f}'.format(beat, r_value) 
+            'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
             for beat, r_value in zip(top_10_indices_dvdt, top_10_r_value_dvdt))
     ]
     
