@@ -78,7 +78,7 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
 
         # Find the mean interval time.
-        pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized)
+        pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized.max())
 
         # Set slider value to maximum number of beats
         analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))

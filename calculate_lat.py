@@ -43,7 +43,8 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         local_act_time.param_dist_normalized_max = local_act_time.param_dist_normalized.max().max()
 
         # Find the mean LAT
-        local_act_time.param_dist_normalized_mean = np.nanmean(local_act_time.param_dist_normalized)
+        local_act_time.param_dist_normalized_mean = np.nanmean(
+            local_act_time.param_dist_normalized.max())
         # print("Mean LAT: " + str(local_act_time.param_dist_normalized_mean))
 
         local_act_time.param_dist_normalized.index = electrode_config.electrode_names
