@@ -206,6 +206,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
 
         # Update file name display in GUI following import
         analysisGUI.file_name_label.configure(text=import_filename)
+        analysisGUI.stat_file_name.set(import_filename)
         analysisGUI.file_path.set(import_path)
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
@@ -733,8 +734,8 @@ class MainGUI(tk.Frame):
         self.gen_all_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
         # Beat select slider, belongs to different frame.
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=125, 
-            width=15, from_=1, to=20,
-            orient="horizontal", bg="white", label="Current Beat:")
+            width=15, from_=1, to=20, orient="horizontal", bg="white", 
+            label="Current Beat:")
         self.mea_beat_select.grid(row=0, column=9, rowspan=2, padx=5, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
             lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
@@ -758,7 +759,8 @@ class MainGUI(tk.Frame):
         self.param_vs_dist_sigma_value.set("3")
         self.stat_readout_text = tk.StringVar()
         self.stat_readout_text.set("TBD")
-
+        self.stat_file_name = tk.StringVar()
+        self.stat_file_name.set("No file")
         # # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -879,6 +881,11 @@ class MainGUI(tk.Frame):
                 input_param, cm_stats))
         param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, 
             padx=5, pady=5)
+        # Display file name
+        self.stat_file_name_label = tk.Label(param_vs_dist_options_frame, 
+            textvariable=self.stat_file_name, bg="white", wraplength=300)
+        self.stat_file_name_label.grid(row=0, column=5, 
+            columnspan=4, padx=5, pady=5)
         
         # Figure frame for statistical best-fit plots.
         param_vs_dist_fig_frame = tk.Frame(param_vs_dist, width=1300, 
