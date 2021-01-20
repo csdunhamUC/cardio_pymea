@@ -244,12 +244,15 @@ local_act_time, conduction_vel, input_param, cm_stats):
     # )
     
     # Pacemaker plotting.
-    cm_stats.param_vs_dist_axis_pm.scatter(
+    cm_stats.param_vs_dist_axis_pm.errorbar(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
         cm_stats.pace_maker_filtered_data[pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
-        c='red'
+        yerr=pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[
+            input_param.stats_param_dist_slider]].std(),
+        ecolor='red', alpha=0.5, linewidth=0.8, fmt='o', c='red', zorder=-1,
+        capsize=3
     )
     cm_stats.param_vs_dist_axis_pm.plot(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
@@ -265,17 +268,17 @@ local_act_time, conduction_vel, input_param, cm_stats):
             "R-value: {0:.3f}".format(cm_stats.r_value_pm[
             input_param.stats_param_dist_slider]))
     )
-    cm_stats.param_vs_dist_axis_pm.errorbar(
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
-        cm_stats.intercept_pm[input_param.stats_param_dist_slider] + 
-        cm_stats.slope_pm[input_param.stats_param_dist_slider] * 
-        local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
-        yerr=pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[
-            input_param.stats_param_dist_slider]].std(),
-        ecolor='black', alpha=0.1, linewidth=0.8
-    )
+    # cm_stats.param_vs_dist_axis_pm.errorbar(
+    #     local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]],
+    #     cm_stats.intercept_pm[input_param.stats_param_dist_slider] + 
+    #     cm_stats.slope_pm[input_param.stats_param_dist_slider] * 
+    #     local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]],
+    #     yerr=pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]].std(),
+    #     ecolor='black', alpha=0.1, linewidth=0.8
+    # )
     cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker", ylabel="Time lag (ms)")
     cm_stats.param_vs_dist_axis_pm.legend(loc='upper left')
     
