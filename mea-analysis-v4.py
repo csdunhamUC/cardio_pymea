@@ -251,7 +251,7 @@ def reload_module():
 # the heat maps observed in the main window of the program. The code is largely 
 # identical with the individual functions, which (will soon) open their own 
 # windows for each calculation.
-def graph_all(analysisGUI, heat_map, pace_maker, upstroke_vel, local_act_time, 
+def graph_all(analysisGUI, heat_map, cm_beats, pace_maker, upstroke_vel, local_act_time, 
 conduction_vel, input_param):
     # ----------------------------- Pacemaker ----------------------------------
     if hasattr(heat_map, 'cbar_1') is True:
@@ -273,8 +273,8 @@ conduction_vel, input_param):
     heat_map.cbar_1 = heat_map.axis1.figure.colorbar(mappable, ax=heat_map.axis1)
     heat_map.cbar_1.ax.set_title("Time Lag (ms)", fontsize=10)
 
-    heat_map.axis1.set(title="Pacemaker, Beat " + 
-        str(input_param.beat_choice + 1), xlabel="X coordinate (μm)",
+    heat_map.axis1.set(title="Pacemaker", 
+        xlabel="X coordinate (μm)",
         ylabel="Y coordinate (μm)")
 
     # --------------------------- Upstroke velocity ----------------------------
@@ -296,8 +296,8 @@ conduction_vel, input_param):
     heat_map.cbar_2 = heat_map.axis2.figure.colorbar(mappable_2, ax=heat_map.axis2)
     heat_map.cbar_2.ax.set_title("μV/ms", fontsize=10)
 
-    heat_map.axis2.set(title="Upstroke Velocity, Beat " + 
-        str(input_param.beat_choice_2 + 1), xlabel="X coordinate (μm)", 
+    heat_map.axis2.set(title="Upstroke Velocity", 
+        xlabel="X coordinate (μm)", 
         ylabel="Y coordinate (μm)")
 
     # ------------------------- Local activation time --------------------------
@@ -319,8 +319,8 @@ conduction_vel, input_param):
     heat_map.cbar_3 = heat_map.axis3.figure.colorbar(mappable_3, ax=heat_map.axis3)
     heat_map.cbar_3.ax.set_title("Time Lag (ms)", fontsize=10)
 
-    heat_map.axis3.set(title="Local Activation Time, Beat " + 
-        str(input_param.beat_choice_3 + 1), xlabel="X coordinate (μm)", 
+    heat_map.axis3.set(title="Local Activation Time", 
+        xlabel="X coordinate (μm)", 
         ylabel="Y coordinate (μm)")
 
     # -------------------------- Conduction velocity ---------------------------
@@ -341,11 +341,15 @@ conduction_vel, input_param):
     heat_map.cbar_4 = heat_map.axis4.figure.colorbar(mappable_4, ax=heat_map.axis4)
     heat_map.cbar_4.ax.set_title("μm/(ms)", fontsize=10)
 
-    heat_map.axis4.set(title="Conduction Velocity, Beat " + 
-        str(input_param.beat_choice_4 + 1), xlabel="X coordinate (μm)", 
+    heat_map.axis4.set(title="Conduction Velocity" , 
+        xlabel="X coordinate (μm)", 
         ylabel="Y coordinate (μm)")
 
     heat_map.curr_plot.tight_layout()
+    heat_map.curr_plot.subplots_adjust(top=0.9)
+    heat_map.curr_plot.suptitle("Parameter Heatmaps. Beat " + 
+        str(input_param.beat_choice + 1) + " of " + 
+        str(int(cm_beats.beat_count_dist_mode[0])) + "\n")
     heat_map.curr_plot.canvas.draw()
 
 
@@ -567,7 +571,7 @@ class MainGUI(tk.Frame):
                 input_param, electrode_config),
                 calculate_conduction_velocity(self, conduction_vel, 
                 local_act_time, heat_map, input_param, electrode_config),
-                graph_all(self, heat_map, pace_maker, upstroke_vel, 
+                graph_all(self, heat_map, cm_beats, pace_maker, upstroke_vel, 
                 local_act_time, conduction_vel, input_param)])
         # Add extra command for each solitary calculation that calls the 
         # appropriate graphing function. The graphing function will call the 
@@ -731,15 +735,16 @@ class MainGUI(tk.Frame):
         self.mea_heatmap_frame.grid(row=1, column=0, padx=5, pady=5)
         self.mea_heatmap_frame.grid_propagate(False)
         self.gen_all_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
-        self.gen_all_heatmap.get_tk_widget().grid(row=0, column=1, padx=5, pady=5)
+        self.gen_all_heatmap.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        
         # Beat select slider, belongs to different frame.
         self.mea_beat_select = tk.Scale(self.mea_parameters_frame, length=125, 
             width=15, from_=1, to=20, orient="horizontal", bg="white", 
             label="Current Beat:")
         self.mea_beat_select.grid(row=0, column=9, rowspan=2, padx=5, pady=5)
         self.mea_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_all(self, heat_map, pace_maker, upstroke_vel,
-                local_act_time, conduction_vel, input_param))
+            lambda event: graph_all(self, heat_map, cm_beats, pace_maker, 
+                upstroke_vel, local_act_time, conduction_vel, input_param))
         self.toolbar_all_heatmap_frame = tk.Frame(self.mea_parameters_frame)
         self.toolbar_all_heatmap_frame.grid(row=0, column=10, rowspan=2, padx=5, pady=5)
         self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
@@ -881,6 +886,7 @@ class MainGUI(tk.Frame):
                 input_param, cm_stats))
         param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, 
             padx=5, pady=5)
+        
         # Display file name
         self.stat_file_name_label = tk.Label(param_vs_dist_options_frame, 
             textvariable=self.stat_file_name, bg="white", wraplength=300)
@@ -904,6 +910,7 @@ class MainGUI(tk.Frame):
             lambda event: param_vs_distance_stats.param_vs_distance_graphing(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                     input_param, cm_stats))
+        
         param_vs_dist_toolbar_frame = tk.Frame(param_vs_dist)
         param_vs_dist_toolbar_frame.grid(row=0, rowspan=2, column=3, columnspan=2, 
             in_=param_vs_dist_options_frame)
