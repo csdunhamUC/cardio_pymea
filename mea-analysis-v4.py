@@ -206,7 +206,6 @@ def data_import(analysisGUI, raw_data, electrode_config):
 
         # Update file name display in GUI following import
         analysisGUI.file_name_label.configure(text=import_filename)
-        analysisGUI.stat_file_name.set(import_filename)
         analysisGUI.file_path.set(import_path)
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
@@ -349,7 +348,7 @@ conduction_vel, input_param):
     heat_map.curr_plot.subplots_adjust(top=0.9)
     heat_map.curr_plot.suptitle("Parameter Heatmaps. Beat " + 
         str(input_param.beat_choice + 1) + " of " + 
-        str(int(cm_beats.beat_count_dist_mode[0])) + "\n")
+        str(int(cm_beats.beat_count_dist_mode[0])) + ".")
     heat_map.curr_plot.canvas.draw()
 
 

@@ -22,6 +22,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
     analysisGUI.param_vs_dist_beat_select.configure(
         to=int(cm_beats.beat_count_dist_mode[0]))
     print("\n" + "Sigma value: " + str(input_param.sigma_value) + "\n")
+    analysisGUI.stat_file_name.set(analysisGUI.file_name_label.cget("text"))
     
     # Filter outliers for pacemaker.
     temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(
