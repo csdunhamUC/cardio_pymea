@@ -23,7 +23,6 @@ def calculate_conduction_velocity(analysisGUI, conduction_vel, local_act_time, h
         # Want/need to display the origin for heat map purposes.  Question is how to do this efficiently.
 
         conduction_vel.param_dist_raw_max = conduction_vel.param_dist_raw.max().max()
-        print("CV max: " + str(conduction_vel.param_dist_raw_max))
         conduction_vel.param_dist_raw_mean = np.nanmean(conduction_vel.param_dist_raw)
 
         conduction_vel.param_dist_raw.index = electrode_config.electrode_names
