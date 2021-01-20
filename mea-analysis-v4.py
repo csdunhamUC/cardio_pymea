@@ -255,6 +255,7 @@ conduction_vel, input_param):
     # ----------------------------- Pacemaker ----------------------------------
     if hasattr(heat_map, 'cbar_1') is True:
         heat_map.cbar_1.remove()
+        delattr(heat_map, 'cbar_1')
 
     heat_map.axis1.cla()
     input_param.beat_choice = int(analysisGUI.mea_beat_select.get()) - 1
@@ -279,6 +280,7 @@ conduction_vel, input_param):
     # --------------------------- Upstroke velocity ----------------------------
     if hasattr(heat_map, 'cbar_2') is True:
         heat_map.cbar_2.remove()
+        delattr(heat_map, 'cbar_2')
     heat_map.axis2.cla()
     input_param.beat_choice_2 = int(analysisGUI.mea_beat_select.get()) - 1
 
@@ -302,6 +304,7 @@ conduction_vel, input_param):
     # ------------------------- Local activation time --------------------------
     if hasattr(heat_map, 'cbar_3') is True:
         heat_map.cbar_3.remove()
+        delattr(heat_map, 'cbar_3')
     heat_map.axis3.cla()
     input_param.beat_choice_3 = int(analysisGUI.mea_beat_select.get()) - 1
 
@@ -325,6 +328,7 @@ conduction_vel, input_param):
     # -------------------------- Conduction velocity ---------------------------
     if hasattr(heat_map, 'cbar_4') is True:
         heat_map.cbar_4.remove()
+        delattr(heat_map, 'cbar_4')
     heat_map.axis4.cla()
     input_param.beat_choice_4 = int(analysisGUI.mea_beat_select.get()) - 1
 
@@ -358,6 +362,7 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
     try:
         if hasattr(heat_map, 'pm_solo_cbar') is True:
             heat_map.pm_solo_cbar.remove()
+            delattr(heat_map, 'pm_solo_cbar')
 
         heat_map.pm_solo_axis.cla()
         input_param.pm_solo_beat_choice = int(analysisGUI.pm_solo_beat_select.get()) - 1
@@ -391,6 +396,7 @@ def graph_upstroke(analysisGUI, heat_map, upstroke_vel, input_param):
     try:
         if hasattr(heat_map, 'dvdt_solo_cbar') is True:
             heat_map.dvdt_solo_cbar.remove()
+            delattr(heat_map, 'dvdt_solo_cbar')
 
         heat_map.dvdt_solo_axis.cla()
         input_param.dvdt_solo_beat_choice = int(analysisGUI.dvdt_solo_beat_select.get()) - 1
@@ -424,6 +430,8 @@ def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
     try:
         if hasattr(heat_map, 'lat_solo_cbar') is True:
             heat_map.lat_solo_cbar.remove()
+            delattr(heat_map, 'lat_solo_cbar')
+        
         heat_map.lat_solo_axis.cla()
         input_param.lat_solo_beat_choice = int(analysisGUI.lat_solo_beat_select.get()) - 1
 
@@ -458,6 +466,8 @@ input_param):
     try:
         if hasattr(heat_map, 'cv_solo_cbar') is True:
             heat_map.cv_solo_cbar.remove()
+            delattr(heat_map, 'cv_solo_cbar')
+        
         heat_map.cv_solo_axis.cla()
         input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
 
