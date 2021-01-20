@@ -50,8 +50,8 @@ def determine_beats(analysisGUI, raw_data, cm_beats, input_param):
             else:
                 cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
         elif analysisGUI.trunc_toggle_on_off.get() == True:
-            trunc_start = int(analysisGUI.trunc_start_value.get())
-            trunc_end = int(analysisGUI.trunc_end_value.get())
+            trunc_start = float(analysisGUI.trunc_start_value.get())
+            trunc_end = float(analysisGUI.trunc_end_value.get())
             print("Truncating between {} and {} minutes.".format(
                 trunc_start, trunc_end))
             
