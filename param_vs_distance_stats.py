@@ -234,14 +234,6 @@ local_act_time, conduction_vel, input_param, cm_stats):
     cm_stats.param_vs_dist_plot.suptitle(
         "Parameter vs. Distance from Minimum.  Beat " + 
         str(input_param.stats_param_dist_slider + 1) + ".") 
-    # cm_stats.pacemaker_reg_plot = sns.regplot(
-    #     x=local_act_time.distance_from_min[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-    #     y=cm_stats.pace_maker_filtered_data[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]],
-    #     ax=cm_stats.param_vs_dist_axis_pm,
-    #     color="crimson",
-    #     label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[input_param.stats_param_dist_slider]) + 
-    #         "\n" + "Std Dev: {0:.2f}".format(pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[input_param.stats_param_dist_slider]].std()))
-    # )
     
     # Pacemaker plotting.
     cm_stats.param_vs_dist_axis_pm.errorbar(
@@ -268,27 +260,19 @@ local_act_time, conduction_vel, input_param, cm_stats):
             "R-value: {0:.3f}".format(cm_stats.r_value_pm[
             input_param.stats_param_dist_slider]))
     )
-    # cm_stats.param_vs_dist_axis_pm.errorbar(
-    #     local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-    #         input_param.stats_param_dist_slider]],
-    #     cm_stats.intercept_pm[input_param.stats_param_dist_slider] + 
-    #     cm_stats.slope_pm[input_param.stats_param_dist_slider] * 
-    #     local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-    #         input_param.stats_param_dist_slider]],
-    #     yerr=pace_maker.param_dist_normalized[pace_maker.final_dist_beat_count[
-    #         input_param.stats_param_dist_slider]].std(),
-    #     ecolor='black', alpha=0.1, linewidth=0.8
-    # )
     cm_stats.param_vs_dist_axis_pm.set(title="Pacemaker", ylabel="Time lag (ms)")
     cm_stats.param_vs_dist_axis_pm.legend(loc='upper left')
     
     # Upstroke velocity plotting.
-    cm_stats.param_vs_dist_axis_dvdt.scatter(
+    cm_stats.param_vs_dist_axis_dvdt.errorbar(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
         cm_stats.upstroke_vel_filtered_data[upstroke_vel.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
-        c='green'
+        yerr=upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[
+            input_param.stats_param_dist_slider]].std(),
+        ecolor='green', alpha=0.5, linewidth=0.8, fmt='o', c='green', zorder=-1,
+        capsize=3
     )
     cm_stats.param_vs_dist_axis_dvdt.plot(
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
@@ -304,27 +288,31 @@ local_act_time, conduction_vel, input_param, cm_stats):
             "R-value: {0:.3f}".format(cm_stats.r_value_dvdt[
             input_param.stats_param_dist_slider])),
     )
-    cm_stats.param_vs_dist_axis_dvdt.errorbar(
-        local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
-        cm_stats.intercept_dvdt[input_param.stats_param_dist_slider] +
-        cm_stats.slope_dvdt[input_param.stats_param_dist_slider] * 
-        local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
-        yerr=upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[
-            input_param.stats_param_dist_slider]].std(),
-        ecolor='black', alpha=0.1, linewidth=0.8
-    )
+    # cm_stats.param_vs_dist_axis_dvdt.errorbar(
+    #     local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]],
+    #     cm_stats.intercept_dvdt[input_param.stats_param_dist_slider] +
+    #     cm_stats.slope_dvdt[input_param.stats_param_dist_slider] * 
+    #     local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]],
+    #     yerr=upstroke_vel.param_dist_normalized[upstroke_vel.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]].std(),
+    #     ecolor='black', alpha=0.1, linewidth=0.8
+    # )
     cm_stats.param_vs_dist_axis_dvdt.set(title="Upstroke Velocity", ylabel="μV/ms")
     cm_stats.param_vs_dist_axis_dvdt.legend(loc='upper left')
     
     # Local activation time plotting.
-    cm_stats.param_vs_dist_axis_lat.scatter(
+    cm_stats.param_vs_dist_axis_lat.errorbar(
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
         cm_stats.local_act_time_filtered_data[local_act_time.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
-        c='orange'
+        yerr=local_act_time.param_dist_normalized[
+            local_act_time.final_dist_beat_count[
+                input_param.stats_param_dist_slider]].std(),
+        ecolor='orange', alpha=0.5, linewidth=0.8, fmt='o', c='orange',
+        zorder=-1, capsize=3
     )
     cm_stats.param_vs_dist_axis_lat.plot(
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
@@ -340,29 +328,33 @@ local_act_time, conduction_vel, input_param, cm_stats):
             "R-value: {0:.3f}".format(cm_stats.r_value_lat[
             input_param.stats_param_dist_slider]))
     )
-    cm_stats.param_vs_dist_axis_lat.errorbar(
-        local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
-        cm_stats.intercept_lat[input_param.stats_param_dist_slider] + 
-        cm_stats.slope_lat[input_param.stats_param_dist_slider] * 
-        local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
-            input_param.stats_param_dist_slider]],
-        yerr=local_act_time.param_dist_normalized[
-            local_act_time.final_dist_beat_count[
-                input_param.stats_param_dist_slider]].std(),
-        ecolor='black', alpha=0.1, linewidth=0.8
-    )
+    # cm_stats.param_vs_dist_axis_lat.errorbar(
+    #     local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]],
+    #     cm_stats.intercept_lat[input_param.stats_param_dist_slider] + 
+    #     cm_stats.slope_lat[input_param.stats_param_dist_slider] * 
+    #     local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
+    #         input_param.stats_param_dist_slider]],
+    #     yerr=local_act_time.param_dist_normalized[
+    #         local_act_time.final_dist_beat_count[
+    #             input_param.stats_param_dist_slider]].std(),
+    #     ecolor='black', alpha=0.1, linewidth=0.8
+    # )
     cm_stats.param_vs_dist_axis_lat.set(title="Local Activation Time", 
         xlabel="Distance from origin (μm)", ylabel="Activation time (ms)")
     cm_stats.param_vs_dist_axis_lat.legend(loc='upper left')
 
     # Conduction velocity plotting.
-    cm_stats.param_vs_dist_axis_cv.scatter(
+    cm_stats.param_vs_dist_axis_cv.errorbar(
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
         cm_stats.conduction_vel_filtered_data[local_act_time.final_dist_beat_count[
             input_param.stats_param_dist_slider]],
-        c='blue'
+        yerr=conduction_vel.param_dist_raw[
+            pace_maker.final_dist_beat_count[
+                input_param.stats_param_dist_slider]].std(),
+        ecolor='blue', alpha=0.5, linewidth=0.8, fmt='o', c='blue', zorder=-1,
+        capsize=3
     )
     a, b, c = cm_stats.cv_popt[input_param.stats_param_dist_slider]
     y_fit = fitting_func(local_act_time.distance_from_min[
@@ -380,12 +372,12 @@ local_act_time, conduction_vel, input_param, cm_stats):
             "R-value: {0:.3f}".format(cm_stats.r_value_cv[
             input_param.stats_param_dist_slider]))
     )
-    cm_stats.param_vs_dist_axis_cv.errorbar(
-        x_sorted, y_fit, yerr=conduction_vel.param_dist_raw[
-            pace_maker.final_dist_beat_count[
-                input_param.stats_param_dist_slider]].std(),
-        ecolor='black', alpha=0.1, linewidth=0.8
-    )
+    # cm_stats.param_vs_dist_axis_cv.errorbar(
+    #     x_sorted, y_fit, yerr=conduction_vel.param_dist_raw[
+    #         pace_maker.final_dist_beat_count[
+    #             input_param.stats_param_dist_slider]].std(),
+    #     ecolor='black', alpha=0.1, linewidth=0.8
+    # )
     cm_stats.param_vs_dist_axis_cv.set(title="Conduction Velocity", 
         xlabel="Distance from origin (μm)", ylabel="μm/ms")
     cm_stats.param_vs_dist_axis_cv.legend(loc='lower right')
