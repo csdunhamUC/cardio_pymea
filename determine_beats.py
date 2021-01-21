@@ -183,15 +183,12 @@ def graph_beats(analysisGUI, cm_beats, input_param):
         print("Generating graph for electrode " + str(input_param.elec_choice + 1) + ".")
         cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
 
-
-        mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values)
-        x_pm_without_nan = cm_beats.dist_beats.iloc[0:, 
+        mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, 
+            input_param.elec_choice].values)
+        x_dist_without_nan = cm_beats.dist_beats.iloc[0:, 
                 input_param.elec_choice].values[mask_dist]
-        dist_without_nan = x_pm_without_nan.astype('int64')
-        
-        # dist_without_nan = cm_beats.dist_beats.iloc[0:, input_param.elec_choice].values[mask_dist].astype('int64')
-
-        cm_beats.axis1.plot(cm_beats.x_axis[x_pm_without_nan], 
+        dist_without_nan = x_dist_without_nan.astype('int64')
+        cm_beats.axis1.plot(cm_beats.x_axis[x_dist_without_nan], 
             cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
                 dist_without_nan], "xr")
         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
@@ -199,23 +196,44 @@ def graph_beats(analysisGUI, cm_beats, input_param):
         cm_beats.axis1.legend(['distance = ' + 
             str(analysisGUI.min_peak_dist_val.get())], loc='lower left')
 
-        # mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values)
-        # prom_without_nan = cm_beats.prom_beats.iloc[0:, input_param.elec_choice].values[mask_prom].astype('int64')
-        # cm_beats.axis2.plot(prom_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[prom_without_nan], "ob")
-        # cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        # cm_beats.axis2.legend(['prominence = ' + str(input_param.parameter_prominence)], loc='lower left')
+        mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, 
+            input_param.elec_choice].values)
+        x_prom_without_nan = cm_beats.prom_beats.iloc[0:, 
+            input_param.elec_choice].values[mask_prom]
+        prom_without_nan = x_prom_without_nan.astype('int64')
+        cm_beats.axis2.plot(cm_beats.x_axis[x_prom_without_nan], 
+            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+                prom_without_nan], "ob")
+        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
+            input_param.elec_choice].values)
+        cm_beats.axis2.legend(['prominence = ' + 
+            str(input_param.parameter_prominence)], loc='lower left')
 
-        # mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, input_param.elec_choice].values)
-        # width_without_nan = cm_beats.width_beats.iloc[0:, input_param.elec_choice].values[mask_width].astype('int64')
-        # cm_beats.axis3.plot(width_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[width_without_nan], "vg")
-        # cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        # cm_beats.axis3.legend(['width = ' + str(input_param.parameter_width)], loc='lower left')
+        mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, 
+            input_param.elec_choice].values)
+        x_width_without_nan = cm_beats.width_beats.iloc[0:, 
+            input_param.elec_choice].values[mask_width]
+        width_without_nan = x_width_without_nan.astype('int64')
+        cm_beats.axis3.plot(cm_beats.x_axis[x_width_without_nan], 
+            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+                width_without_nan], "vg")
+        cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
+            input_param.elec_choice].values)
+        cm_beats.axis3.legend(['width = ' + 
+            str(input_param.parameter_width)], loc='lower left')
 
-        # mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values)
-        # thresh_without_nan = cm_beats.thresh_beats.iloc[0:, input_param.elec_choice].values[mask_thresh].astype('int64')
-        # cm_beats.axis4.plot(thresh_without_nan, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[thresh_without_nan], "xk")
-        # cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, input_param.elec_choice].values)
-        # cm_beats.axis4.legend(['threshold = ' + str(input_param.parameter_thresh)], loc='lower left')
+        mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, 
+            input_param.elec_choice].values)
+        x_thresh_without_nan = cm_beats.thresh_beats.iloc[0:, 
+            input_param.elec_choice].values[mask_thresh]
+        thresh_without_nan = x_thresh_without_nan.astype('int64')
+        cm_beats.axis4.plot(cm_beats.x_axis[x_thresh_without_nan], 
+            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+                thresh_without_nan], "xk")
+        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
+            input_param.elec_choice].values)
+        cm_beats.axis4.legend(['threshold = ' + 
+            str(input_param.parameter_thresh)], loc='lower left')
 
         cm_beats.comp_plot.canvas.draw()
         print("Plotting complete.")
