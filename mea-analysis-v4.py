@@ -26,7 +26,6 @@ import pandas as pd
 import pandasgui as pgui
 import seaborn as sns
 import os
-import time
 import tkinter as tk
 import importlib
 from scipy import stats
@@ -788,7 +787,7 @@ class MainGUI(tk.Frame):
         gen_beats_fig.get_tk_widget().grid(row=2, column=0, columnspan=2, padx=5, pady=5)
         # NavigationToolbar2Tk calls pack internally, conflicts with grid.  
         # Workaround: establish in own frame, use grid to place that frame 
-        # in_side of the chosen parent frame. This works because the parent 
+        # inside of the chosen parent frame. This works because the parent 
         # frame is still a descent of "root", which is the overarching parent 
         # of all of these GUI elements.
         gen_beats_toolbar_frame = tk.Frame(beat_detect)
