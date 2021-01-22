@@ -222,8 +222,10 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
     # where rows and columns can be ranges separated by colons
     # input_param.beat_choice = int(analysisGUI.mea_beat_select.get()) - 1
     # print(pace_maker.param_dist_normalized.name)
-    print(electrode_config.electrode_names[0])
-    print(electrode_config.electrode_names[5])
+    # print(electrode_config.electrode_names[0])
+    # print(electrode_config.electrode_names[5])
+    print(analysisGUI.sample_frequency_val.get())
+    print(analysisGUI.sample_frequency_menu['menu'].keys())
     # print(input_param.beat_choice)
 
 
@@ -708,11 +710,14 @@ class MainGUI(tk.Frame):
         self.sample_frequency_label = tk.Label(self.mea_parameters_frame,
             text="Sample Freq. (Hz)", bg="white", wraplength=100)
         self.sample_frequency_label.grid(row=0, column=6, padx=5, pady=2)
+        frequency_values = ('1000', '10000')
         self.sample_frequency_val = tk.StringVar()
-        self.sample_frequency_val.set("1000")
-        self.sample_frequency_entry = tk.Entry(self.mea_parameters_frame,
-            text=self.sample_frequency_val, width=8)
-        self.sample_frequency_entry.grid(row=1, column=6, padx=5, pady=2)
+        self.sample_frequency_val.set(frequency_values[0])
+        self.sample_frequency_menu = tk.OptionMenu(self.mea_parameters_frame,
+            self.sample_frequency_val, *frequency_values)
+        self.sample_frequency_menu.grid(row=1, column=6, padx=5, pady=2)
+        self.sample_frequency_menu.configure(bg="white", borderwidth=0, 
+            width=8)
 
         # Truncation on/off toggle checkbox and positioning.
         self.trunc_toggle_on_off = tk.BooleanVar()
