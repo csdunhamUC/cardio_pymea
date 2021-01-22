@@ -84,7 +84,14 @@ per_electrode_mode_of_beats, sample_frequency):
     temp_local_at = np.zeros(num_of_electrodes)
     local_at = np.zeros((mode_of_beats, num_of_electrodes))
 
-    
+    # Checks to see whether sample frequency is on millisecond time scale.
+    # If so, dividing it into 1000 should give 1.0, and the calculations
+    # will proceed assuming millisecond scales, such that each index is some
+    # millisecond.  If not and the answer is 0.1 (as 10,000Hz yields), this 
+    # means that the time scale is now in tenths of milliseconds.  In order to 
+    # comprise the same 5 millisecond window, 50 indices must be analyzed rather 
+    # than 5.  The end_point variable dynamically re-sizes the appropriate
+    # arrays in order to handle these two scenarios.
     if 1000 / sample_frequency == 1.0:
         end_point = 5
         temp_slope = np.zeros((num_of_electrodes, end_point))
@@ -158,7 +165,6 @@ per_electrode_mode_of_beats, sample_frequency):
                 else:
                     temp_index[electrode] = [np.nan] * end_point
                     temp_slope[electrode] = [np.nan] * end_point
-                
                 temp_local_at[electrode] = temp_index[electrode, np.argmin(temp_slope[electrode])]
             
             local_at[beat] = temp_local_at
