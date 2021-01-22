@@ -83,12 +83,16 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         # Find maximum time lag (interval)
         pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
 
-
         # Find the mean interval time.
         pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized.max())
 
         # Set slider value to maximum number of beats
         analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+
+        # Find the number of excluded electrodes (removed for noise, etc)
+        excluded_elec = np.count_nonzero(pace_maker.param_dist_normalized.count() == 0)
+        print("{}Excluded electrodes: {} {}".format(Fore.YELLOW, excluded_elec,
+            Style.RESET_ALL))
 
         # Assigns column headers (names) using the naming convention provided in the electrode_config class.
         pace_maker.param_dist_normalized.columns = electrode_config.electrode_names
