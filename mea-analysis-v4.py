@@ -34,7 +34,7 @@ import datetime
 import determine_beats
 from calculate_pacemaker import calculate_pacemaker
 from calculate_upstroke_vel import calculate_upstroke_vel
-from calculate_lat import calculate_lat
+import calculate_lat
 from calculate_conduction_velocity import calculate_conduction_velocity
 import param_vs_distance_stats
 
@@ -236,6 +236,7 @@ def time_test():
 def reload_module():
     importlib.reload(param_vs_distance_stats)
     importlib.reload(determine_beats)
+    importlib.reload(calculate_lat)
     # from param_vs_distance_stats import param_vs_distance_graphing, param_vs_distance_analysis
     print("Reloaded module.")
 
@@ -575,7 +576,7 @@ class MainGUI(tk.Frame):
                 heat_map, input_param, electrode_config),
                 calculate_upstroke_vel(self, cm_beats, upstroke_vel, heat_map, 
                 input_param, electrode_config),
-                calculate_lat(self, cm_beats, local_act_time, heat_map, 
+                calculate_lat.calculate_lat(self, cm_beats, local_act_time, heat_map, 
                 input_param, electrode_config),
                 calculate_conduction_velocity(self, conduction_vel, 
                 local_act_time, heat_map, input_param, electrode_config),
@@ -598,8 +599,8 @@ class MainGUI(tk.Frame):
                 input_param),
                 graph_upstroke(self, heat_map, upstroke_vel, input_param)])
         calc_menu.add_command(label="Local Activation Time", 
-            command=lambda: [calculate_lat(self, cm_beats, local_act_time, 
-                heat_map, input_param, electrode_config),
+            command=lambda: [calculate_lat.calculate_lat(self, cm_beats, 
+                local_act_time, heat_map, input_param, electrode_config),
                 self.lat_heatmap_window(cm_beats, local_act_time, heat_map, 
                 input_param),
                 graph_local_act_time(self, heat_map, local_act_time, input_param)])
