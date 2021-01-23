@@ -59,8 +59,8 @@ def determine_beats(analysisGUI, raw_data, cm_beats, input_param):
             end_milsec = int(trunc_end * 60 * input_param.sample_frequency)
             print("Start (ms) = {}, End (ms) = {}".format(
                 start_milsec, end_milsec))
-            cm_beats.x_axis = (raw_data.imported.iloc[start_milsec:end_milsec, 0]
-                 - raw_data.imported.iloc[start_milsec:end_milsec, 0].min().min())
+            cm_beats.x_axis = (raw_data.imported.iloc[start_milsec:end_milsec, 0].values 
+            - raw_data.imported.iloc[start_milsec:end_milsec, 0].min().min())
             # y_axis indexing ends at column -1, or second to last column, to 
             # remove the columns containing only \r
             if '\r' in raw_data.imported.columns:
@@ -185,10 +185,9 @@ def graph_beats(analysisGUI, cm_beats, input_param):
 
         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, 
             input_param.elec_choice].values)
-        x_dist_without_nan = cm_beats.dist_beats.iloc[0:, 
-                input_param.elec_choice].values[mask_dist]
-        dist_without_nan = x_dist_without_nan.astype('int64')
-        cm_beats.axis1.plot(cm_beats.x_axis[x_dist_without_nan], 
+        dist_without_nan = cm_beats.dist_beats.iloc[0:, 
+                input_param.elec_choice].values[mask_dist].astype('int64')
+        cm_beats.axis1.plot(cm_beats.x_axis[dist_without_nan], 
             cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
                 dist_without_nan], "xr")
         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
@@ -198,10 +197,9 @@ def graph_beats(analysisGUI, cm_beats, input_param):
 
         mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, 
             input_param.elec_choice].values)
-        x_prom_without_nan = cm_beats.prom_beats.iloc[0:, 
-            input_param.elec_choice].values[mask_prom]
-        prom_without_nan = x_prom_without_nan.astype('int64')
-        cm_beats.axis2.plot(cm_beats.x_axis[x_prom_without_nan], 
+        prom_without_nan = cm_beats.prom_beats.iloc[0:, 
+            input_param.elec_choice].values[mask_prom].astype('int64')
+        cm_beats.axis2.plot(cm_beats.x_axis[prom_without_nan], 
             cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
                 prom_without_nan], "ob")
         cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
@@ -211,10 +209,9 @@ def graph_beats(analysisGUI, cm_beats, input_param):
 
         mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, 
             input_param.elec_choice].values)
-        x_width_without_nan = cm_beats.width_beats.iloc[0:, 
-            input_param.elec_choice].values[mask_width]
-        width_without_nan = x_width_without_nan.astype('int64')
-        cm_beats.axis3.plot(cm_beats.x_axis[x_width_without_nan], 
+        width_without_nan = cm_beats.width_beats.iloc[0:, 
+            input_param.elec_choice].values[mask_width].astype('int64')
+        cm_beats.axis3.plot(cm_beats.x_axis[width_without_nan], 
             cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
                 width_without_nan], "vg")
         cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
@@ -224,10 +221,9 @@ def graph_beats(analysisGUI, cm_beats, input_param):
 
         mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, 
             input_param.elec_choice].values)
-        x_thresh_without_nan = cm_beats.thresh_beats.iloc[0:, 
-            input_param.elec_choice].values[mask_thresh]
-        thresh_without_nan = x_thresh_without_nan.astype('int64')
-        cm_beats.axis4.plot(cm_beats.x_axis[x_thresh_without_nan], 
+        thresh_without_nan = cm_beats.thresh_beats.iloc[0:, 
+            input_param.elec_choice].values[mask_thresh].astype('int64')
+        cm_beats.axis4.plot(cm_beats.x_axis[thresh_without_nan], 
             cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
                 thresh_without_nan], "xk")
         cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
