@@ -55,7 +55,6 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         # Find the mean LAT
         local_act_time.param_dist_normalized_mean = np.nanmean(
             local_act_time.param_dist_normalized.max())
-        # print("Mean LAT: " + str(local_act_time.param_dist_normalized_mean))
 
         local_act_time.param_dist_normalized.index = electrode_config.electrode_names
         local_act_time.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
@@ -71,7 +70,7 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
-        print(end_time - start_time)
+        # print(end_time - start_time)
         calculate_distances(local_act_time, electrode_config)
     except AttributeError:
         print("Please use Find Peaks first.")
@@ -193,4 +192,4 @@ def calculate_distances(local_act_time, electrode_config):
 
     print("Done.")
     end_time = time.process_time()
-    print(end_time - start_time)
+    # print(end_time - start_time)

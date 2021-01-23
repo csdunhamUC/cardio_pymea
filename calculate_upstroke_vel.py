@@ -68,7 +68,7 @@ def calculate_upstroke_vel(analysisGUI, cm_beats, upstroke_vel, heat_map, input_
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
-        print(end_time - start_time)
+        # print(end_time - start_time)
     except AttributeError:
         print("Please use Find Peaks first.")
 

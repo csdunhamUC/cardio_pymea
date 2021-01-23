@@ -32,6 +32,6 @@ def calculate_conduction_velocity(analysisGUI, conduction_vel, local_act_time, h
 
         end_time = time.process_time()
         print("CV calculation complete.")
-        print(end_time - start_time)
+        # print(end_time - start_time)
     except AttributeError:
         print("Please calculate local activation time first.")
