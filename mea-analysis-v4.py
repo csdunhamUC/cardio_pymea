@@ -37,6 +37,7 @@ import calculate_upstroke_vel
 import calculate_lat
 from calculate_conduction_velocity import calculate_conduction_velocity
 import param_vs_distance_stats
+import psd_plotting
 
 
 ################################################################################
@@ -78,6 +79,10 @@ class MEAHeatMaps:
 
 
 class StatisticsData:
+    pass
+
+
+class PSDData:
     pass
 
 
@@ -236,10 +241,11 @@ def time_test():
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
 def reload_module():
-    importlib.reload(param_vs_distance_stats)
-    importlib.reload(determine_beats)
-    importlib.reload(calculate_lat)
-    importlib.reload(calculate_upstroke_vel)
+    # importlib.reload(param_vs_distance_stats)
+    # importlib.reload(determine_beats)
+    # importlib.reload(calculate_lat)
+    # importlib.reload(calculate_upstroke_vel)
+    importlib.reload(psd_plotting)
     # from param_vs_distance_stats import param_vs_distance_graphing, param_vs_distance_analysis
     print("Reloaded module.")
 
@@ -529,7 +535,7 @@ def trunc_toggle(analysisGUI):
 class MainGUI(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-    electrode_config):
+    electrode_config, psd_data):
         tk.Frame.__init__(self, master)
         # The fun story about grid: columns and rows cannot be generated past 
         # the number of widgets you have (or at least I've yet to learn the way 
@@ -621,7 +627,10 @@ class MainGUI(tk.Frame):
             command=lambda: [self.param_vs_dist_stats_window(cm_beats, 
             pace_maker, upstroke_vel, local_act_time, conduction_vel, 
             input_param, cm_stats)])
-        statistics_menu.add_command(label="Power Law Plot", command=None)
+        statistics_menu.add_command(label="Power Spectrum", 
+            command=lambda: [self.psd_plot_window(cm_beats, pace_maker, 
+            upstroke_vel, local_act_time, conduction_vel, input_param, 
+            cm_stats, psd_data)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -781,6 +790,8 @@ class MainGUI(tk.Frame):
         self.stat_readout_text.set("TBD")
         self.stat_file_name = tk.StringVar()
         self.stat_file_name.set("No file")
+        self.psd_file_name = tk.StringVar()
+        self.psd_file_name.set("No file")
         # # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -964,6 +975,50 @@ class MainGUI(tk.Frame):
         #     tk.Label(param_vs_dist_readout_scrollframe, bg="white",
         #     text="This is a test and I said this is a test").grid(row=i)
 
+    def psd_plot_window(self, cm_beats, pace_maker, upstroke_vel, 
+    local_act_time, conduction_vel, input_param, cm_stats, psd_data):
+        psd_window= tk.Toplevel(self)
+        psd_window.title("Log-Log and Power Spectrum")
+        psd_window_options_frame = tk.Frame(psd_window, width=1300, 
+            height=80, bg="white")
+        psd_window_options_frame.grid(row=0, column=0, columnspan=1, 
+            padx=5, pady=5)
+        psd_window_options_frame.grid_propagate(False)
+
+        psd_window_plotting = tk.Button(psd_window_options_frame, 
+            text="Plot PSD", bg="silver", height=2,
+            command=lambda: None)
+        psd_window_plotting.grid(row=0, rowspan=2, column=1, 
+            padx=5, pady=5)
+        
+        # Display file name
+        self.psd_file_name_label = tk.Label(psd_window_options_frame, 
+            textvariable=self.psd_file_name, bg="white", wraplength=300)
+        self.psd_file_name_label.grid(row=0, column=5, 
+            columnspan=4, padx=5, pady=5)
+        
+        # Figure frame for statistical best-fit plots.
+        psd_fig_frame = tk.Frame(psd_window, width=1300, 
+            height=800, bg="white")
+        psd_fig_frame.grid(row=1, column=0, padx=5, pady=5)
+        psd_fig_frame.grid_propagate(False)
+        psd_fig = FigureCanvasTkAgg(psd_data.psd_plots, 
+            psd_fig_frame)
+        psd_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        
+        self.psd_electrode_select = tk.Scale(psd_window_options_frame, 
+            length=125, width=15, from_=1, to=5, 
+            orient="horizontal", bg="white", label="Current Beat")
+        self.psd_electrode_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
+        self.psd_electrode_select.bind("<ButtonRelease-1>", 
+            lambda event: None)
+        
+        psd_toolbar_frame = tk.Frame(psd_window)
+        psd_toolbar_frame.grid(row=0, rowspan=2, column=3, columnspan=2, 
+            in_=psd_window_options_frame)
+        psd_toolbar = NavigationToolbar2Tk(psd_fig, 
+            psd_toolbar_frame)
+
 
     def col_sel_callback(self, *args):
         print("You entered: \"{}\"".format(self.elec_to_plot_val.get()))
@@ -1018,6 +1073,7 @@ def main():
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
     cm_stats = StatisticsData()
+    psd_data = PSDData()
     electrode_config = ElectrodeConfig(raw_data)
 
     # Heatmap axes for Calculate All (main window)
@@ -1051,12 +1107,22 @@ def main():
     cm_beats.axis3 = cm_beats.comp_plot.add_subplot(223)
     cm_beats.axis4 = cm_beats.comp_plot.add_subplot(224)
 
+    # Subplot axes for Param vs Distance Stats window
     cm_stats.param_vs_dist_plot = plt.Figure(figsize=(10.5, 6.5), dpi=120)
     cm_stats.param_vs_dist_axis_pm = cm_stats.param_vs_dist_plot.add_subplot(221)
     cm_stats.param_vs_dist_axis_lat = cm_stats.param_vs_dist_plot.add_subplot(223)
     cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(222)
     cm_stats.param_vs_dist_axis_cv = cm_stats.param_vs_dist_plot.add_subplot(224)
 
+    # Subplot axes for PSD Plotting window
+    psd_data.psd_plots = plt.Figure(figsize=(10.5, 6.5), dpi=120)
+    psd_data.loglog_before = psd_data.psd_plots.add_subplot(321)
+    psd_data.loglog_during = psd_data.psd_plots.add_subplot(323)
+    psd_data.loglog_after = psd_data.psd_plots.add_subplot(325)
+    psd_data.psd_before = psd_data.psd_plots.add_subplot(322)
+    psd_data.psd_during = psd_data.psd_plots.add_subplot(324)
+    psd_data.psd_during = psd_data.psd_plots.add_subplot(326)
+    
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from 
     # top of screen
@@ -1065,7 +1131,7 @@ def main():
     # Calls class to create the GUI window. *********
     analysisGUI = MainGUI(root, raw_data, cm_beats, pace_maker, upstroke_vel, 
         local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-        electrode_config)
+        electrode_config, psd_data)
     # print(vars(analysisGUI))
     # print(dir(analysisGUI))
     # print(hasattr(analysisGUI "elec_to_plot_entry"))
