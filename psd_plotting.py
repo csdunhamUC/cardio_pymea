@@ -13,14 +13,32 @@ from matplotlib import pyplot as plt
 import pandas as pd
 import time
 
+"""
+    Variables of likely use for this module:
+    psd_data.loglog_before = psd_data.psd_plots.add_subplot(321)
+    psd_data.loglog_during = psd_data.psd_plots.add_subplot(323)
+    psd_data.loglog_after = psd_data.psd_plots.add_subplot(325)
+    psd_data.psd_before = psd_data.psd_plots.add_subplot(322)
+    psd_data.psd_during = psd_data.psd_plots.add_subplot(324)
+    psd_data.psd_during = psd_data.psd_plots.add_subplot(326)
+    cm_beats.x_axis
+    cm_beats.y_axis
+    pace_maker.param_dist_normalized
+    local_act_time.param_dist_normalized
+    upstroke_vel.param_dist_normalized
+    conduction_vel.param_dist_raw
+    input_param.sample_frequency
+    analysisGUI.psd_start_beat
+    analysisGUI.psd_end_beat
+"""
 
 def plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-local_act_time, conduction_vel, input_param):
+local_act_time, conduction_vel, input_param, psd_data):
     print()
 
 
 def plot_psd_welch(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-local_act_time, conduction_vel, input_param):
+local_act_time, conduction_vel, input_param, psd_data):
     print()
     x = np.ndarray((2,3))
     freq, Pxx = signal.periodogram(x, fs=1.0, window='hann')
