@@ -80,12 +80,6 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
             pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0).div(10)
             pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0).div(10)
 
-        # Find maximum time lag (interval)
-        pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
-
-        # Find the mean interval time.
-        pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized.max())
-
         # Set slider value to maximum number of beats
         analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
 
@@ -134,6 +128,12 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
 
+        # Find maximum time lag (interval)
+        pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
+
+        # Find the mean interval time.
+        pace_maker.param_dist_normalized_mean = np.nanmean(pace_maker.param_dist_normalized.max())
+
         # Insert electrode name as column to make future plotting easier when attempting to use pivot table.
         pace_maker.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
         pace_maker.param_prom_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
@@ -158,7 +158,7 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         print("Done.")
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
-        print(end_time - start_time)
+        # print(end_time - start_time)
         print("{}Maximum time lag in data set: {} {}".format(
             Fore.MAGENTA, pace_maker.param_dist_normalized_max, 
             Style.RESET_ALL))
