@@ -792,6 +792,10 @@ class MainGUI(tk.Frame):
         self.stat_file_name.set("No file")
         self.psd_file_name = tk.StringVar()
         self.psd_file_name.set("No file")
+        self.psd_start_beat = tk.StringVar()
+        self.psd_start_beat.set("Start (Beat)")
+        self.psd_end_beat = tk.StringVar()
+        self.psd_end_beat.set("End (Beat)")
         # # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -985,16 +989,29 @@ class MainGUI(tk.Frame):
             padx=5, pady=5)
         psd_window_options_frame.grid_propagate(False)
 
+        # Button to generate plots.
         psd_window_plotting = tk.Button(psd_window_options_frame, 
             text="Plot PSD", bg="silver", height=2,
             command=lambda: None)
-        psd_window_plotting.grid(row=0, rowspan=2, column=1, 
+        psd_window_plotting.grid(row=0, rowspan=2, column=0, 
             padx=5, pady=5)
         
+        # Entry fields for defining range of interest, in terms of beats.
+        psd_beat_interval_label = tk.Label(psd_window_options_frame, width=20,
+            bg="white smoke", text="Start/End Beats", borderwidth=1)
+        psd_beat_interval_label.grid(row=0, column=1, columnspan=2, padx=5,
+            pady=2)
+        psd_start_beat_value = tk.Entry(psd_window_options_frame, width=9, 
+            bg="white", textvariable=self.psd_start_beat)
+        psd_start_beat_value.grid(row=1, column=1, padx=5, pady=2)
+        psd_end_beat_value = tk.Entry(psd_window_options_frame, width=9,
+            bg="white", textvariable=self.psd_end_beat)
+        psd_end_beat_value.grid(row=1, column=2, padx=5, pady=2)
+
         # Display file name
         self.psd_file_name_label = tk.Label(psd_window_options_frame, 
             textvariable=self.psd_file_name, bg="white", wraplength=300)
-        self.psd_file_name_label.grid(row=0, column=5, 
+        self.psd_file_name_label.grid(row=0, column=6, 
             columnspan=4, padx=5, pady=5)
         
         # Figure frame for statistical best-fit plots.
@@ -1008,13 +1025,13 @@ class MainGUI(tk.Frame):
         
         self.psd_electrode_select = tk.Scale(psd_window_options_frame, 
             length=125, width=15, from_=1, to=5, 
-            orient="horizontal", bg="white", label="Current Beat")
-        self.psd_electrode_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
+            orient="horizontal", bg="white", label="Electrode")
+        self.psd_electrode_select.grid(row=0, rowspan=2, column=3, padx=5, pady=5)
         self.psd_electrode_select.bind("<ButtonRelease-1>", 
             lambda event: None)
         
         psd_toolbar_frame = tk.Frame(psd_window)
-        psd_toolbar_frame.grid(row=0, rowspan=2, column=3, columnspan=2, 
+        psd_toolbar_frame.grid(row=0, rowspan=2, column=4, columnspan=2, 
             in_=psd_window_options_frame)
         psd_toolbar = NavigationToolbar2Tk(psd_fig, 
             psd_toolbar_frame)
