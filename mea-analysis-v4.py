@@ -795,7 +795,7 @@ class MainGUI(tk.Frame):
         self.psd_beats = ["Beat " + str(i) for i in range(1, 11)]
         self.psd_start_beat_value = None
         self.psd_end_beat_value = None
-        # # print(dir(self))
+        # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
         beat_detect = tk.Toplevel(self)
@@ -1026,10 +1026,12 @@ class MainGUI(tk.Frame):
         
         self.psd_electrode_select = tk.Scale(psd_window_options_frame, 
             length=125, width=15, from_=1, to=5, 
-            orient="horizontal", bg="white", label="Electrode")
+            orient="horizontal", bg="white", label="Beat")
         self.psd_electrode_select.grid(row=0, rowspan=2, column=3, padx=5, pady=5)
         self.psd_electrode_select.bind("<ButtonRelease-1>", 
-            lambda event: None)
+            lambda event: psd_plotting.plot_log_vs_log(self, cm_beats, 
+                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+                input_param, psd_data))
         
         psd_toolbar_frame = tk.Frame(psd_window)
         psd_toolbar_frame.grid(row=0, rowspan=2, column=4, columnspan=2, 
