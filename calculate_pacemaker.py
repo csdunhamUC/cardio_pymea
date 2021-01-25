@@ -99,6 +99,10 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
             pace_maker.final_dist_beat_count.append('Beat ' + str(beat+1))
 
+        # Update entry boxes for PSD Plotting window.
+        analysisGUI.psd_start_beat_value['values'] = pace_maker.final_dist_beat_count
+        analysisGUI.psd_end_beat_value['values'] = pace_maker.final_dist_beat_count
+
         # Generate index (row) labels, as a list, for assignment to dataframe, prior to transpose.
         dist_new_index = []
         for row in pace_maker.param_dist_normalized.index:
