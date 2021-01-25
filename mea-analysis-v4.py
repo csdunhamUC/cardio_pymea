@@ -27,9 +27,10 @@ import pandasgui as pgui
 import seaborn as sns
 import os
 import tkinter as tk
+from tkinter import ttk
 import importlib
 from scipy import stats
-from dis import dis
+# from dis import dis
 import datetime
 import determine_beats
 from calculate_pacemaker import calculate_pacemaker
@@ -232,10 +233,6 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
     print(analysisGUI.sample_frequency_val.get())
     print(analysisGUI.sample_frequency_menu['menu'].keys())
     # print(input_param.beat_choice)
-
-
-def time_test():
-    dis(calculate_lat)
 
 
 # Reloads given module.  This is used for testing/developing a module to save 
@@ -636,7 +633,6 @@ class MainGUI(tk.Frame):
 
         advanced_tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)
-        advanced_tools_menu.add_command(label="Test Efficiency", command=lambda: time_test())
         advanced_tools_menu.add_command(label="K-Means Clustering", command=None)
         advanced_tools_menu.add_command(label="t-SNE", command=None)
         advanced_tools_menu.add_command(label="DBSCAN", command=None)
@@ -796,6 +792,9 @@ class MainGUI(tk.Frame):
         self.psd_start_beat.set("Start (Beat)")
         self.psd_end_beat = tk.StringVar()
         self.psd_end_beat.set("End (Beat)")
+        self.psd_beats = ["Beat " + str(i) for i in range(1, 11)]
+        self.psd_start_beat_value = None
+        self.psd_end_beat_value = None
         # # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -974,10 +973,6 @@ class MainGUI(tk.Frame):
         param_vs_dist_readout_text = tk.Label(param_vs_dist_readout_scrollframe,
             bg="white", anchor="w", justify="left", width=24,
             textvariable=self.stat_readout_text).grid(row=1, column=0, sticky="w")
-        
-        # for i in range(50):
-        #     tk.Label(param_vs_dist_readout_scrollframe, bg="white",
-        #     text="This is a test and I said this is a test").grid(row=i)
 
     def psd_plot_window(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats, psd_data):
@@ -992,21 +987,27 @@ class MainGUI(tk.Frame):
         # Button to generate plots.
         psd_window_plotting = tk.Button(psd_window_options_frame, 
             text="Plot PSD", bg="silver", height=2,
-            command=lambda: None)
+            command=lambda: psd_plotting.psd_plotting(self, cm_beats, 
+                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+                input_param, psd_data))
         psd_window_plotting.grid(row=0, rowspan=2, column=0, 
             padx=5, pady=5)
         
         # Entry fields for defining range of interest, in terms of beats.
-        psd_beat_interval_label = tk.Label(psd_window_options_frame, width=20,
+        psd_beat_interval_label = tk.Label(psd_window_options_frame, width=22,
             bg="white smoke", text="Start/End Beats", borderwidth=1)
         psd_beat_interval_label.grid(row=0, column=1, columnspan=2, padx=5,
             pady=2)
-        psd_start_beat_value = tk.Entry(psd_window_options_frame, width=9, 
-            bg="white", textvariable=self.psd_start_beat)
-        psd_start_beat_value.grid(row=1, column=1, padx=5, pady=2)
-        psd_end_beat_value = tk.Entry(psd_window_options_frame, width=9,
-            bg="white", textvariable=self.psd_end_beat)
-        psd_end_beat_value.grid(row=1, column=2, padx=5, pady=2)
+
+        self.psd_start_beat_value = ttk.Combobox(psd_window_options_frame, width=10, 
+            textvariable=self.psd_start_beat, values=self.psd_beats)
+        self.psd_start_beat_value.grid(row=1, column=1, padx=5, pady=2)
+        self.psd_start_beat_value.state(['readonly'])
+        
+        self.psd_end_beat_value = ttk.Combobox(psd_window_options_frame, width=10,
+            textvariable=self.psd_end_beat, values=self.psd_beats)
+        self.psd_end_beat_value.grid(row=1, column=2, padx=5, pady=2)
+        self.psd_end_beat_value.state(['readonly'])
 
         # Display file name
         self.psd_file_name_label = tk.Label(psd_window_options_frame, 
@@ -1131,14 +1132,14 @@ def main():
     cm_stats.param_vs_dist_axis_dvdt = cm_stats.param_vs_dist_plot.add_subplot(222)
     cm_stats.param_vs_dist_axis_cv = cm_stats.param_vs_dist_plot.add_subplot(224)
 
-    # Subplot axes for PSD Plotting window
+    # Subplot axes for PSD Plot window
     psd_data.psd_plots = plt.Figure(figsize=(10.5, 6.5), dpi=120)
-    psd_data.loglog_before = psd_data.psd_plots.add_subplot(321)
-    psd_data.loglog_during = psd_data.psd_plots.add_subplot(323)
-    psd_data.loglog_after = psd_data.psd_plots.add_subplot(325)
-    psd_data.psd_before = psd_data.psd_plots.add_subplot(322)
-    psd_data.psd_during = psd_data.psd_plots.add_subplot(324)
-    psd_data.psd_during = psd_data.psd_plots.add_subplot(326)
+    psd_data.loglog_before_ax = psd_data.psd_plots.add_subplot(321)
+    psd_data.loglog_during_ax = psd_data.psd_plots.add_subplot(323)
+    psd_data.loglog_after_ax = psd_data.psd_plots.add_subplot(325)
+    psd_data.psd_before_ax = psd_data.psd_plots.add_subplot(322)
+    psd_data.psd_during_ax = psd_data.psd_plots.add_subplot(324)
+    psd_data.psd_after_ax = psd_data.psd_plots.add_subplot(326)
     
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from 
