@@ -1153,12 +1153,12 @@ def main():
 
     # Subplot axes for PSD Plot window
     psd_data.psd_plots = plt.Figure(figsize=(10.5, 6.5), dpi=120)
-    psd_data.loglog_before_ax = psd_data.psd_plots.add_subplot(321)
-    psd_data.loglog_during_ax = psd_data.psd_plots.add_subplot(323)
-    psd_data.loglog_after_ax = psd_data.psd_plots.add_subplot(325)
-    psd_data.psd_before_ax = psd_data.psd_plots.add_subplot(322)
-    psd_data.psd_during_ax = psd_data.psd_plots.add_subplot(324)
-    psd_data.psd_after_ax = psd_data.psd_plots.add_subplot(326)
+    # psd_data.loglog_before_ax = psd_data.psd_plots.add_subplot(321)
+    psd_data.loglog_during_ax = psd_data.psd_plots.add_subplot(211)
+    # psd_data.loglog_after_ax = psd_data.psd_plots.add_subplot(325)
+    # psd_data.psd_before_ax = psd_data.psd_plots.add_subplot(322)
+    psd_data.psd_during_ax = psd_data.psd_plots.add_subplot(212)
+    # psd_data.psd_after_ax = psd_data.psd_plots.add_subplot(326)
     
     root = tk.Tk()
     # Dimensions width x height, distance position from right of screen + from 
