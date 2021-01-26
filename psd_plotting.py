@@ -54,8 +54,9 @@ local_act_time, conduction_vel, input_param, psd_data):
     end_beat = analysisGUI.psd_end_beat_value.get()
     elec_choice = analysisGUI.psd_electrode_choice.get()
 
-    # psd_data.psd_during_ax.cla()
-    # psd_data.loglog_during_ax.cla()
+    if len(psd_data.loglog_during_ax.lines) >= 12:
+        psd_data.psd_during_ax.cla()
+        psd_data.loglog_during_ax.cla()
 
     plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
         local_act_time, conduction_vel, input_param, psd_data, start_beat, 
@@ -80,7 +81,8 @@ elec_choice):
         conduction_vel.param_dist_raw[pace_maker.final_dist_beat_count[
             input_param.psd_plot_slider]], '.', base=10, 
             label=pace_maker.final_dist_beat_count[input_param.psd_plot_slider])
-    psd_data.loglog_during_ax.set(title="Log CV vs Log Distance")
+    psd_data.loglog_during_ax.set(title="Log CV vs Log Distance", 
+        xlabel="Log μm", ylabel="Log CV")
     psd_data.loglog_during_ax.legend(loc="lower left", ncol=6)
 
     print(pace_maker.final_dist_beat_count[input_param.psd_plot_slider])
