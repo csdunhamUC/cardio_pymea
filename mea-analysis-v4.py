@@ -625,9 +625,9 @@ class MainGUI(tk.Frame):
             pace_maker, upstroke_vel, local_act_time, conduction_vel, 
             input_param, cm_stats)])
         statistics_menu.add_command(label="Power Spectrum", 
-            command=lambda: [self.psd_plot_window(cm_beats, pace_maker, 
-            upstroke_vel, local_act_time, conduction_vel, input_param, 
-            cm_stats, psd_data)])
+            command=lambda: [self.psd_plot_window(cm_beats, electrode_config, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, cm_stats, psd_data)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
 
@@ -795,6 +795,10 @@ class MainGUI(tk.Frame):
         self.psd_beats = ["Beat " + str(i) for i in range(1, 11)]
         self.psd_start_beat_value = None
         self.psd_end_beat_value = None
+        self.psd_electrode_choice = None
+        self.psd_elec_choice = tk.StringVar()
+        self.psd_elec_choice.set("F7")
+        self.psd_electrodes = []
         # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -974,8 +978,9 @@ class MainGUI(tk.Frame):
             bg="white", anchor="w", justify="left", width=24,
             textvariable=self.stat_readout_text).grid(row=1, column=0, sticky="w")
 
-    def psd_plot_window(self, cm_beats, pace_maker, upstroke_vel, 
-    local_act_time, conduction_vel, input_param, cm_stats, psd_data):
+    def psd_plot_window(self, cm_beats, electrode_config, pace_maker, 
+    upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
+    psd_data):
         psd_window= tk.Toplevel(self)
         psd_window.title("Log-Log and Power Spectrum")
         psd_window_options_frame = tk.Frame(psd_window, width=1300, 
@@ -988,12 +993,13 @@ class MainGUI(tk.Frame):
         psd_window_plotting = tk.Button(psd_window_options_frame, 
             text="Plot PSD", bg="silver", height=2,
             command=lambda: psd_plotting.psd_plotting(self, cm_beats, 
-                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
-                input_param, psd_data))
+                electrode_config, pace_maker, upstroke_vel, local_act_time, 
+                conduction_vel, input_param, psd_data))
         psd_window_plotting.grid(row=0, rowspan=2, column=0, 
             padx=5, pady=5)
         
-        # Entry fields for defining range of interest, in terms of beats.
+        # Combobox for defining range of interest, in terms of beats.
+        # This applies to the PSD plots (not log-log, at least not yet)
         psd_beat_interval_label = tk.Label(psd_window_options_frame, width=22,
             bg="white smoke", text="Start/End Beats", borderwidth=1)
         psd_beat_interval_label.grid(row=0, column=1, columnspan=2, padx=5,
@@ -1009,10 +1015,20 @@ class MainGUI(tk.Frame):
         self.psd_end_beat_value.grid(row=1, column=2, padx=5, pady=2)
         self.psd_end_beat_value.state(['readonly'])
 
+        # Combobox for choosing electrode of interest.  Applies to PSD.
+        psd_electrode_label = tk.Label(psd_window_options_frame, width=10,
+            bg="white smoke", text="Electrode (PSD)", wraplength=100, 
+            borderwidth=1)
+        psd_electrode_label.grid(row=0, column=3, padx=5, pady=2)
+        self.psd_electrode_choice = ttk.Combobox(psd_window_options_frame, width=9,
+            textvariable=self.psd_elec_choice, values=self.psd_electrodes)
+        self.psd_electrode_choice.grid(row=1, column=3, padx=5, pady=2)
+        self.psd_electrode_choice.state(['readonly'])
+
         # Display file name
         self.psd_file_name_label = tk.Label(psd_window_options_frame, 
             textvariable=self.psd_file_name, bg="white", wraplength=300)
-        self.psd_file_name_label.grid(row=0, column=6, 
+        self.psd_file_name_label.grid(row=0, column=7, 
             columnspan=4, padx=5, pady=5)
         
         # Figure frame for statistical best-fit plots.
@@ -1024,17 +1040,18 @@ class MainGUI(tk.Frame):
             psd_fig_frame)
         psd_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         
+        # Slider for changing plotted log-log beat.
         self.psd_electrode_select = tk.Scale(psd_window_options_frame, 
             length=125, width=15, from_=1, to=5, 
             orient="horizontal", bg="white", label="Beat")
-        self.psd_electrode_select.grid(row=0, rowspan=2, column=3, padx=5, pady=5)
+        self.psd_electrode_select.grid(row=0, rowspan=2, column=4, padx=5, pady=5)
         self.psd_electrode_select.bind("<ButtonRelease-1>", 
-            lambda event: psd_plotting.plot_log_vs_log(self, cm_beats, 
-                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
-                input_param, psd_data))
+            lambda event: psd_plotting.psd_plotting(self, cm_beats, 
+                electrode_config, pace_maker, upstroke_vel, local_act_time, 
+                conduction_vel, input_param, psd_data))
         
         psd_toolbar_frame = tk.Frame(psd_window)
-        psd_toolbar_frame.grid(row=0, rowspan=2, column=4, columnspan=2, 
+        psd_toolbar_frame.grid(row=0, rowspan=2, column=5, columnspan=2, 
             in_=psd_window_options_frame)
         psd_toolbar = NavigationToolbar2Tk(psd_fig, 
             psd_toolbar_frame)
