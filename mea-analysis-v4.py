@@ -238,7 +238,7 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
 def reload_module():
-    # importlib.reload(param_vs_distance_stats)
+    importlib.reload(param_vs_distance_stats)
     # importlib.reload(determine_beats)
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
@@ -799,6 +799,10 @@ class MainGUI(tk.Frame):
         self.psd_elec_choice = tk.StringVar()
         self.psd_elec_choice.set("F7")
         self.psd_electrodes = []
+        self.psd_param_default = tk.StringVar()
+        self.psd_param_default.set("Choose")
+        self.psd_param_choice_opts = ["Orig. Signal", "Cond. Vel.",
+             "Up. Vel.", "Pacemaker", "Local AT"]
         # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param):
@@ -999,39 +1003,48 @@ class MainGUI(tk.Frame):
             padx=5, pady=5)
         
         # Combobox for defining range of interest, in terms of beats.
-        # This applies to the PSD plots (not log-log, at least not yet)
         psd_beat_interval_label = tk.Label(psd_window_options_frame, width=22,
             bg="white smoke", text="Start/End Beats", borderwidth=1)
         psd_beat_interval_label.grid(row=0, column=1, columnspan=2, padx=5,
             pady=2)
 
-        self.psd_start_beat_value = ttk.Combobox(psd_window_options_frame, width=10, 
+        self.psd_start_beat_value = ttk.Combobox(psd_window_options_frame, width=9, 
             textvariable=self.psd_start_beat, values=self.psd_beats)
         self.psd_start_beat_value.grid(row=1, column=1, padx=5, pady=2)
         self.psd_start_beat_value.state(['readonly'])
         
-        self.psd_end_beat_value = ttk.Combobox(psd_window_options_frame, width=10,
+        self.psd_end_beat_value = ttk.Combobox(psd_window_options_frame, width=9,
             textvariable=self.psd_end_beat, values=self.psd_beats)
         self.psd_end_beat_value.grid(row=1, column=2, padx=5, pady=2)
         self.psd_end_beat_value.state(['readonly'])
 
         # Combobox for choosing electrode of interest.  Applies to PSD.
         psd_electrode_label = tk.Label(psd_window_options_frame, width=10,
-            bg="white smoke", text="Electrode (PSD)", wraplength=100, 
-            borderwidth=1)
+            bg="white smoke", text="Electrode", wraplength=100, borderwidth=1)
         psd_electrode_label.grid(row=0, column=3, padx=5, pady=2)
         self.psd_electrode_choice = ttk.Combobox(psd_window_options_frame, width=9,
             textvariable=self.psd_elec_choice, values=self.psd_electrodes)
         self.psd_electrode_choice.grid(row=1, column=3, padx=5, pady=2)
         self.psd_electrode_choice.state(['readonly'])
 
+        # Combobox for choosing which parameter to plot in PSD (e.g. raw data,
+        # CV, dV/dt, etc).
+        psd_param_choice_label = tk.Label(psd_window_options_frame, width=10,
+            bg="white smoke", text="Parameter", wraplength=100, borderwidth=1)
+        psd_param_choice_label.grid(row=0, column=4, padx=5, pady=2)
+        self.psd_param_choice = ttk.Combobox(psd_window_options_frame, width=10,
+            textvariable=self.psd_param_default, 
+            values=self.psd_param_choice_opts)
+        self.psd_param_choice.grid(row=1, column=4, padx=5, pady=2)
+        self.psd_param_choice.state(['readonly'])
+
         # Display file name
         self.psd_file_name_label = tk.Label(psd_window_options_frame, 
             textvariable=self.psd_file_name, bg="white", wraplength=300)
-        self.psd_file_name_label.grid(row=0, column=7, 
-            columnspan=4, padx=5, pady=5)
+        self.psd_file_name_label.grid(row=0, column=8, columnspan=4, padx=5, 
+            pady=5)
         
-        # Figure frame for statistical best-fit plots.
+        # Figure frame for PSD and log-log plots.
         psd_fig_frame = tk.Frame(psd_window, width=1300, 
             height=800, bg="white")
         psd_fig_frame.grid(row=1, column=0, padx=5, pady=5)
@@ -1044,14 +1057,15 @@ class MainGUI(tk.Frame):
         self.psd_electrode_select = tk.Scale(psd_window_options_frame, 
             length=125, width=15, from_=1, to=5, 
             orient="horizontal", bg="white", label="Beat")
-        self.psd_electrode_select.grid(row=0, rowspan=2, column=4, padx=5, pady=5)
+        self.psd_electrode_select.grid(row=0, rowspan=2, column=5, padx=5, pady=5)
         self.psd_electrode_select.bind("<ButtonRelease-1>", 
             lambda event: psd_plotting.psd_plotting(self, cm_beats, 
                 electrode_config, pace_maker, upstroke_vel, local_act_time, 
                 conduction_vel, input_param, psd_data))
         
+        # Frame for matplotlib navigation toolbar.
         psd_toolbar_frame = tk.Frame(psd_window)
-        psd_toolbar_frame.grid(row=0, rowspan=2, column=5, columnspan=2, 
+        psd_toolbar_frame.grid(row=0, rowspan=2, column=6, columnspan=2, 
             in_=psd_window_options_frame)
         psd_toolbar = NavigationToolbar2Tk(psd_fig, 
             psd_toolbar_frame)
