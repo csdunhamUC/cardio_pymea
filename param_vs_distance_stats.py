@@ -101,6 +101,9 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.std_err_pm[num]) = sp.stats.linregress(
             local_act_time.distance_from_min.loc[pm_without_nan.index, beat], 
             pm_without_nan)
+    
+    # Turn R into R-squared
+    cm_stats.r_value_pm = np.square(cm_stats.r_value_pm)
 
     # Calculations for R-squared values (Upstroke Velocity)
     cm_stats.slope_dvdt = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
@@ -116,6 +119,9 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.std_err_dvdt[num]) = sp.stats.linregress(
             local_act_time.distance_from_min.loc[dvdt_without_nan.index, beat],
             dvdt_without_nan)
+    
+    # Turn R into R-squared
+    cm_stats.r_value_dvdt = np.square(cm_stats.r_value_dvdt)
 
     # Calculations for R-squared values (Local Activation Time)
     cm_stats.slope_lat = np.zeros(int(cm_beats.beat_count_dist_mode[0]))
@@ -131,6 +137,9 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.std_err_lat[num]) = sp.stats.linregress(
             local_act_time.distance_from_min.loc[lat_without_nan.index, beat], 
             lat_without_nan)
+    
+    # Turn R into R-squared
+    cm_stats.r_value_lat = np.square(cm_stats.r_value_lat)
 
     # Curve fitting and R-squared calculations for CV.
     cm_stats.cv_popt = [0]*int(cm_beats.beat_count_dist_mode[0])
