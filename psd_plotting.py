@@ -38,7 +38,7 @@ import time
             input_param.psd_plot_slider]]
 """
 
-def psd_plotting(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
+def psd_plotting(analysisGUI, cm_beats, electrode_config, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, psd_data):
     # Update slider max.
     analysisGUI.psd_electrode_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
@@ -48,30 +48,41 @@ local_act_time, conduction_vel, input_param, psd_data):
     # Update entry boxes for PSD Plotting window.
     analysisGUI.psd_start_beat_value['values'] = pace_maker.final_dist_beat_count
     analysisGUI.psd_end_beat_value['values'] = pace_maker.final_dist_beat_count
+    analysisGUI.psd_electrode_choice['values'] = electrode_config.electrode_names
+
+    start_beat = analysisGUI.psd_start_beat_value.get()
+    end_beat = analysisGUI.psd_end_beat_value.get()
+    elec_choice = analysisGUI.psd_electrode_choice.get()
+
+    # psd_data.psd_during_ax.cla()
+    # psd_data.loglog_during_ax.cla()
 
     plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-        local_act_time, conduction_vel, input_param, psd_data)
+        local_act_time, conduction_vel, input_param, psd_data, start_beat, 
+        end_beat, elec_choice)
     plot_psd_welch(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-        local_act_time, conduction_vel, input_param, psd_data)
+        local_act_time, conduction_vel, input_param, psd_data, start_beat, 
+        end_beat, elec_choice)
 
 
 def plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-local_act_time, conduction_vel, input_param, psd_data):
-    start_beat = analysisGUI.psd_start_beat_value.get()
-    print(start_beat)
-    end_beat = analysisGUI.psd_end_beat_value.get()
-    print(end_beat)
+local_act_time, conduction_vel, input_param, psd_data, start_beat, end_beat,
+elec_choice):
+
+    print(pace_maker.param_dist_raw.loc[elec_choice, start_beat])
+    print(pace_maker.param_dist_raw.loc[elec_choice, end_beat])
 
     # Get slider value.
     input_param.psd_plot_slider = (analysisGUI.psd_electrode_select.get() - 1)
 
-    psd_data.loglog_during_ax.cla()
-
     psd_data.loglog_during_ax.loglog(local_act_time.distance_from_min[
         pace_maker.final_dist_beat_count[input_param.psd_plot_slider]],
         conduction_vel.param_dist_raw[pace_maker.final_dist_beat_count[
-            input_param.psd_plot_slider]], '.', base=10)
-    
+            input_param.psd_plot_slider]], '.', base=10, 
+            label=pace_maker.final_dist_beat_count[input_param.psd_plot_slider])
+    psd_data.loglog_during_ax.set(title="Log CV vs Log Distance")
+    psd_data.loglog_during_ax.legend(loc="lower left", ncol=6)
+
     print(pace_maker.final_dist_beat_count[input_param.psd_plot_slider])
 
     psd_data.psd_plots.tight_layout()
@@ -79,8 +90,8 @@ local_act_time, conduction_vel, input_param, psd_data):
 
 
 def plot_psd_welch(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-local_act_time, conduction_vel, input_param, psd_data):
-    # psd_data.psd_during_ax.cla()
+local_act_time, conduction_vel, input_param, psd_data, start_beat, end_beat,
+elec_choice):
     # x = np.ndarray((2,3))
     freq, Pxx = signal.welch(conduction_vel.param_dist_raw[pace_maker.final_dist_beat_count[
             input_param.psd_plot_slider]].dropna(), fs=1.0, window='hann')
@@ -96,9 +107,11 @@ local_act_time, conduction_vel, input_param, psd_data):
     # print(freq)
     # print(Pxx_period)
 
-    psd_data.psd_during_ax.loglog(freq, Pxx, label=pace_maker.final_dist_beat_count[
-            input_param.psd_plot_slider])
-    psd_data.psd_during_ax.legend(loc="lower left", ncol=3)
+    psd_data.psd_during_ax.loglog(freq, Pxx, 
+        label=pace_maker.final_dist_beat_count[input_param.psd_plot_slider])
+    psd_data.psd_during_ax.set(title="Welch PSD of CV", 
+        xlabel="Log of Frequency (Hz)", ylabel="Log of PSD of CV")
+    psd_data.psd_during_ax.legend(loc="lower left", ncol=6)
     psd_data.psd_plots.tight_layout()
     psd_data.psd_plots.canvas.draw()
     # Welch may be the more robust method to use.
