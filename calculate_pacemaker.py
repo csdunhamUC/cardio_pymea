@@ -94,6 +94,8 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         pace_maker.param_width_normalized.columns = electrode_config.electrode_names
         pace_maker.param_thresh_normalized.columns = electrode_config.electrode_names
 
+        pace_maker.param_dist_raw.columns = electrode_config.electrode_names
+
         # Generate index (row) labels, as a list, in order to access chosen beat heatmaps in subsequent function.
         pace_maker.final_dist_beat_count = []
         for beat in range(int(cm_beats.beat_count_dist_mode[0])):
@@ -122,11 +124,15 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         pace_maker.param_width_normalized.index = width_new_index
         pace_maker.param_thresh_normalized.index = thresh_new_index
 
+        pace_maker.param_dist_raw.index = dist_new_index
+
         # Transpose dataframe to make future plotting easier.  Makes rows = electrodes and columns = beat number.
         pace_maker.param_dist_normalized = pace_maker.param_dist_normalized.transpose()
         pace_maker.param_prom_normalized = pace_maker.param_prom_normalized.transpose()
         pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
         pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
+
+        pace_maker.param_dist_raw = pace_maker.param_dist_raw.transpose()
 
         # Find maximum time lag (interval)
         pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
