@@ -36,7 +36,7 @@ import determine_beats
 from calculate_pacemaker import calculate_pacemaker
 import calculate_upstroke_vel
 import calculate_lat
-from calculate_conduction_velocity import calculate_conduction_velocity
+import calculate_cv
 import param_vs_distance_stats
 import psd_plotting
 
@@ -239,11 +239,11 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
 # time vs re-running the program over and over.
 def reload_module():
     importlib.reload(param_vs_distance_stats)
+    importlib.reload(calculate_cv)
     # importlib.reload(determine_beats)
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
-    # from param_vs_distance_stats import param_vs_distance_graphing, param_vs_distance_analysis
     print("Reloaded module.")
 
 
@@ -584,7 +584,7 @@ class MainGUI(tk.Frame):
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time, heat_map, 
                 input_param, electrode_config),
-                calculate_conduction_velocity(self, conduction_vel, 
+                calculate_cv.calculate_conduction_velocity(self, conduction_vel, 
                 local_act_time, heat_map, input_param, electrode_config),
                 graph_all(self, heat_map, cm_beats, pace_maker, upstroke_vel, 
                 local_act_time, conduction_vel, input_param)])
@@ -611,8 +611,9 @@ class MainGUI(tk.Frame):
                 input_param),
                 graph_local_act_time(self, heat_map, local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", 
-            command=lambda: [calculate_conduction_velocity(self, conduction_vel, 
-                local_act_time, heat_map, input_param, electrode_config),
+            command=lambda: [calculate_cv.calculate_conduction_velocity(self, 
+                conduction_vel, local_act_time, heat_map, input_param, 
+                electrode_config),
                 self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, 
                 heat_map, input_param),
                 graph_conduction_vel(self, heat_map, local_act_time, 
