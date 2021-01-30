@@ -584,8 +584,9 @@ class MainGUI(tk.Frame):
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time, heat_map, 
                 input_param, electrode_config),
-                calculate_cv.calculate_conduction_velocity(self, conduction_vel, 
-                local_act_time, heat_map, input_param, electrode_config),
+                calculate_cv.calculate_conduction_velocity(self, cm_beats, 
+                conduction_vel, local_act_time, heat_map, input_param, 
+                electrode_config),
                 graph_all(self, heat_map, cm_beats, pace_maker, upstroke_vel, 
                 local_act_time, conduction_vel, input_param)])
         # Add extra command for each solitary calculation that calls the 
@@ -612,7 +613,7 @@ class MainGUI(tk.Frame):
                 graph_local_act_time(self, heat_map, local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", 
             command=lambda: [calculate_cv.calculate_conduction_velocity(self, 
-                conduction_vel, local_act_time, heat_map, input_param, 
+                cm_beats, conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
                 self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, 
                 heat_map, input_param),
