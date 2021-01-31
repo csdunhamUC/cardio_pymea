@@ -18,6 +18,9 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
         if hasattr(conduction_vel, 'param_dist_raw') is True:
             print("Clearing old CV data before running new calculation...")
             delattr(conduction_vel, 'param_dist_raw')
+            delattr(conduction_vel, 'vector_mag')
+            delattr(conduction_vel, 'vector_x_comp')
+            delattr(conduction_vel, 'vector_y_comp')
 
         start_time = time.process_time()
         # electrode_config.electrode_coords_x
