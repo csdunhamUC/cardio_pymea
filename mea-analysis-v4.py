@@ -494,14 +494,6 @@ input_param):
             str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
 
-        x_arrow = conduction_vel.vector_x_comp['X'].values
-        y_arrow = conduction_vel.vector_y_comp['Y'].values
-        heat_map.cv_solo_axis_2.quiver(x_arrow, y_arrow,
-            conduction_vel.vector_x_comp[local_act_time.final_dist_beat_count[
-                input_param.cv_solo_beat_choice]], 
-            conduction_vel.vector_y_comp[local_act_time.final_dist_beat_count[
-                input_param.cv_solo_beat_choice]])
-
         heat_map.cv_solo_plot.tight_layout()
         heat_map.cv_solo_plot.canvas.draw()
 
@@ -1160,8 +1152,11 @@ def main():
 
     # Heatmap axis for only Conduction Velocity window
     heat_map.cv_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
-    heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(211)
-    heat_map.cv_solo_axis_2 = heat_map.cv_solo_plot.add_subplot(212)
+    heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(111)
+
+    # Quiver plot for Conduction Velocity Quiver window.
+    conduction_vel.quiver_plot = plt.Figure(figsize=(12,6), dpi=120)
+    conduction_vel.quiver_plot_axis = conduction_vel.quiver_plot.add_subplot(111)
 
     # Subplot axes for Peak Finder (Beats) window
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
