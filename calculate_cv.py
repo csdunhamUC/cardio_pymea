@@ -35,6 +35,8 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
         x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
         y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
         elec_nan_removed = np.array([x_elec, y_elec])
+
+        print(elec_nan_removed)
         
         # Generate new list with the electrode names with NaN values removed.
         elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
@@ -46,6 +48,20 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
             conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
                 two_dim_polynomial, elec_nan_removed, 
                 local_act_time.param_dist_normalized[beat].dropna())
+
+        # Alternative to the preceding lines, using sorted values
+        # Gives truly nonsensical results.  Probably needs better sorting.
+        # cv_without_nan = conduction_vel.param_dist_raw[beat].dropna()
+        # cv_without_nan = cv_without_nan.sort_values(ascending=True)
+        # x_sorted = local_act_time.distance_from_min.loc[cv_without_nan.index, 
+        #     beat].sort_values(ascending=True)
+        # elec_removed_sorted = np.sort(elec_nan_removed)
+        # for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
+        # columns=['Electrode', 'X', 'Y'])):
+        #     lat_sorted = local_act_time.param_dist_normalized[
+        #         beat].dropna().sort_values(ascending=True)
+        #     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
+        #         two_dim_polynomial, elec_removed_sorted, lat_sorted)
 
         # print(conduction_vel.cv_popt[0])
         # print(conduction_vel.cv_popt[3])
@@ -136,26 +152,19 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
 
     for num in range(int(cm_beats.beat_count_dist_mode[0])):
         for electrode in range(len(elec_nan_removed[0])):
-            # x_expr = sym.lambdify([x, y], t_deriv_expr_x[num], "numpy")
-            # y_expr = sym.lambdify([x, y], t_deriv_expr_y[num], "numpy")
             # From Bayly et al, the equation for the x and y velocity components
             # of the conduction velocity, Tx and Ty, are:
             # Tx / (Tx^2 + Ty^2)
             # Ty / (Tx^2 + Ty^2)
             T_part_x = t_deriv_expr_x[num](elec_nan_removed[0][electrode], 
                 elec_nan_removed[1][electrode])
-            T_part_y = t_deriv_expr_y[num](elec_nan_removed[1][electrode], 
-                elec_nan_removed[0][electrode])
+            T_part_y = t_deriv_expr_y[num](elec_nan_removed[0][electrode], 
+                elec_nan_removed[1][electrode])
 
             x_deriv[electrode] = T_part_x / (T_part_x**2 + T_part_y**2)
             y_deriv[electrode] = T_part_y / (T_part_x**2 + T_part_y**2)
-            # x_deriv[electrode] = t_deriv_expr_x[num](elec_nan_removed[0][electrode], 
-            #     elec_nan_removed[1][electrode])
-            # y_deriv[electrode] = t_deriv_expr_y[num](elec_nan_removed[1][electrode], 
-            #     elec_nan_removed[0][electrode])
         
-        # print(np.sqrt(np.add(np.square(x_deriv), np.square(y_deriv))))
-        vector_mag[num] = np.sqrt(np.add(np.square(x_deriv), np.square(y_deriv)))
+        vector_mag[num] = np.sqrt(np.square(x_deriv) + np.square(y_deriv))
         vector_x_comp[num] = x_deriv
         vector_y_comp[num] = y_deriv
         
