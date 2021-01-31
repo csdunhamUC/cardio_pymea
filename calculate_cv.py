@@ -14,7 +14,7 @@ import sympy as sym
 
 
 def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_act_time, heat_map, input_param, electrode_config):
-    try:
+    # try:
         if hasattr(conduction_vel, 'param_dist_raw') is True:
             print("Clearing old CV data before running new calculation...")
             delattr(conduction_vel, 'param_dist_raw')
@@ -24,34 +24,60 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
         # electrode_config.electrode_coords_y
         # Y data to fit to: local_act_time.param_dist_normalized
         # "X" data consists of x, y coordinates from electrode_coords
-        # print(len(electrode_config.electrode_coords_x))
 
         conduction_vel.cv_popt = [0]*int(cm_beats.beat_count_dist_mode[0])
         conduction_vel.cv_pcov = [0]*int(cm_beats.beat_count_dist_mode[0])
         nan_electrodes_idx = np.where(local_act_time.param_dist_normalized[
             'Beat 1'].isna())[0]
-        x_elec = np.delete(
-            electrode_config.electrode_coords_x, nan_electrodes_idx)
-        y_elec = np.delete(
-            electrode_config.electrode_coords_y, nan_electrodes_idx)
+        x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
+        y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
         elec_nan_removed = np.array([x_elec, y_elec])
-        # print(nan_electrodes_idx)
-        # print(nan_electrodes_idx[0])
-        # print(elec_nan_removed)
-        # print(elec_nan_removed[0])
-        # print(local_act_time.param_dist_normalized.iloc[4, 3])
+        
+        # Generate new list with the electrode names with NaN values removed.
+        elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
+        elec_removed_names = [
+            i for i in electrode_config.electrode_names if i not in elec_to_remove]
         
         for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
         columns=['Electrode', 'X', 'Y'])):
             conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
                 two_dim_polynomial, elec_nan_removed, 
-                local_act_time.param_dist_normalized[beat].dropna()
-            )
+                local_act_time.param_dist_normalized[beat].dropna())
 
-        print(conduction_vel.cv_popt[0])
-        print(conduction_vel.cv_popt[3])
+        # print(conduction_vel.cv_popt[0])
+        # print(conduction_vel.cv_popt[3])
 
         calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel)
+
+        conduction_vel.vector_mag.columns = elec_removed_names
+        conduction_vel.vector_mag.index = local_act_time.final_dist_beat_count
+        conduction_vel.vector_x_comp.columns = elec_removed_names
+        conduction_vel.vector_x_comp.index = local_act_time.final_dist_beat_count
+        conduction_vel.vector_y_comp.columns = elec_removed_names
+        conduction_vel.vector_y_comp.index = local_act_time.final_dist_beat_count
+
+        missing_elec_fill = [np.nan] * int(cm_beats.beat_count_dist_mode[0])
+        for missing in nan_electrodes_idx:
+            nan_elec = electrode_config.electrode_names[missing]
+            conduction_vel.vector_mag.insert(int(missing), nan_elec, 
+                missing_elec_fill)
+            conduction_vel.vector_x_comp.insert(int(missing), nan_elec, 
+                missing_elec_fill)
+            conduction_vel.vector_y_comp.insert(int(missing), nan_elec, 
+                missing_elec_fill)
+
+        conduction_vel.vector_mag = conduction_vel.vector_mag.T
+        conduction_vel.vector_x_comp = conduction_vel.vector_x_comp.T
+        conduction_vel.vector_y_comp = conduction_vel.vector_y_comp.T
+        conduction_vel.vector_mag.insert(0, 'Electrode', electrode_config.electrode_names)
+        conduction_vel.vector_mag.insert(1, 'X', electrode_config.electrode_coords_x)
+        conduction_vel.vector_mag.insert(2, 'Y', electrode_config.electrode_coords_y)
+        conduction_vel.vector_x_comp.insert(0, 'Electrode', electrode_config.electrode_names)
+        conduction_vel.vector_x_comp.insert(1, 'X', electrode_config.electrode_coords_x)
+        conduction_vel.vector_x_comp.insert(2, 'Y', electrode_config.electrode_coords_y)
+        conduction_vel.vector_y_comp.insert(0, 'Electrode', electrode_config.electrode_names)
+        conduction_vel.vector_y_comp.insert(1, 'X', electrode_config.electrode_coords_x)
+        conduction_vel.vector_y_comp.insert(2, 'Y', electrode_config.electrode_coords_y)
 
         conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(
             local_act_time.param_dist_normalized.loc[
@@ -71,8 +97,8 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
         end_time = time.process_time()
         print("CV calculation complete.")
         print(end_time - start_time)
-    except AttributeError:
-        print("Please calculate local activation time first.")
+    # except AttributeError:
+    #     print("Please calculate local activation time first.")
 
 
 def two_dim_polynomial(elec_nan_removed, a, b, c, d, e, f):
