@@ -475,11 +475,12 @@ input_param):
             delattr(heat_map, 'cv_solo_cbar')
         
         heat_map.cv_solo_axis.cla()
+        heat_map.cv_solo_axis_2.cla()
         input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
 
-        electrode_names_4 = conduction_vel.param_dist_raw.pivot(index='Y', 
+        electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
             columns='X', values='Electrode')
-        heatmap_pivot_table_4 = conduction_vel.param_dist_raw.pivot(index='Y', 
+        heatmap_pivot_table_4 = conduction_vel.vector_mag.pivot(index='Y', 
             columns='X', values=local_act_time.final_dist_beat_count[input_param.cv_solo_beat_choice])
 
         heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
@@ -492,6 +493,15 @@ input_param):
         heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + 
             str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
+
+        x_arrow = conduction_vel.vector_x_comp['X'].values
+        y_arrow = conduction_vel.vector_y_comp['Y'].values
+        heat_map.cv_solo_axis_2.quiver(x_arrow, y_arrow,
+            conduction_vel.vector_x_comp[local_act_time.final_dist_beat_count[
+                input_param.cv_solo_beat_choice]], 
+            conduction_vel.vector_y_comp[local_act_time.final_dist_beat_count[
+                input_param.cv_solo_beat_choice]])
+
         heat_map.cv_solo_plot.tight_layout()
         heat_map.cv_solo_plot.canvas.draw()
 
@@ -1150,7 +1160,8 @@ def main():
 
     # Heatmap axis for only Conduction Velocity window
     heat_map.cv_solo_plot = plt.Figure(figsize=(12, 6), dpi=120)
-    heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(111)
+    heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(211)
+    heat_map.cv_solo_axis_2 = heat_map.cv_solo_plot.add_subplot(212)
 
     # Subplot axes for Peak Finder (Beats) window
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
