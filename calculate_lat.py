@@ -20,6 +20,7 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         start_time = time.process_time()
         print("Calculating LAT per beat.")
 
+        # Pre-allocate/define variables for passing to numba.
         num_of_electrodes = len(cm_beats.dist_beats.columns)
         mode_of_beats = int(cm_beats.beat_count_dist_mode[0])
         cm_beats_dist_beats_as_array = cm_beats.dist_beats.to_numpy()
@@ -30,6 +31,8 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         for electrode in range(num_of_electrodes):
             per_electrode_mode_of_beats[electrode] = len(cm_beats.dist_beats.iloc[0:, electrode].dropna())
 
+        # Run LAT calculations through numba using approp. function, store in
+        # local_at.
         local_at = lat_calc_for_numba(mode_of_beats, num_of_electrodes, 
             cm_beats_dist_beats_as_array, cm_beats_y_axis_as_array, 
             per_electrode_mode_of_beats, sample_frequency)
@@ -56,6 +59,7 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         local_act_time.param_dist_normalized_mean = np.nanmean(
             local_act_time.param_dist_normalized.max())
 
+        # Assign row labels (electrodes), insert electrode names & coords.
         local_act_time.param_dist_normalized.index = electrode_config.electrode_names
         local_act_time.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
         local_act_time.param_dist_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
@@ -170,7 +174,8 @@ per_electrode_mode_of_beats, sample_frequency):
 
     return local_at
 
-# Function that calculates distances from the minimum electrode for each beat.  Values for use in conduction velocity.
+# Function that calculates distances from the minimum electrode for each beat.  
+# Values for use in finite difference method of calculating conduction velocity.
 def calculate_distances(local_act_time, electrode_config):
     if hasattr(local_act_time, 'distance_from_min') is True:
         print("Clearing old distance data before running new calculation...")

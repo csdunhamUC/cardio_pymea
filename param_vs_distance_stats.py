@@ -143,11 +143,9 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cv_without_nan = cv_without_nan.sort_values(ascending=True)
         x_sorted = local_act_time.distance_from_min.loc[cv_without_nan.index, 
             beat].sort_values(ascending=True)
-        cm_stats.cv_popt[num], cm_stats.cv_pcov[num] = curve_fit(
-            fitting_func, 
-            x_sorted, cv_without_nan,
-            method="trf"
-        )
+        cm_stats.cv_popt[num], cm_stats.cv_pcov[num] = curve_fit(fitting_func, 
+            x_sorted, cv_without_nan, method="trf")
+        # This is calculating R-squared properly, no need to square again.
         residuals = cv_without_nan - fitting_func(x_sorted, *cm_stats.cv_popt[num])
         ss_res = np.sum(residuals**2)
         ss_tot = np.sum((cv_without_nan - np.mean(cv_without_nan))**2)
@@ -175,6 +173,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
     top_10_indices_dvdt = list(top_10_indices_dvdt[np.argsort(-cm_stats.r_value_dvdt[top_10_indices_dvdt])])
     top_10_r_value_dvdt = list(cm_stats.r_value_dvdt[top_10_indices_dvdt])
 
+    # Assemble all the values for the stats readout text in GUI.
     cm_stats.complete_stats_readout = [
         "Max Time Lag: {}".format(pace_maker.param_dist_normalized_max) + "\n",
         "Mean Time Lag: {0:.2f}".format(pace_maker.param_dist_normalized_mean) 
@@ -214,6 +213,10 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.complete_stats_readout)))
 
     # Necessary readouts:
+    # 1) Calculate beat interval between each beat, plot over full dataset.
+    # 2) Find electrodes with elongated beat interval, determine if distance 
+    #   correlation exists
+    # 2a) Calculate and plot beat amplitude vs distance
     # 3) Mode of PM (LAT) min & max channels.
     # 4) Mode of CV min and max channels.
     # 5) Number of unique min channels for PM (LAT)
