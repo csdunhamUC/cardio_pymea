@@ -45,31 +45,25 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
         elec_removed_names = [
             i for i in electrode_config.electrode_names if i not in elec_to_remove]
         
-        # # Alternative: using lmfit instead of curve_fit.  Results are same.
-        # twod_poly_model = Model(two_dim_polynomial, independent_vars=['x', 'y'],
-        #     nan_policy='omit')
-        # print(twod_poly_model.param_names, twod_poly_model.independent_vars)
-        # # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
-        # # for each beat.
-        # model_params = twod_poly_model.make_params(
-        #     a=1, b=1, c=1, d=1, e=1, f=1)
-        # for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
-        # columns=['Electrode', 'X', 'Y'])):
-        #     model_result = twod_poly_model.fit(
-        #         local_act_time.param_dist_normalized[beat].dropna(), 
-        #         model_params, x = x_elec, y = y_elec)
-        #     conduction_vel.cv_popt[num] = list(model_result.params.values())
-        #     print(model_result.fit_report())
-
+        # Uses lmfit instead of curve_fit.  Results are same.
+        twod_poly_model = Model(two_dim_polynomial, independent_vars=['x', 'y'],
+            nan_policy='omit')
+        print(twod_poly_model.param_names, twod_poly_model.independent_vars)
+        # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
+        # for each beat using lmfit's Model.fit()
+        model_params = twod_poly_model.make_params(
+            a=1, b=1, c=1, d=1, e=1, f=1)
         for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
-        columns=['Electrode', 'X', 'Y'])):    
-            conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
-                two_dim_polynomial, elec_nan_removed, 
-                local_act_time.param_dist_normalized[beat].dropna(),
-                method="trf")
+        columns=['Electrode', 'X', 'Y'])):
+            model_result = twod_poly_model.fit(
+                local_act_time.param_dist_normalized[beat].dropna(), 
+                model_params, x = x_elec, y = y_elec)
+            conduction_vel.cv_popt[num] = list(model_result.params.values())
+            # print(model_result.fit_report())
+
         
         # # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
-        # # for each beat.
+        # # for each beat using curve_fit
         # for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
         # columns=['Electrode', 'X', 'Y'])):
         #     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
@@ -156,19 +150,20 @@ def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, local_a
     #     print("Please calculate local activation time first.")
 
 
-# # Function for fitting if using lmfit.
-# def two_dim_polynomial(x, y, a, b, c, d, e, f):
-#     # Equation from: PV Bayly et al, IEEE, 1998, doi:10.1109/10.668746
-#     # t = T(x,y) = ax**2 + by**2 + cxy + dx + ey + f
-#     return a*x**2 + b*y**2 + c*x*y + d*x + e*y + f
-
-
-def two_dim_polynomial(elec_nan_removed, a, b, c, d, e, f):
+# Function for fitting if using lmfit.
+def two_dim_polynomial(x, y, a, b, c, d, e, f):
     # Equation from: PV Bayly et al, IEEE, 1998, doi:10.1109/10.668746
     # t = T(x,y) = ax**2 + by**2 + cxy + dx + ey + f
-    x = elec_nan_removed[0]
-    y = elec_nan_removed[1]
     return a*x**2 + b*y**2 + c*x*y + d*x + e*y + f
+
+
+# # Function for fitting if using curve_fit
+# def two_dim_polynomial(elec_nan_removed, a, b, c, d, e, f):
+#     # Equation from: PV Bayly et al, IEEE, 1998, doi:10.1109/10.668746
+#     # t = T(x,y) = ax**2 + by**2 + cxy + dx + ey + f
+#     x = elec_nan_removed[0]
+#     y = elec_nan_removed[1]
+#     return a*x**2 + b*y**2 + c*x*y + d*x + e*y + f
 
 
 # Calculate derivatives w.r.t x and y for each beat.
