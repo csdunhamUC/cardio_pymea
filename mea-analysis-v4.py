@@ -29,8 +29,6 @@ import os
 import tkinter as tk
 from tkinter import ttk
 import importlib
-from scipy import stats
-# from dis import dis
 import datetime
 import determine_beats
 from calculate_pacemaker import calculate_pacemaker
@@ -39,6 +37,7 @@ import calculate_lat
 import calculate_cv
 import param_vs_distance_stats
 import psd_plotting
+import cv_quiver
 
 
 ################################################################################
@@ -224,12 +223,6 @@ def data_import(analysisGUI, raw_data, electrode_config):
 
 # Usually just for debugging, prints out values upon button press.
 def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config):
-    # adding .iloc to a data frame allows to reference [row, column], 
-    # where rows and columns can be ranges separated by colons
-    # input_param.beat_choice = int(analysisGUI.mea_beat_select.get()) - 1
-    # print(pace_maker.param_dist_normalized.name)
-    # print(electrode_config.electrode_names[0])
-    # print(electrode_config.electrode_names[5])
     print(analysisGUI.sample_frequency_val.get())
     print(analysisGUI.sample_frequency_menu['menu'].keys())
     # print(input_param.beat_choice)
@@ -244,6 +237,7 @@ def reload_module():
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
+    importlib.reload(cv_quiver)
     print("Reloaded module.")
 
 
@@ -475,13 +469,13 @@ input_param):
             delattr(heat_map, 'cv_solo_cbar')
         
         heat_map.cv_solo_axis.cla()
-        heat_map.cv_solo_axis_2.cla()
         input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
 
         electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
             columns='X', values='Electrode')
         heatmap_pivot_table_4 = conduction_vel.vector_mag.pivot(index='Y', 
-            columns='X', values=local_act_time.final_dist_beat_count[input_param.cv_solo_beat_choice])
+            columns='X', values=local_act_time.final_dist_beat_count[
+                input_param.cv_solo_beat_choice])
 
         heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
             annot=electrode_names_4, fmt="", ax=heat_map.cv_solo_axis, cbar=False)
@@ -513,8 +507,12 @@ local_act_time, conduction_vel):
         lat_normalized = local_act_time.param_dist_normalized
         lat_distances = local_act_time.distance_from_min
         cv_raw = conduction_vel.param_dist_raw
+        cv_mag = conduction_vel.vector_mag
+        cv_x_comp = conduction_vel.vector_x_comp
+        cv_y_comp = conduction_vel.vector_y_comp
         pgui.show(cm_beats_dist_data, pm_normalized, dVdt_normalized, 
-            lat_normalized, lat_distances, cv_raw, settings={'block': True})
+            lat_normalized, lat_distances, cv_raw, cv_mag, cv_x_comp, cv_y_comp,
+            settings={'block': True})
     except(AttributeError):
         print("Please run all of your calculations first.")
 
@@ -621,6 +619,12 @@ class MainGUI(tk.Frame):
                 heat_map, input_param),
                 graph_conduction_vel(self, heat_map, local_act_time, 
                 conduction_vel, input_param)])
+        calc_menu.add_command(label="Cond. Vel. Vector Field",
+            command=lambda: [
+                self.cv_vector_window(cm_beats, local_act_time, conduction_vel, 
+                input_param),
+                cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
+                conduction_vel), ])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -779,11 +783,14 @@ class MainGUI(tk.Frame):
         self.elec_to_plot_val = tk.StringVar()
         self.elec_to_plot_val.set("1")
         self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
+        
         self.pm_solo_beat_select = None
         self.dvdt_solo_beat_select = None
         self.lat_solo_beat_select = None
         self.cv_solo_beat_select = None
         self.param_vs_dist_beat_select = None
+        self.cv_vector_beat_select = None
+        
         self.param_vs_dist_sigma_value = tk.StringVar()
         self.param_vs_dist_sigma_value.set("3")
         self.stat_readout_text = tk.StringVar()
@@ -797,9 +804,11 @@ class MainGUI(tk.Frame):
         self.psd_end_beat = tk.StringVar()
         self.psd_end_beat.set("End (Beat)")
         self.psd_beats = ["Beat " + str(i) for i in range(1, 11)]
+        
         self.psd_start_beat_value = None
         self.psd_end_beat_value = None
         self.psd_electrode_choice = None
+        
         self.psd_elec_choice = tk.StringVar()
         self.psd_elec_choice.set("F7")
         self.psd_electrodes = []
@@ -904,6 +913,24 @@ class MainGUI(tk.Frame):
         self.cv_solo_beat_select.bind("<ButtonRelease-1>",
             lambda event: graph_conduction_vel(self, heat_map, local_act_time, 
             conduction_vel, input_param))
+    
+    def cv_vector_window(self, cm_beats, local_act_time, conduction_vel, 
+    input_param):
+        cv_vector = tk.Toplevel(self)
+        cv_vector.title("Conduction Velocity Heatmap")
+        cv_vector_frame = tk.Frame(cv_vector, width=1400, height=900, bg="white")
+        cv_vector_frame.grid(row=0, column=0, padx=5, pady=5)
+        cv_vector_frame.grid_propagate(False)
+        cv_vector_fig = FigureCanvasTkAgg(conduction_vel.quiver_plot, cv_vector_frame)
+        cv_vector_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.cv_vector_beat_select = tk.Scale(cv_vector_frame, length=125, 
+            width=15, from_=1,
+            to=int(cm_beats.beat_count_dist_mode[0]),
+            orient="horizontal", bg="white", label="Current Beat")
+        self.cv_vector_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.cv_vector_beat_select.bind("<ButtonRelease-1>",
+            lambda event: cv_quiver.cv_quiver_plot(self, input_param, 
+                local_act_time, conduction_vel))
 
     def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):
@@ -1155,7 +1182,7 @@ def main():
     heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(111)
 
     # Quiver plot for Conduction Velocity Quiver window.
-    conduction_vel.quiver_plot = plt.Figure(figsize=(12,6), dpi=120)
+    conduction_vel.quiver_plot = plt.Figure(figsize=(10.5,6), dpi=120)
     conduction_vel.quiver_plot_axis = conduction_vel.quiver_plot.add_subplot(111)
 
     # Subplot axes for Peak Finder (Beats) window
