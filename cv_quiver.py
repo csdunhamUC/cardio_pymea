@@ -11,57 +11,35 @@ from matplotlib import pyplot as plt
 from scipy.interpolate import interp2d
 import matplotlib.tri as tri
 from scipy.interpolate import griddata
+from scipy.interpolate import bisplev, bisplrep
 
 
 def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
+    input_param.cv_vector_beat_choice = int(
+        analysisGUI.cv_vector_beat_select.get()) - 1
+    
     # X and Y electrode coordinates
     conduction_vel.quiver_plot_axis.cla()
 
-    z = conduction_vel.vector_x_comp[['X', 'Y', 
-        local_act_time.final_dist_beat_count[
-            input_param.cv_vect_beat_choice]]].dropna()
-    x_arrow = z['X'].values
-    y_arrow = z['Y'].values
-    
-    z_mag = conduction_vel.vector_mag[local_act_time.final_dist_beat_count[
-            input_param.cv_vect_beat_choice]].dropna()
+    cv_beat = conduction_vel.vector_mag[
+        ['X', 'Y', local_act_time.final_dist_beat_count
+            [input_param.cv_vector_beat_choice]]]
 
-    input_param.cv_vect_beat_choice = int(
-        analysisGUI.cv_vector_beat_select.get()) - 1
-    
-    uC = conduction_vel.vector_x_comp[local_act_time.final_dist_beat_count[
-            input_param.cv_vect_beat_choice]].dropna().to_numpy()
-    vC = conduction_vel.vector_y_comp[local_act_time.final_dist_beat_count[
-            input_param.cv_vect_beat_choice]].dropna().to_numpy()
-    
-    xi = np.linspace(x_arrow.min(), x_arrow.max(), x_arrow.size)
-    yi = np.linspace(y_arrow.min(), y_arrow.max(), y_arrow.size)
+    contZ = cv_beat.pivot_table(index='X', columns='Y', values=cv_beat).T.values
+    contX_uniq = np.sort(cv_beat.X.unique())
+    contY_uniq = np.sort(cv_beat.Y.unique())
+    contX, contY = np.meshgrid(contX_uniq, contY_uniq)
 
-    x1, y1 = np.meshgrid(x_arrow, y_arrow)
-    points = np.array((x_arrow, y_arrow)).T
+    conduction_vel.quiver_plot_axis.contour(contX, contY, contZ,
+        cmap='jet')
+    contf = conduction_vel.quiver_plot_axis.contourf(contX, contY, contZ, 
+        cmap='jet')
+    # conduction_vel.quiver_plot_axis.streamplot(contX, contY, contZ)
 
-    # Bicubic interpolation.
-    uCi = interp2d(x_arrow, y_arrow, uC)(xi, yi)
-    vCi = interp2d(x_arrow, y_arrow, vC)(xi, yi)
-    grid_z_mag = interp2d(x_arrow, y_arrow, z_mag)(xi, yi)
+    print(contf)
 
-    # uCi = griddata(points, uC, (x1, y1), method='linear')
-    # vCi = griddata(points, vC, (x1, y1), method='linear')
-    # grid_z_mag = griddata(points, z_mag, (x1, y1), method='linear')
-
-    conduction_vel.quiver_plot_axis.streamplot(xi, yi, uCi, vCi)
-    # conduction_vel.quiver_plot_axis.contour(x1, y1, grid_z_mag)
-    # conduction_vel.quiver_plot_axis.contourf(x1, y1, grid_z_mag)
-
-    # # Generate quiver plot using x, y arrow coordinates and magnitudes from
-    # # calculate_cv function.
-    # grid_z = griddata(points, z_mag, (x1, y1), method='nearest')
-    # conduction_vel.quiver_plot_axis.contourf(x1, y1, grid_z, extend='both')
-    # conduction_vel.quiver_plot_axis.contour(x1, y1, grid_z)
-
-    # Generate quiver plot using x, y arrow coordinates and magnitudes from
-    # calculate_cv function.
-    conduction_vel.quiver_plot_axis.quiver(x_arrow, y_arrow, uC, vC)
+    # Add colorbar.
+    cbar = plt.colorbar(contf, ax=conduction_vel.quiver_plot_axis)
 
     # Invert y-axis
     conduction_vel.quiver_plot_axis.invert_yaxis()
@@ -69,3 +47,5 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     # Draw plot.
     conduction_vel.quiver_plot.tight_layout()
     conduction_vel.quiver_plot.canvas.draw()
+
+    cbar.remove()
