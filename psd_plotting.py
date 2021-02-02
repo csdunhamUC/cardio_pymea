@@ -12,24 +12,7 @@ from scipy import signal
 import seaborn as sns
 from matplotlib import pyplot as plt
 import pandas as pd
-import time
 
-"""
-    Variables of likely use for this module:
-    psd_data.loglog_before_ax = psd_data.psd_plots.add_subplot(321)
-    psd_data.loglog_during_ax = psd_data.psd_plots.add_subplot(323)
-    psd_data.loglog_after_ax = psd_data.psd_plots.add_subplot(325)
-    psd_data.psd_before_ax = psd_data.psd_plots.add_subplot(322)
-    psd_data.psd_during_ax = psd_data.psd_plots.add_subplot(324)
-    psd_data.psd_during_ax = psd_data.psd_plots.add_subplot(326)
-    cm_beats.x_axis
-    cm_beats.y_axis
-    input_param.sample_frequency
-    input_param.psd_plot_slider = int(
-        analysisGUI.psd_electrode_select.get()) - 1
-    local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
-        input_param.psd_plot_slider]]
-"""
 
 def psd_plotting(analysisGUI, cm_beats, electrode_config, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, psd_data):
