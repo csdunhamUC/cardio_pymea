@@ -21,7 +21,11 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     # X and Y electrode coordinates
     conduction_vel.quiver_plot_axis.cla()
 
-    cv_beat = conduction_vel.vector_mag[
+    cv_beat_mag = conduction_vel.vector_mag[
+        ['X', 'Y', local_act_time.final_dist_beat_count
+            [input_param.cv_vector_beat_choice]]].dropna()
+
+    cv_beat_raw = conduction_vel.param_dist_raw[
         ['X', 'Y', local_act_time.final_dist_beat_count
             [input_param.cv_vector_beat_choice]]].dropna()
     
@@ -34,19 +38,22 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
             [input_param.cv_vector_beat_choice]]].dropna()
 
     # For vector mag and plotting x, y coordinates in a grid
-    contZ = cv_beat.pivot_table(index='Y', columns='X', values=cv_beat).values
-    contX_uniq = np.sort(cv_beat.X.unique())
-    contY_uniq = np.sort(cv_beat.Y.unique())
+    contZ_mag = cv_beat_mag.pivot_table(index='Y', 
+        columns='X', values=cv_beat_mag).values
+    contZ_raw = cv_beat_raw.pivot_table(index='Y',
+        columns='X', values=cv_beat_raw).values
+    contX_uniq = np.sort(cv_beat_mag.X.unique())
+    contY_uniq = np.sort(cv_beat_mag.Y.unique())
     contX, contY = np.meshgrid(contX_uniq, contY_uniq)
     
     # For vector components.
     contU = x_comp.pivot_table(index='Y', columns='X', values=x_comp).values
     contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
-    # Plot contour plots
-    conduction_vel.quiver_plot_axis.contour(contX, contY, contZ,
+    # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
+    conduction_vel.quiver_plot_axis.contour(contX, contY, contZ_mag,
         cmap='jet', origin='upper')
-    contf = conduction_vel.quiver_plot_axis.contourf(contX, contY, contZ, 
+    contf = conduction_vel.quiver_plot_axis.contourf(contX, contY, contZ_mag, 
         cmap='jet', origin='upper')
     # Plot streamplot.
     conduction_vel.quiver_plot_axis.streamplot(contX, contY, contU, contV)
