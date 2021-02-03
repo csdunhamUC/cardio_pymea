@@ -34,24 +34,25 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
             [input_param.cv_vector_beat_choice]]].dropna()
 
     # For vector mag and plotting x, y coordinates in a grid
-    contZ = cv_beat.pivot_table(index='X', columns='Y', values=cv_beat).T.values
+    contZ = cv_beat.pivot_table(index='Y', columns='X', values=cv_beat).values
     contX_uniq = np.sort(cv_beat.X.unique())
     contY_uniq = np.sort(cv_beat.Y.unique())
     contX, contY = np.meshgrid(contX_uniq, contY_uniq)
     
     # For vector components.
-    contU = x_comp.pivot_table(index='X', columns='Y', values=x_comp).T.values
-    contV = y_comp.pivot_table(index='X', columns='Y', values=y_comp).T.values
+    contU = x_comp.pivot_table(index='Y', columns='X', values=x_comp).values
+    contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
     # Plot contour plots
     conduction_vel.quiver_plot_axis.contour(contX, contY, contZ,
-        cmap='jet')
+        cmap='jet', origin='upper')
     contf = conduction_vel.quiver_plot_axis.contourf(contX, contY, contZ, 
-        cmap='jet')
+        cmap='jet', origin='upper')
     # Plot streamplot.
     conduction_vel.quiver_plot_axis.streamplot(contX, contY, contU, contV)
     # Plot quiver plot.
-    conduction_vel.quiver_plot_axis.quiver(contX, contY, contU, contV)
+    conduction_vel.quiver_plot_axis.quiver(contX, contY, contU, contV,
+        angles='xy')
 
     # Add colorbar.
     cbar = plt.colorbar(contf, ax=conduction_vel.quiver_plot_axis)
