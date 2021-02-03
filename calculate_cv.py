@@ -176,8 +176,8 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
     # Pre-allocate lists and arrays based on # of beats or # of electrodes.
     t_deriv_expr_x = [0]*int(cm_beats.beat_count_dist_mode[0])
     t_deriv_expr_y = [0]*int(cm_beats.beat_count_dist_mode[0])
-    x_deriv = np.zeros(int(len(elec_nan_removed[0])))
-    y_deriv = np.zeros(int(len(elec_nan_removed[1])))
+    x_comp = np.zeros(int(len(elec_nan_removed[0])))
+    y_comp = np.zeros(int(len(elec_nan_removed[1])))
     vector_mag = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
         len(elec_nan_removed[0])))
     vector_x_comp = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
@@ -206,19 +206,21 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
             # of the conduction velocity, Tx and Ty, are:
             # Tx / (Tx^2 + Ty^2)
             # Ty / (Tx^2 + Ty^2)
+            # Evaluate partial derivatives for x and y components
             T_part_x = t_deriv_expr_x[num](elec_nan_removed[0][electrode], 
                 elec_nan_removed[1][electrode])
             T_part_y = t_deriv_expr_y[num](elec_nan_removed[0][electrode], 
                 elec_nan_removed[1][electrode])
 
-            x_deriv[electrode] = T_part_x / (T_part_x**2 + T_part_y**2)
-            y_deriv[electrode] = T_part_y / (T_part_x**2 + T_part_y**2)
+            # Complete calculation for x and y components.
+            x_comp[electrode] = T_part_x / (T_part_x**2 + T_part_y**2)
+            y_comp[electrode] = T_part_y / (T_part_x**2 + T_part_y**2)
         
         # Calculate vector magnitude for all electrodes in the given beat
-        vector_mag[num] = np.sqrt(np.square(x_deriv) + np.square(y_deriv))
+        vector_mag[num] = np.sqrt(np.square(x_comp) + np.square(y_comp))
         # Store vector components for all electrodes for each beat.
-        vector_x_comp[num] = x_deriv
-        vector_y_comp[num] = y_deriv
+        vector_x_comp[num] = x_comp
+        vector_y_comp[num] = y_comp
 
     # Store magnitude, components in Pandas dataframes in conduction_vel "struc"
     conduction_vel.vector_mag = pd.DataFrame(vector_mag)
