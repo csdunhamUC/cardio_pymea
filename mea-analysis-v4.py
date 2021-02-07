@@ -395,14 +395,6 @@ class MainGUI(tk.Frame):
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
     electrode_config, psd_data):
         tk.Frame.__init__(self, master)
-        # The fun story about grid: columns and rows cannot be generated past 
-        # the number of widgets you have (or at least I've yet to learn the way 
-        # to do so, and will update if I find out how). It's all relative geometry,
-        # where the relation is with other widgets.  If you have 3 widgets you 
-        # can have 3 rows or 3 columns and organize accordingly.  If you have 2 
-        # widgets you can only have 2 rows or 2 columns.
-        # use .bind("<Enter>", "color") or .bind("<Leave>", "color") to change 
-        # mouse-over color effects.
         self.grid()
         self.winfo_toplevel().title("MEA Analysis - v4")
 
@@ -411,7 +403,7 @@ class MainGUI(tk.Frame):
         self.file_path = tk.StringVar()
         self.file_path.set("/")
 
-        # ############################ Menu ####################################
+        ############################## Menu ####################################
         self.master = master
         menu = tk.Menu(self.master, tearoff=False)
         self.master.config(menu=menu)
@@ -519,7 +511,7 @@ class MainGUI(tk.Frame):
         testing_menu.add_command(label="Reload Module", command=lambda: reload_module())
 
 
-        # ######################### Entry Fields ###############################
+        ########################### Entry Fields ###############################
         # Frame for MEA parameters (e.g. plotted electrode, min peak distance, 
         # min peak amplitude, prominence, etc)
         self.mea_parameters_frame = tk.Frame(self, width=1620, height=80, bg="white")
@@ -625,7 +617,7 @@ class MainGUI(tk.Frame):
         self.trunc_end_value.grid(row=1, column=8, padx=5, pady=2)
         self.trunc_end_value.grid_remove()
 
-        # ############################# Heatmap ################################
+        ############################### Heatmap ################################
         # Frame and elements for pacemaker heat map plot.
         self.mea_heatmap_frame = tk.Frame(self, width=1620, height=800, bg="white")
         self.mea_heatmap_frame.grid(row=1, column=0, padx=5, pady=5)
@@ -695,11 +687,6 @@ class MainGUI(tk.Frame):
         beat_detect_frame.grid_propagate(False)
         gen_beats_fig = FigureCanvasTkAgg(cm_beats.comp_plot, beat_detect_frame)
         gen_beats_fig.get_tk_widget().grid(row=2, column=0, columnspan=2, padx=5, pady=5)
-        # NavigationToolbar2Tk calls pack internally, conflicts with grid.  
-        # Workaround: establish in own frame, use grid to place that frame 
-        # inside of the chosen parent frame. This works because the parent 
-        # frame is still a descent of "root", which is the overarching parent 
-        # of all of these GUI elements.
         gen_beats_toolbar_frame = tk.Frame(beat_detect)
         gen_beats_toolbar_frame.grid(row=4, column=0, columnspan=2, in_=beat_detect_frame)
         gen_beats_toolbar = NavigationToolbar2Tk(gen_beats_fig, gen_beats_toolbar_frame)
@@ -731,7 +718,8 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.pm_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.pm_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_pacemaker(self, heat_map, pace_maker, input_param))
+            lambda event: calculate_pacemaker.graph_pacemaker(self, heat_map, 
+                pace_maker, input_param))
 
     def dvdt_heatmap_window(self, cm_beats, upstroke_vel, heat_map, input_param):
         dvdt_heatmap = tk.Toplevel(self)
@@ -746,7 +734,8 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.dvdt_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.dvdt_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_upstroke(self, heat_map, upstroke_vel, input_param))
+            lambda event: calculate_upstroke_vel.graph_upstroke(self, heat_map, 
+                upstroke_vel, input_param))
 
     def lat_heatmap_window(self, cm_beats, local_act_time, heat_map, input_param):
         lat_heatmap = tk.Toplevel(self)
@@ -761,8 +750,8 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.lat_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.lat_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_local_act_time(self, heat_map, local_act_time, 
-            input_param))
+            lambda event: calculate_lat.graph_local_act_time(self, heat_map, 
+                local_act_time, input_param))
 
     def cv_heatmap_window(self, cm_beats, local_act_time, conduction_vel, 
     heat_map, input_param):
