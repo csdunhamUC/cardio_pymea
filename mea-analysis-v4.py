@@ -38,6 +38,7 @@ import calculate_cv
 import param_vs_distance_stats
 import psd_plotting
 import cv_quiver
+import calculate_beat_amp_int
 
 
 ################################################################################
@@ -83,6 +84,10 @@ class StatisticsData:
 
 
 class PSDData:
+    pass
+
+
+class BeatAmpIntData:
     pass
 
 
@@ -393,7 +398,7 @@ def trunc_toggle(analysisGUI):
 class MainGUI(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-    electrode_config, psd_data):
+    electrode_config, psd_data, beat_amp_int):
         tk.Frame.__init__(self, master)
         self.grid()
         self.winfo_toplevel().title("MEA Analysis - v4")
@@ -430,7 +435,7 @@ class MainGUI(tk.Frame):
             command=lambda: [determine_beats.determine_beats(self, raw_data, cm_beats, input_param),
                 self.beat_detect_window(cm_beats, input_param),
                 determine_beats.graph_beats(self, cm_beats, input_param)])
-        calc_menu.add_command(label="Calculate All Parameters",
+        calc_menu.add_command(label="Calculate All (PM, LAT, dV/dt, CV)",
             command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
@@ -481,6 +486,8 @@ class MainGUI(tk.Frame):
                 input_param),
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
                     conduction_vel), ])
+        calc_menu.add_command(label="Beat Amplitude & Interval", 
+            command=None)
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -1014,6 +1021,7 @@ def main():
     cm_stats = StatisticsData()
     psd_data = PSDData()
     electrode_config = ElectrodeConfig(raw_data)
+    beat_amp_int = BeatAmpIntData()
 
     # Heatmap axes for Calculate All (main window)
     heat_map.curr_plot = plt.Figure(figsize=(13, 6.5), dpi=120)
@@ -1074,7 +1082,7 @@ def main():
     # Calls class to create the GUI window. *********
     analysisGUI = MainGUI(root, raw_data, cm_beats, pace_maker, upstroke_vel, 
         local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-        electrode_config, psd_data)
+        electrode_config, psd_data, beat_amp_int)
     # print(vars(analysisGUI))
     # print(dir(analysisGUI))
     # print(hasattr(analysisGUI "elec_to_plot_entry"))
