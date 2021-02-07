@@ -31,7 +31,7 @@ from tkinter import ttk
 import importlib
 import datetime
 import determine_beats
-from calculate_pacemaker import calculate_pacemaker
+import calculate_pacemaker
 import calculate_upstroke_vel
 import calculate_lat
 import calculate_cv
@@ -247,9 +247,9 @@ def reload_module():
 
 # This function is called following the use of "Calculate All Parameters" from 
 # the drop-down menu and from the GUI slider on the main window.  It generates 
-# the heat maps observed in the main window of the program. The code is largely 
-# identical with the individual functions, which (will soon) open their own 
-# windows for each calculation.
+# the heat maps observed in the main window of the program.
+# Graphing functions to produce heatmaps for individual parameters are located 
+# within their respective calculation modules.
 def graph_all(analysisGUI, heat_map, cm_beats, pace_maker, upstroke_vel, local_act_time, 
 conduction_vel, input_param):
     # ----------------------------- Pacemaker ----------------------------------
@@ -356,147 +356,6 @@ conduction_vel, input_param):
     heat_map.curr_plot.canvas.draw()
 
 
-# Construct heatmap from previously calculated pacemaker data.  Function is 
-# called each time the slider is moved to select a new beat.
-def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
-    try:
-        if hasattr(heat_map, 'pm_solo_cbar') is True:
-            heat_map.pm_solo_cbar.remove()
-            delattr(heat_map, 'pm_solo_cbar')
-
-        heat_map.pm_solo_axis.cla()
-        input_param.pm_solo_beat_choice = int(analysisGUI.pm_solo_beat_select.get()) - 1
-
-        electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
-            columns='X', values='Electrode')
-        heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', 
-            columns='X', values=pace_maker.final_dist_beat_count[input_param.pm_solo_beat_choice])
-
-        heat_map.pm_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
-            annot=electrode_names, fmt="", ax=heat_map.pm_solo_axis, vmin=0, 
-            vmax=pace_maker.param_dist_normalized_max, cbar=False)
-        mappable = heat_map.pm_solo_temp.get_children()[0]
-        heat_map.pm_solo_cbar = heat_map.pm_solo_axis.figure.colorbar(mappable, 
-            ax=heat_map.pm_solo_axis)
-        heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
-
-        heat_map.pm_solo_axis.set(title="Pacemaker, Beat " + 
-            str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)")
-        heat_map.pm_solo_plot.tight_layout()
-        heat_map.pm_solo_plot.canvas.draw()
-
-    except AttributeError:
-        print("Please calculate PM first.")
-    except IndexError:
-        print("You entered a beat that does not exist.")
-
-
-def graph_upstroke(analysisGUI, heat_map, upstroke_vel, input_param):
-    try:
-        if hasattr(heat_map, 'dvdt_solo_cbar') is True:
-            heat_map.dvdt_solo_cbar.remove()
-            delattr(heat_map, 'dvdt_solo_cbar')
-
-        heat_map.dvdt_solo_axis.cla()
-        input_param.dvdt_solo_beat_choice = int(analysisGUI.dvdt_solo_beat_select.get()) - 1
-
-        electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
-            columns='X', values='Electrode')
-        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
-            columns='X', values=upstroke_vel.final_dist_beat_count[input_param.dvdt_solo_beat_choice])
-
-        heat_map.dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", 
-            annot=electrode_names_2, fmt="", ax=heat_map.dvdt_solo_axis, 
-            vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
-        mappable_2 = heat_map.dvdt_solo_temp.get_children()[0]
-        heat_map.dvdt_solo_cbar = heat_map.dvdt_solo_axis.figure.colorbar(mappable_2, 
-            ax=heat_map.dvdt_solo_axis)
-        heat_map.dvdt_solo_cbar.ax.set_title("μV/ms", fontsize=10)
-
-        heat_map.dvdt_solo_axis.set(title="Upstroke Velocity, Beat " + 
-            str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)")
-        heat_map.dvdt_solo_plot.tight_layout()
-        heat_map.dvdt_solo_plot.canvas.draw()
-
-    except AttributeError:
-        print("Please calculate dV/dt first.")
-    except IndexError:
-        print("You entered a beat that does not exist.")
-
-
-def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
-    try:
-        if hasattr(heat_map, 'lat_solo_cbar') is True:
-            heat_map.lat_solo_cbar.remove()
-            delattr(heat_map, 'lat_solo_cbar')
-        
-        heat_map.lat_solo_axis.cla()
-        input_param.lat_solo_beat_choice = int(analysisGUI.lat_solo_beat_select.get()) - 1
-
-        electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', 
-            columns='X', values='Electrode')
-        heatmap_pivot_table_3 = local_act_time.param_dist_normalized.pivot(
-            index='Y', columns='X', 
-            values=local_act_time.final_dist_beat_count[input_param.lat_solo_beat_choice])
-
-        heat_map.lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", 
-            annot=electrode_names_3, fmt="", ax=heat_map.lat_solo_axis, 
-            vmax=local_act_time.param_dist_normalized_max, cbar=False)
-        mappable_3 = heat_map.lat_solo_temp.get_children()[0]
-        heat_map.lat_solo_cbar = heat_map.lat_solo_axis.figure.colorbar(mappable_3, 
-            ax=heat_map.lat_solo_axis)
-        heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
-
-        heat_map.lat_solo_axis.set(title="Local Activation Time, Beat " + 
-            str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)")
-        heat_map.lat_solo_plot.tight_layout()
-        heat_map.lat_solo_plot.canvas.draw()
-
-    except AttributeError:
-        print("Please calculate LAT first.")
-    except IndexError:
-        print("You entered a beat that does not exist.")
-
-
-def graph_conduction_vel(analysisGUI, heat_map, local_act_time, conduction_vel, 
-input_param):
-    try:
-        if hasattr(heat_map, 'cv_solo_cbar') is True:
-            heat_map.cv_solo_cbar.remove()
-            delattr(heat_map, 'cv_solo_cbar')
-        
-        heat_map.cv_solo_axis.cla()
-        input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
-
-        electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
-            columns='X', values='Electrode')
-        heatmap_pivot_table_4 = conduction_vel.vector_mag.pivot(index='Y', 
-            columns='X', values=local_act_time.final_dist_beat_count[
-                input_param.cv_solo_beat_choice])
-
-        heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
-            annot=electrode_names_4, fmt="", ax=heat_map.cv_solo_axis, cbar=False)
-        mappable_4 = heat_map.cv_solo_temp.get_children()[0]
-        heat_map.cv_solo_cbar = heat_map.cv_solo_axis.figure.colorbar(mappable_4, 
-            ax=heat_map.cv_solo_axis)
-        heat_map.cv_solo_cbar.ax.set_title("μm/(ms)", fontsize=10)
-
-        heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + 
-            str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)")
-
-        heat_map.cv_solo_plot.tight_layout()
-        heat_map.cv_solo_plot.canvas.draw()
-
-    except AttributeError:
-        print("Please make sure you've calculated Local Activation Time first.")
-    except IndexError:
-        print("You entered a beat that does not exist.")
-
-
 # Calls the PandasGUI function from the pandasgui library (external dev!)
 def show_dataframes(raw_data, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel):
@@ -529,6 +388,8 @@ def trunc_toggle(analysisGUI):
         analysisGUI.trunc_end_text.set("End (Min)")
 
 
+################################################################################
+######################## GUI Class for graphing program ########################
 class MainGUI(tk.Frame):
     def __init__(self, master, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
@@ -578,8 +439,8 @@ class MainGUI(tk.Frame):
                 self.beat_detect_window(cm_beats, input_param),
                 determine_beats.graph_beats(self, cm_beats, input_param)])
         calc_menu.add_command(label="Calculate All Parameters",
-            command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, 
-                heat_map, input_param, electrode_config),
+            command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
+                cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time, heat_map, 
@@ -594,37 +455,40 @@ class MainGUI(tk.Frame):
         # appropriate method to open the window.  This will allow for individual
         # parameter analysis.
         calc_menu.add_command(label="Pacemaker", 
-            command=lambda: [calculate_pacemaker(self, cm_beats, pace_maker, 
-                heat_map, input_param, electrode_config),
+            command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
+                cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, 
                 input_param),
-                graph_pacemaker(self, heat_map, pace_maker, input_param)])
+                calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
+                    input_param)])
         calc_menu.add_command(label="Upstroke Velocity", 
             command=lambda: [calculate_upstroke_vel.calculate_upstroke_vel(self, 
                 cm_beats, upstroke_vel, heat_map, input_param, electrode_config),
                 self.dvdt_heatmap_window(cm_beats, upstroke_vel, heat_map, 
                 input_param),
-                graph_upstroke(self, heat_map, upstroke_vel, input_param)])
+                calculate_upstroke_vel.graph_upstroke(self, heat_map, 
+                    upstroke_vel, input_param)])
         calc_menu.add_command(label="Local Activation Time", 
             command=lambda: [calculate_lat.calculate_lat(self, cm_beats, 
                 local_act_time, heat_map, input_param, electrode_config),
                 self.lat_heatmap_window(cm_beats, local_act_time, heat_map, 
                 input_param),
-                graph_local_act_time(self, heat_map, local_act_time, input_param)])
+                calculate_lat.graph_local_act_time(self, heat_map, 
+                    local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", 
             command=lambda: [calculate_cv.calculate_conduction_velocity(self, 
                 cm_beats, conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
                 self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, 
                 heat_map, input_param),
-                graph_conduction_vel(self, heat_map, local_act_time, 
-                conduction_vel, input_param)])
+                calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
+                    conduction_vel, input_param)])
         calc_menu.add_command(label="Cond. Vel. Vector Field",
             command=lambda: [
                 self.cv_vector_window(cm_beats, local_act_time, conduction_vel, 
                 input_param),
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
-                conduction_vel), ])
+                    conduction_vel), ])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -638,6 +502,10 @@ class MainGUI(tk.Frame):
             input_param, cm_stats, psd_data)])
         statistics_menu.add_command(label="Radial Binning Plot w/ R-Square", command=None)
         statistics_menu.add_command(label="Q-Q Plot",  command=None)
+
+        tools_menu = tk.Menu(menu)
+        menu.add_cascade(label="Tools", menu=tools_menu)
+        tools_menu.add_command(label="Manual Electrode Filter", command=None)
 
         advanced_tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)
@@ -911,7 +779,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.cv_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.cv_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: graph_conduction_vel(self, heat_map, local_act_time, 
+            lambda event: calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
             conduction_vel, input_param))
     
     def cv_vector_window(self, cm_beats, local_act_time, conduction_vel, 
