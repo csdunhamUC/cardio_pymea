@@ -11,6 +11,7 @@ import pandas as pd
 # from scipy.optimize import curve_fit
 import sympy as sym
 from lmfit import Model
+import seaborn as sns
 
 
 def calculate_conduction_velocity(analysisGUI, cm_beats, conduction_vel, 
@@ -232,3 +233,39 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
     #         sym.latex(sym.simplify(t_xy.diff(var))))
 
     print()
+
+
+def graph_conduction_vel(analysisGUI, heat_map, local_act_time, conduction_vel, 
+input_param):
+    try:
+        if hasattr(heat_map, 'cv_solo_cbar') is True:
+            heat_map.cv_solo_cbar.remove()
+            delattr(heat_map, 'cv_solo_cbar')
+        
+        heat_map.cv_solo_axis.cla()
+        input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
+
+        electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
+            columns='X', values='Electrode')
+        heatmap_pivot_table_4 = conduction_vel.vector_mag.pivot(index='Y', 
+            columns='X', values=local_act_time.final_dist_beat_count[
+                input_param.cv_solo_beat_choice])
+
+        heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
+            annot=electrode_names_4, fmt="", ax=heat_map.cv_solo_axis, cbar=False)
+        mappable_4 = heat_map.cv_solo_temp.get_children()[0]
+        heat_map.cv_solo_cbar = heat_map.cv_solo_axis.figure.colorbar(mappable_4, 
+            ax=heat_map.cv_solo_axis)
+        heat_map.cv_solo_cbar.ax.set_title("μm/(ms)", fontsize=10)
+
+        heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + 
+            str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+            ylabel="Y coordinate (μm)")
+
+        heat_map.cv_solo_plot.tight_layout()
+        heat_map.cv_solo_plot.canvas.draw()
+
+    except AttributeError:
+        print("Please make sure you've calculated Local Activation Time first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")

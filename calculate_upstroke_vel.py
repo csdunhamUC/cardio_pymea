@@ -7,6 +7,7 @@ import time
 from numba import njit
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 
 # Calculates upstroke velocity (dV/dt)
@@ -159,3 +160,37 @@ per_electrode_mode_of_beats, sample_frequency):
             dvdt_max[beat] = temp_dvdt_max
 
     return dvdt_max
+
+
+def graph_upstroke(analysisGUI, heat_map, upstroke_vel, input_param):
+    try:
+        if hasattr(heat_map, 'dvdt_solo_cbar') is True:
+            heat_map.dvdt_solo_cbar.remove()
+            delattr(heat_map, 'dvdt_solo_cbar')
+
+        heat_map.dvdt_solo_axis.cla()
+        input_param.dvdt_solo_beat_choice = int(analysisGUI.dvdt_solo_beat_select.get()) - 1
+
+        electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
+            columns='X', values='Electrode')
+        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
+            columns='X', values=upstroke_vel.final_dist_beat_count[input_param.dvdt_solo_beat_choice])
+
+        heat_map.dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", 
+            annot=electrode_names_2, fmt="", ax=heat_map.dvdt_solo_axis, 
+            vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
+        mappable_2 = heat_map.dvdt_solo_temp.get_children()[0]
+        heat_map.dvdt_solo_cbar = heat_map.dvdt_solo_axis.figure.colorbar(mappable_2, 
+            ax=heat_map.dvdt_solo_axis)
+        heat_map.dvdt_solo_cbar.ax.set_title("μV/ms", fontsize=10)
+
+        heat_map.dvdt_solo_axis.set(title="Upstroke Velocity, Beat " + 
+            str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+            ylabel="Y coordinate (μm)")
+        heat_map.dvdt_solo_plot.tight_layout()
+        heat_map.dvdt_solo_plot.canvas.draw()
+
+    except AttributeError:
+        print("Please calculate dV/dt first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")

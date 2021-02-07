@@ -7,6 +7,7 @@ import time
 from numba import njit
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 
 # Calculates local activation time (LAT)
@@ -198,3 +199,38 @@ def calculate_distances(local_act_time, electrode_config):
     print("Done.")
     end_time = time.process_time()
     # print(end_time - start_time)
+
+
+def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
+    try:
+        if hasattr(heat_map, 'lat_solo_cbar') is True:
+            heat_map.lat_solo_cbar.remove()
+            delattr(heat_map, 'lat_solo_cbar')
+        
+        heat_map.lat_solo_axis.cla()
+        input_param.lat_solo_beat_choice = int(analysisGUI.lat_solo_beat_select.get()) - 1
+
+        electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', 
+            columns='X', values='Electrode')
+        heatmap_pivot_table_3 = local_act_time.param_dist_normalized.pivot(
+            index='Y', columns='X', 
+            values=local_act_time.final_dist_beat_count[input_param.lat_solo_beat_choice])
+
+        heat_map.lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", 
+            annot=electrode_names_3, fmt="", ax=heat_map.lat_solo_axis, 
+            vmax=local_act_time.param_dist_normalized_max, cbar=False)
+        mappable_3 = heat_map.lat_solo_temp.get_children()[0]
+        heat_map.lat_solo_cbar = heat_map.lat_solo_axis.figure.colorbar(mappable_3, 
+            ax=heat_map.lat_solo_axis)
+        heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
+
+        heat_map.lat_solo_axis.set(title="Local Activation Time, Beat " + 
+            str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+            ylabel="Y coordinate (μm)")
+        heat_map.lat_solo_plot.tight_layout()
+        heat_map.lat_solo_plot.canvas.draw()
+
+    except AttributeError:
+        print("Please calculate LAT first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")

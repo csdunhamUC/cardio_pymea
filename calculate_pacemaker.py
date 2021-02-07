@@ -10,6 +10,7 @@ from colorama import Fore
 from colorama import Style
 from colorama import init
 from colorama import deinit
+import seaborn as sns
 
 # Comment out init() if using Pycharm on Windows.
 init()
@@ -172,3 +173,37 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
         deinit()
     except AttributeError:
         print("Please use Find Peaks first.")
+
+
+def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
+    try:
+        if hasattr(heat_map, 'pm_solo_cbar') is True:
+            heat_map.pm_solo_cbar.remove()
+            delattr(heat_map, 'pm_solo_cbar')
+
+        heat_map.pm_solo_axis.cla()
+        input_param.pm_solo_beat_choice = int(analysisGUI.pm_solo_beat_select.get()) - 1
+
+        electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
+            columns='X', values='Electrode')
+        heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', 
+            columns='X', values=pace_maker.final_dist_beat_count[input_param.pm_solo_beat_choice])
+
+        heat_map.pm_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
+            annot=electrode_names, fmt="", ax=heat_map.pm_solo_axis, vmin=0, 
+            vmax=pace_maker.param_dist_normalized_max, cbar=False)
+        mappable = heat_map.pm_solo_temp.get_children()[0]
+        heat_map.pm_solo_cbar = heat_map.pm_solo_axis.figure.colorbar(mappable, 
+            ax=heat_map.pm_solo_axis)
+        heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
+
+        heat_map.pm_solo_axis.set(title="Pacemaker, Beat " + 
+            str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+            ylabel="Y coordinate (μm)")
+        heat_map.pm_solo_plot.tight_layout()
+        heat_map.pm_solo_plot.canvas.draw()
+
+    except AttributeError:
+        print("Please calculate PM first.")
+    except IndexError:
+        print("You entered a beat that does not exist.")
