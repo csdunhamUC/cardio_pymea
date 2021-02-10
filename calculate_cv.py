@@ -41,7 +41,8 @@ local_act_time, heat_map, input_param, electrode_config):
         # Generate 2xN, where N = number of non-NaN electrodes, of elec. coords.
         elec_nan_removed = np.array([x_elec, y_elec])
 
-        print(elec_nan_removed)
+        print(elec_nan_removed[0])
+        print(elec_nan_removed[1])
         
         # Generate new list with the electrode names with NaN values removed.
         elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
@@ -64,7 +65,6 @@ local_act_time, heat_map, input_param, electrode_config):
             conduction_vel.cv_popt[num] = list(model_result.params.values())
             # print(model_result.fit_report())
 
-        
         # # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
         # # for each beat using curve_fit
         # for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
@@ -87,9 +87,6 @@ local_act_time, heat_map, input_param, electrode_config):
         #         beat].dropna().sort_values(ascending=True)
         #     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
         #         two_dim_polynomial, elec_removed_sorted, lat_sorted)
-
-        # print(conduction_vel.cv_popt[0])
-        # print(conduction_vel.cv_popt[3])
 
         # Calculate derivatives using SymPy diff and lambdify at each electrode
         # for each beat, using the parameters for the two-dimensional polynomial
@@ -177,8 +174,6 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
     # Pre-allocate lists and arrays based on # of beats or # of electrodes.
     t_deriv_expr_x = [0]*int(cm_beats.beat_count_dist_mode[0])
     t_deriv_expr_y = [0]*int(cm_beats.beat_count_dist_mode[0])
-    x_comp = np.zeros(int(len(elec_nan_removed[0])))
-    y_comp = np.zeros(int(len(elec_nan_removed[1])))
     vector_mag = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
         len(elec_nan_removed[0])))
     vector_x_comp = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
@@ -191,46 +186,39 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
     for num in range(int(cm_beats.beat_count_dist_mode[0])):
         a, b, c, d, e, f = conduction_vel.cv_popt[num]
         t_xy = a*x**2 + b*y**2 + c*x*y + d*x + e*y + f
-
-        t_deriv_expr_x[num] = sym.lambdify([x, y], t_xy.diff(x))
-        t_deriv_expr_y[num] = sym.lambdify([x, y], t_xy.diff(y))
+        t_deriv_expr_x[num] = sym.lambdify([x, y], t_xy.diff(x), "numpy")
+        t_deriv_expr_y[num] = sym.lambdify([x, y], t_xy.diff(y), "numpy")
 
     # Evaluate the partial derivatives of function T(x,y) w.r.t x and y
     # Partial derivatives for a beat are calculated at each electrode, using the
     # appropriate (x,y) coordinates of each electrode and are then stored in
     # x_deriv or y_deriv.  
     # These values are operated upon appropriately to find the vector magnitude 
-    # of all electrodes for each beat.
-    for num in range(int(cm_beats.beat_count_dist_mode[0])):
-        for electrode in range(len(elec_nan_removed[0])):
-            # From Bayly et al, the equation for the x and y velocity components
-            # of the conduction velocity, Tx and Ty, are:
-            # Tx / (Tx^2 + Ty^2)
-            # Ty / (Tx^2 + Ty^2)
-            # Evaluate partial derivatives for x and y components
-            T_part_x = t_deriv_expr_x[num](elec_nan_removed[0][electrode], 
-                elec_nan_removed[1][electrode])
-            T_part_y = t_deriv_expr_y[num](elec_nan_removed[0][electrode], 
-                elec_nan_removed[1][electrode])
-
-            # Complete calculation for x and y components.
-            x_comp[electrode] = T_part_x / (T_part_x**2 + T_part_y**2)
-            y_comp[electrode] = T_part_y / (T_part_x**2 + T_part_y**2)
+    # of all electrodes (using vectorization via numpy) for each beat.
+    for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+        # From Bayly et al, the equation for the x and y velocity components
+        # of the conduction velocity, Tx and Ty, are:
+        # Tx / (Tx^2 + Ty^2)
+        # Ty / (Tx^2 + Ty^2)
+        # Evaluate partial derivatives for x and y components
+        T_part_x = t_deriv_expr_x[beat](elec_nan_removed[0], 
+            elec_nan_removed[1])
+        T_part_y = t_deriv_expr_y[beat](elec_nan_removed[0], 
+            elec_nan_removed[1])
+        # Complete calculation for x and y components.
+        x_component = T_part_x / (T_part_x**2 + T_part_y**2)
+        y_component = T_part_y / (T_part_x**2 + T_part_y**2)
         
         # Calculate vector magnitude for all electrodes in the given beat
-        vector_mag[num] = np.sqrt(np.square(x_comp) + np.square(y_comp))
+        vector_mag[beat] = np.sqrt(np.square(x_component) + np.square(y_component))
         # Store vector components for all electrodes for each beat.
-        vector_x_comp[num] = x_comp
-        vector_y_comp[num] = y_comp
+        vector_x_comp[beat] = x_component
+        vector_y_comp[beat] = y_component
 
     # Store magnitude, components in Pandas dataframes in conduction_vel "struc"
     conduction_vel.vector_mag = pd.DataFrame(vector_mag)
     conduction_vel.vector_x_comp = pd.DataFrame(vector_x_comp)
     conduction_vel.vector_y_comp = pd.DataFrame(vector_y_comp)
-
-    # for var in [x, y]:
-    #     print("\\frac{\\partial g}{\\partial " + str(var) + "} =", 
-    #         sym.latex(sym.simplify(t_xy.diff(var))))
 
     print()
 
@@ -269,3 +257,34 @@ input_param):
         print("Please make sure you've calculated Local Activation Time first.")
     except IndexError:
         print("You entered a beat that does not exist.")
+
+
+# Previous loop structure for evaluating SymPy functions.  Since switched to 
+# numpy vectorized format for performance increase.
+#     x_comp = np.zeros(int(len(elec_nan_removed[0])))
+#     y_comp = np.zeros(int(len(elec_nan_removed[1])))
+# for beat in range(int(cm_beats.beat_count_dist_mode[0])):
+#     for electrode in range(len(elec_nan_removed[0])):
+#         # From Bayly et al, the equation for the x and y velocity components
+#         # of the conduction velocity, Tx and Ty, are:
+#         # Tx / (Tx^2 + Ty^2)
+#         # Ty / (Tx^2 + Ty^2)
+#         # Evaluate partial derivatives for x and y components
+#         T_part_x = t_deriv_expr_x[beat](elec_nan_removed[0][electrode], 
+#             elec_nan_removed[1][electrode])
+#         T_part_y = t_deriv_expr_y[beat](elec_nan_removed[0][electrode], 
+#             elec_nan_removed[1][electrode])
+
+#         # Complete calculation for x and y components.
+#         x_comp[electrode] = T_part_x / (T_part_x**2 + T_part_y**2)
+#         y_comp[electrode] = T_part_y / (T_part_x**2 + T_part_y**2)
+    
+#     # Calculate vector magnitude for all electrodes in the given beat
+#     vector_mag[beat] = np.sqrt(np.square(x_comp) + np.square(y_comp))
+#     # Store vector components for all electrodes for each beat.
+#     vector_x_comp[beat] = x_comp
+#     vector_y_comp[beat] = y_comp
+
+# for var in [x, y]:
+#     print("\\frac{\\partial g}{\\partial " + str(var) + "} =", 
+#         sym.latex(sym.simplify(t_xy.diff(var))))
