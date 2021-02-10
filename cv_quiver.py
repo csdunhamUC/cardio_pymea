@@ -52,9 +52,9 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
 
     # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
     conduction_vel.quiver_plot_axis.contour(contX, contY, contZ_mag,
-        cmap='jet', origin='upper')
+        cmap='jet')
     contf = conduction_vel.quiver_plot_axis.contourf(contX, contY, contZ_mag, 
-        cmap='jet', origin='upper')
+        cmap='jet')
     # Plot streamplot.
     conduction_vel.quiver_plot_axis.streamplot(contX, contY, contU, contV)
     # Plot quiver plot.
