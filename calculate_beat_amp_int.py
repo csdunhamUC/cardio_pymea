@@ -10,11 +10,11 @@ import scipy as sp
 from scipy.optimize import curve_fit
 
 
-def calculate_beat_amp(analysisGUI, cm_beats, pace_maker, heat_map, input_param, 
-electrode_config):
+def calculate_beat_amp(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
+heat_map, input_param, electrode_config):
     print()
-    # Obtain beat amplitudes using indices from pace_maker.raw data, store in
-    # variable beat_amp_int
+    # Obtain beat amplitudes using indices from pace_maker.raw data, values from
+    # cm_beats.y_axis, store in variable beat_amp_int
 
 
 def calculate_beat_interval():

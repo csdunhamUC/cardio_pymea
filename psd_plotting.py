@@ -54,7 +54,7 @@ local_act_time, conduction_vel, input_param, psd_data):
 def plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, psd_data, start_beat, end_beat,
 elec_choice, param_choices, electrode_config):
-
+    psd_data.loglog_during_ax.cla()
     # Only here for testing, will remove later.
     print(pace_maker.param_dist_raw.loc[elec_choice, start_beat])
     print(pace_maker.param_dist_raw.loc[elec_choice, end_beat])
@@ -102,7 +102,7 @@ elec_choice, param_choices, electrode_config):
 def plot_psd_welch(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, psd_data, start_beat, end_beat,
 elec_choice, param_choices, electrode_config):
-    # psd_data.psd_during_ax.cla()
+    psd_data.psd_during_ax.cla()
     # print(conduction_vel.param_dist_raw.drop(
     #     columns=['Electrode', 'X', 'Y']).dropna().values.flatten())
     # print(len(conduction_vel.param_dist_raw.drop(
@@ -118,7 +118,7 @@ elec_choice, param_choices, electrode_config):
             elec_index], fs=1.0, window='hann')
         
         psd_data.psd_during_ax.loglog(freq, Pxx, label=elec_choice)
-        psd_data.psd_during_ax.set(title="Welch PSD of Signal", 
+        psd_data.psd_during_ax.set(title="Periodogram of Signal", 
             xlabel="Log of Frequency (Hz)", ylabel="Log of PSD of Signal")
         psd_data.psd_during_ax.legend(loc="lower left", ncol=6)
     
@@ -146,10 +146,3 @@ elec_choice, param_choices, electrode_config):
 
     psd_data.psd_plots.tight_layout()
     psd_data.psd_plots.canvas.draw()
-
-    # freq, Pxx = signal.welch(conduction_vel.param_dist_raw.drop(
-    #     columns=['Electrode', 'X', 'Y']).dropna().values.flatten(), fs=1.0, window='hann')
-    # x must be a 1d array or series, fs = sampling frequency
-    # freq, Pxx = signal.welch(x, fs=1.0)
-    # print(freq)
-    # print(Pxx_period)
