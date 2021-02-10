@@ -243,6 +243,7 @@ def reload_module():
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
     importlib.reload(cv_quiver)
+    importlib.reload(calculate_beat_amp_int)
     print("Reloaded module.")
 
 
@@ -487,7 +488,11 @@ class MainGUI(tk.Frame):
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
                     conduction_vel), ])
         calc_menu.add_command(label="Beat Amplitude & Interval", 
-            command=None)
+            command=lambda: [self.beat_amp_int_window(cm_beats, pace_maker, 
+                beat_amp_int, input_param),
+                calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
+                    beat_amp_int, pace_maker, heat_map, input_param, 
+                    electrode_config)])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -781,7 +786,7 @@ class MainGUI(tk.Frame):
     def cv_vector_window(self, cm_beats, local_act_time, conduction_vel, 
     input_param):
         cv_vector = tk.Toplevel(self)
-        cv_vector.title("Conduction Velocity Heatmap")
+        cv_vector.title("CV Vector Fields")
         cv_vector_frame = tk.Frame(cv_vector, width=1400, height=900, bg="white")
         cv_vector_frame.grid(row=0, column=0, padx=5, pady=5)
         cv_vector_frame.grid_propagate(False)
@@ -962,8 +967,31 @@ class MainGUI(tk.Frame):
         psd_toolbar_frame = tk.Frame(psd_window)
         psd_toolbar_frame.grid(row=0, rowspan=2, column=6, columnspan=2, 
             in_=psd_window_options_frame)
-        psd_toolbar = NavigationToolbar2Tk(psd_fig, 
-            psd_toolbar_frame)
+        psd_toolbar = NavigationToolbar2Tk(psd_fig, psd_toolbar_frame)
+    
+
+    def beat_amp_int_window(self, cm_beats, pace_maker, beat_amp_int, 
+    input_param):
+        beat_amp_window = tk.Toplevel(self)
+        beat_amp_window.title("CV Vector Fields")
+        beat_amp_int_frame = tk.Frame(beat_amp_window, width=1400, height=900, bg="white")
+        beat_amp_int_frame.grid(row=0, column=0, padx=5, pady=5)
+        beat_amp_int_frame.grid_propagate(False)
+        beat_amp_int_fig = FigureCanvasTkAgg(beat_amp_int.amp_int_plot, beat_amp_int_frame)
+        beat_amp_int_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
+        self.beat_amp_beat_select = tk.Scale(beat_amp_int_frame, length=125, 
+            width=15, from_=1,
+            to=int(cm_beats.beat_count_dist_mode[0]),
+            orient="horizontal", bg="white", label="Current Beat")
+        self.beat_amp_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.beat_amp_beat_select.bind("<ButtonRelease-1>",
+            lambda event: None)
+        
+        # Frame for matplotlib navigation toolbar.
+        amp_int_toolbar_frame = tk.Frame(beat_amp_window)
+        amp_int_toolbar_frame.grid(row=1, column=1, in_=beat_amp_int_frame)
+        beat_amp_toolbar = NavigationToolbar2Tk(beat_amp_int_fig, 
+            amp_int_toolbar_frame)
 
 
     def col_sel_callback(self, *args):
@@ -1047,8 +1075,15 @@ def main():
     heat_map.cv_solo_axis = heat_map.cv_solo_plot.add_subplot(111)
 
     # Quiver plot for Conduction Velocity Quiver window.
-    conduction_vel.quiver_plot = plt.Figure(figsize=(10.5,6), dpi=120)
+    conduction_vel.quiver_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
     conduction_vel.quiver_plot_axis = conduction_vel.quiver_plot.add_subplot(111)
+
+    # Assorted plots for Beat Amplitude & Interval window.
+    beat_amp_int.amp_int_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
+    beat_amp_int.axis1 = beat_amp_int.amp_int_plot.add_subplot(221)
+    beat_amp_int.axis2 = beat_amp_int.amp_int_plot.add_subplot(222)
+    beat_amp_int.axis3 = beat_amp_int.amp_int_plot.add_subplot(223)
+    beat_amp_int.axis4 = beat_amp_int.amp_int_plot.add_subplot(224)
 
     # Subplot axes for Peak Finder (Beats) window
     cm_beats.comp_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
