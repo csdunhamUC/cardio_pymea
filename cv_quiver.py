@@ -60,6 +60,8 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     # Plot quiver plot.
     conduction_vel.quiver_plot_axis.quiver(contX, contY, contU, contV,
         angles='xy')
+    conduction_vel.quiver_plot_axis.set(xlabel="X coordinate (μm)", 
+        ylabel="Y coordinate (μm)", title="Quiver, Stream, Contour of CV")
 
     # Add colorbar.
     cbar = plt.colorbar(contf, ax=conduction_vel.quiver_plot_axis)
