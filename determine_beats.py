@@ -11,7 +11,8 @@ from scipy import stats
 
 
 # Finds peaks based on given input parameters.
-def determine_beats(analysisGUI, raw_data, cm_beats, input_param):
+def determine_beats(analysisGUI, raw_data, cm_beats, input_param, 
+electrode_config):
     try:
         print("Finding beats...\n")
         start_time = time.process_time()
@@ -148,6 +149,9 @@ def determine_beats(analysisGUI, raw_data, cm_beats, input_param):
         cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
         cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
 
+        # Assign electrode labels to cm_beats.y_axis columns
+        cm_beats.y_axis.columns = electrode_config.electrode_names
+
         # Prints the output from the preceding operations.
         print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode[0]))
         print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode[0]))
@@ -172,7 +176,7 @@ def determine_beats(analysisGUI, raw_data, cm_beats, input_param):
 
 # Produces 4-subplot plot of peak finder data and graphs it.  Can be called via 
 # button. Will throw exception of data does not exist.
-def graph_beats(analysisGUI, cm_beats, input_param):
+def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
     try:
         cm_beats.axis1.cla()
         cm_beats.axis2.cla()
@@ -188,7 +192,7 @@ def graph_beats(analysisGUI, cm_beats, input_param):
         dist_without_nan = cm_beats.dist_beats.iloc[0:, 
                 input_param.elec_choice].values[mask_dist].astype('int64')
         cm_beats.axis1.plot(cm_beats.x_axis[dist_without_nan], 
-            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+            cm_beats.y_axis[electrode_config.electrode_names[input_param.elec_choice]].values[
                 dist_without_nan], "xr")
         cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
             input_param.elec_choice].values)
@@ -200,10 +204,10 @@ def graph_beats(analysisGUI, cm_beats, input_param):
         prom_without_nan = cm_beats.prom_beats.iloc[0:, 
             input_param.elec_choice].values[mask_prom].astype('int64')
         cm_beats.axis2.plot(cm_beats.x_axis[prom_without_nan], 
-            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+            cm_beats.y_axis[electrode_config.electrode_names[input_param.elec_choice]].values[
                 prom_without_nan], "ob")
-        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
-            input_param.elec_choice].values)
+        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis[
+            electrode_config.electrode_names[input_param.elec_choice]].values)
         cm_beats.axis2.legend(['prominence = ' + 
             str(input_param.parameter_prominence)], loc='lower left')
 
@@ -212,7 +216,8 @@ def graph_beats(analysisGUI, cm_beats, input_param):
         width_without_nan = cm_beats.width_beats.iloc[0:, 
             input_param.elec_choice].values[mask_width].astype('int64')
         cm_beats.axis3.plot(cm_beats.x_axis[width_without_nan], 
-            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+            cm_beats.y_axis[electrode_config.electrode_names[
+                input_param.elec_choice]].values[
                 width_without_nan], "vg")
         cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
             input_param.elec_choice].values)
@@ -224,10 +229,11 @@ def graph_beats(analysisGUI, cm_beats, input_param):
         thresh_without_nan = cm_beats.thresh_beats.iloc[0:, 
             input_param.elec_choice].values[mask_thresh].astype('int64')
         cm_beats.axis4.plot(cm_beats.x_axis[thresh_without_nan], 
-            cm_beats.y_axis.iloc[0:, input_param.elec_choice].values[
+            cm_beats.y_axis[electrode_config.electrode_names[
+                input_param.elec_choice]].values[
                 thresh_without_nan], "xk")
-        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
-            input_param.elec_choice].values)
+        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis[
+            electrode_config.electrode_names[input_param.elec_choice]].values)
         cm_beats.axis4.legend(['threshold = ' + 
             str(input_param.parameter_thresh)], loc='lower left')
 

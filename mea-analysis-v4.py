@@ -433,9 +433,11 @@ class MainGUI(tk.Frame):
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
         calc_menu.add_command(label="Beat Detect (Run First!)", 
-            command=lambda: [determine_beats.determine_beats(self, raw_data, cm_beats, input_param),
-                self.beat_detect_window(cm_beats, input_param),
-                determine_beats.graph_beats(self, cm_beats, input_param)])
+            command=lambda: [determine_beats.determine_beats(self, raw_data, 
+                cm_beats, input_param, electrode_config),
+                self.beat_detect_window(cm_beats, input_param, electrode_config),
+                determine_beats.graph_beats(self, cm_beats, input_param,
+                    electrode_config)])
         calc_menu.add_command(label="Calculate All (PM, LAT, dV/dt, CV)",
             command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
@@ -489,10 +491,10 @@ class MainGUI(tk.Frame):
                     conduction_vel), ])
         calc_menu.add_command(label="Beat Amplitude & Interval", 
             command=lambda: [self.beat_amp_int_window(cm_beats, pace_maker, 
-                beat_amp_int, input_param),
+                local_act_time, beat_amp_int, input_param, electrode_config),
                 calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
-                    beat_amp_int, pace_maker, heat_map, input_param, 
-                    electrode_config)])
+                    beat_amp_int, pace_maker, local_act_time, heat_map, 
+                    input_param, electrode_config)])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -690,7 +692,7 @@ class MainGUI(tk.Frame):
              "Up. Vel.", "Pacemaker", "Local AT"]
         # print(dir(self))
 
-    def beat_detect_window(self, cm_beats, input_param):
+    def beat_detect_window(self, cm_beats, input_param, electrode_config):
         beat_detect = tk.Toplevel(self)
         beat_detect.title('Beat Detect Window')
         beat_detect.geometry('1250x850')
@@ -714,7 +716,8 @@ class MainGUI(tk.Frame):
         # find peaks, after switching columns.
         graph_beats_button = tk.Button(beat_detect_frame, text="Graph Beats", 
             width=15, height=3, bg="red2",
-            command=lambda: determine_beats.graph_beats(self, cm_beats, input_param))
+            command=lambda: determine_beats.graph_beats(self, cm_beats, 
+                input_param, electrode_config))
         graph_beats_button.grid(row=0, rowspan=2, column=1, padx=2, pady=2)
 
     def pacemaker_heatmap_window(self, cm_beats, pace_maker, heat_map, input_param):
@@ -970,11 +973,12 @@ class MainGUI(tk.Frame):
         psd_toolbar = NavigationToolbar2Tk(psd_fig, psd_toolbar_frame)
     
 
-    def beat_amp_int_window(self, cm_beats, pace_maker, beat_amp_int, 
-    input_param):
+    def beat_amp_int_window(self, cm_beats, pace_maker, local_act_time,
+    beat_amp_int, input_param, electrode_config):
         beat_amp_window = tk.Toplevel(self)
         beat_amp_window.title("CV Vector Fields")
-        beat_amp_int_frame = tk.Frame(beat_amp_window, width=1400, height=900, bg="white")
+        beat_amp_int_frame = tk.Frame(beat_amp_window, width=1400, height=900, 
+            bg="white")
         beat_amp_int_frame.grid(row=0, column=0, padx=5, pady=5)
         beat_amp_int_frame.grid_propagate(False)
         beat_amp_int_fig = FigureCanvasTkAgg(beat_amp_int.amp_int_plot, beat_amp_int_frame)
@@ -985,7 +989,8 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.beat_amp_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.beat_amp_beat_select.bind("<ButtonRelease-1>",
-            lambda event: None)
+            lambda event: calculate_beat_amp_int.beat_amp_interval_graph(self,
+                electrode_config, beat_amp_int, local_act_time, input_param))
         
         # Frame for matplotlib navigation toolbar.
         amp_int_toolbar_frame = tk.Frame(beat_amp_window)
