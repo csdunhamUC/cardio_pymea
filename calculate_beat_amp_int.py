@@ -13,18 +13,17 @@ from scipy.optimize import curve_fit
 
 def calculate_beat_amp(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
-    print()
     # Obtain beat amplitudes using indices from pace_maker.raw data, values from
     # cm_beats.y_axis, store in variable beat_amp_int
     # cm_beats.y_axis format: columns = electrodes, rows = voltages
 
     # Find indices of electrodes with NaN values.
     nan_electrodes_idx = np.where(pace_maker.param_dist_raw['Beat 1'].isna())[0]
-    # Remove electrodes with NaN values for fitting modules (which cannot 
-    # handle NaN values)
+    # Remove electrodes with NaN values
     x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
     y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
-    # Generate 2xN, where N = number of non-NaN electrodes, of elec. coords.
+    # Generate 2xN matrix, where N = number of non-NaN electrodes, 
+    # of elec. coords.
     elec_nan_removed = np.array([x_elec, y_elec])
         
     # Generate new list with the electrode names with NaN values removed.
@@ -39,13 +38,7 @@ local_act_time, heat_map, input_param, electrode_config):
     for num, beat in enumerate(pace_maker.param_dist_raw):
         for num2, elec in enumerate(elec_removed_names):
             temp_idx = int(pace_maker.param_dist_raw.loc[elec, beat])
-            # print(temp_idx)
-            # Yields the wrong values from cm_beats.y_axis because elec doesn't
-            # exclude the bad channels.  Need to rework cm_beats.y_axis to have
-            # electrode names for columns.  Requires updating plotting functions
-            # in determine_beats as well.
             temp_amps[num2] = cm_beats.y_axis.loc[temp_idx, elec]
-            # print(temp_amps[num2])
         
         amps_array[num] = temp_amps.T
 
@@ -64,14 +57,20 @@ local_act_time, heat_map, input_param, electrode_config):
     beat_amp_int.beat_amp.insert(0, 'Electrode', electrode_config.electrode_names)
     beat_amp_int.beat_amp.insert(1, 'X', electrode_config.electrode_coords_x)
     beat_amp_int.beat_amp.insert(2, 'Y', electrode_config.electrode_coords_y)
-    print()
+    
+    calculate_beat_interval(beat_amp_int, pace_maker, input_param)
+
     beat_amp_interval_graph(analysisGUI, electrode_config, beat_amp_int, 
         local_act_time, input_param)
 
 
-def calculate_beat_interval():
-    print()
-    # Using pace_maker.raw data, calculate the time between each beat.
+def calculate_beat_interval(beat_amp_int, pace_maker, input_param):
+    # Using pace_maker.param_dist_raw data, calculate the time between each beat.
+    mean_beat_time = pace_maker.param_dist_raw.mean(axis=0, skipna=True)
+    mbt_start_removed = mean_beat_time.iloc[1:]
+    mbt_end_removed = mean_beat_time.iloc[:-1]
+    beat_amp_int.beat_interval = mbt_start_removed.values - mbt_end_removed.values
+    beat_amp_int.mean_beat_int = np.nanmean(beat_amp_int.beat_interval)
     # Calculation needs to take into account input_param.sample_frequency
 
 
@@ -95,19 +94,27 @@ local_act_time, input_param):
         columns='X', values='Electrode')
     heatmap_pivot_table = beat_amp_int.beat_amp.pivot(index='Y', 
         columns='X', values=curr_beat)
-
     beat_amp_int.beat_amp_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
         annot=electrode_names, fmt="", ax=beat_amp_int.axis1, cbar=False)
     mappable = beat_amp_int.beat_amp_temp.get_children()[0]
     beat_amp_int.amp_cbar = beat_amp_int.axis1.figure.colorbar(mappable, 
         ax=beat_amp_int.axis1)
     beat_amp_int.amp_cbar.ax.set_title("μV", fontsize=10)
+    beat_amp_int.axis1.set(title="Beat Amplitude")
+
+    # Plot beat intervals across dataset.
+    beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
+        beat_amp_int.beat_interval)
+    beat_amp_int.axis2.set(title="Beat Interval", xlabel="Beat", 
+        ylabel="Interval (ms)")
     
     # Statistical plot for beat amplitude vs distance, per beat.
     beat_amp_int.axis3.scatter(local_act_time.distance_from_min[curr_beat],
         beat_amp_int.beat_amp[curr_beat])
     beat_amp_int.axis3.set(title="Beat Amplitude vs Distance", 
         xlabel="Distance", ylabel="Beat Amplitude")
+
+    # What will axis4 be a plot of?
 
     beat_amp_int.amp_int_plot.tight_layout()
     beat_amp_int.amp_int_plot.canvas.draw()

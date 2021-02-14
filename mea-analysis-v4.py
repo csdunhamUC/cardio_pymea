@@ -976,25 +976,29 @@ class MainGUI(tk.Frame):
     def beat_amp_int_window(self, cm_beats, pace_maker, local_act_time,
     beat_amp_int, input_param, electrode_config):
         beat_amp_window = tk.Toplevel(self)
-        beat_amp_window.title("CV Vector Fields")
+        beat_amp_window.title("Beat Amplitude & Interval")
+        beat_amp_int_opt_frame = tk.Frame(beat_amp_window, width=1400, 
+            height=100, bg="white")
+        beat_amp_int_opt_frame.grid(row=0, column=0, padx=5, pady=5)
+        beat_amp_int_opt_frame.grid_propagate(False)
         beat_amp_int_frame = tk.Frame(beat_amp_window, width=1400, height=900, 
             bg="white")
-        beat_amp_int_frame.grid(row=0, column=0, padx=5, pady=5)
+        beat_amp_int_frame.grid(row=1, column=0, padx=5, pady=5)
         beat_amp_int_frame.grid_propagate(False)
         beat_amp_int_fig = FigureCanvasTkAgg(beat_amp_int.amp_int_plot, beat_amp_int_frame)
         beat_amp_int_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
-        self.beat_amp_beat_select = tk.Scale(beat_amp_int_frame, length=125, 
+        self.beat_amp_beat_select = tk.Scale(beat_amp_int_opt_frame, length=125, 
             width=15, from_=1,
             to=int(cm_beats.beat_count_dist_mode[0]),
             orient="horizontal", bg="white", label="Current Beat")
-        self.beat_amp_beat_select.grid(row=1, column=0, padx=5, pady=5)
+        self.beat_amp_beat_select.grid(row=0, column=0, padx=5, pady=5)
         self.beat_amp_beat_select.bind("<ButtonRelease-1>",
             lambda event: calculate_beat_amp_int.beat_amp_interval_graph(self,
                 electrode_config, beat_amp_int, local_act_time, input_param))
         
         # Frame for matplotlib navigation toolbar.
         amp_int_toolbar_frame = tk.Frame(beat_amp_window)
-        amp_int_toolbar_frame.grid(row=1, column=1, in_=beat_amp_int_frame)
+        amp_int_toolbar_frame.grid(row=0, column=1, in_=beat_amp_int_opt_frame)
         beat_amp_toolbar = NavigationToolbar2Tk(beat_amp_int_fig, 
             amp_int_toolbar_frame)
 
@@ -1084,7 +1088,7 @@ def main():
     conduction_vel.quiver_plot_axis = conduction_vel.quiver_plot.add_subplot(111)
 
     # Assorted plots for Beat Amplitude & Interval window.
-    beat_amp_int.amp_int_plot = plt.Figure(figsize=(10.5, 6), dpi=120)
+    beat_amp_int.amp_int_plot = plt.Figure(figsize=(10.5, 6.5), dpi=120)
     beat_amp_int.axis1 = beat_amp_int.amp_int_plot.add_subplot(221)
     beat_amp_int.axis2 = beat_amp_int.amp_int_plot.add_subplot(222)
     beat_amp_int.axis3 = beat_amp_int.amp_int_plot.add_subplot(223)
