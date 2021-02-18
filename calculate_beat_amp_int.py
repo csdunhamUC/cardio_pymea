@@ -89,6 +89,9 @@ local_act_time, input_param):
     start_beat = analysisGUI.amp_int_start_beat_value.get()
     end_beat = analysisGUI.amp_int_end_beat_value.get()
 
+    start_beat_idx = local_act_time.final_dist_beat_count.index(start_beat)
+    end_beat_idx = local_act_time.final_dist_beat_count.index(end_beat)
+
     if hasattr(beat_amp_int, 'amp_cbar') is True:
         beat_amp_int.amp_cbar.remove()
         delattr(beat_amp_int, 'amp_cbar')
@@ -124,7 +127,7 @@ local_act_time, input_param):
         xlabel="Distance", ylabel="Beat Amplitude (μV)")
 
     # What will axis4 be a plot of?  Let's try boxplot of beat amp.
-    beats_selected = beat_amp_int.beat_amp.columns[313:326]
+    beats_selected = beat_amp_int.beat_amp.columns[start_beat_idx+3:end_beat_idx+4]
     print(beats_selected)
     beat_amp_int.axis4.boxplot(beat_amp_int.beat_amp[beats_selected].dropna(),
         vert=True, patch_artist=True)
