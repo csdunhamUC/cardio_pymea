@@ -11,11 +11,15 @@ import seaborn as sns
 from scipy.optimize import curve_fit
 
 
+# Obtain beat amplitudes using indices from pace_maker.raw data, values from
+# cm_beats.y_axis, store in variable beat_amp_int
+# cm_beats.y_axis format: columns = electrodes, rows = voltages
 def calculate_beat_amp(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
-    # Obtain beat amplitudes using indices from pace_maker.raw data, values from
-    # cm_beats.y_axis, store in variable beat_amp_int
-    # cm_beats.y_axis format: columns = electrodes, rows = voltages
+    analysisGUI.amp_int_start_beat_value['values'] = (
+        pace_maker.final_dist_beat_count)
+    analysisGUI.amp_int_end_beat_value['values'] = (
+        pace_maker.final_dist_beat_count)
 
     # Find indices of electrodes with NaN values.
     nan_electrodes_idx = np.where(pace_maker.param_dist_raw['Beat 1'].isna())[0]
@@ -71,6 +75,7 @@ def calculate_beat_interval(beat_amp_int, pace_maker, input_param):
     mbt_end_removed = mean_beat_time.iloc[:-1]
     beat_amp_int.beat_interval = mbt_start_removed.values - mbt_end_removed.values
     beat_amp_int.mean_beat_int = np.nanmean(beat_amp_int.beat_interval)
+    print(beat_amp_int.mean_beat_int)
     # Calculation needs to take into account input_param.sample_frequency
 
 
@@ -80,6 +85,10 @@ local_act_time, input_param):
     beat_amp_int.axis2.cla()
     beat_amp_int.axis3.cla()
     beat_amp_int.axis4.cla()
+
+    start_beat = analysisGUI.amp_int_start_beat_value.get()
+    end_beat = analysisGUI.amp_int_end_beat_value.get()
+
     if hasattr(beat_amp_int, 'amp_cbar') is True:
         beat_amp_int.amp_cbar.remove()
         delattr(beat_amp_int, 'amp_cbar')
@@ -105,16 +114,23 @@ local_act_time, input_param):
     # Plot beat intervals across dataset.
     beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
         beat_amp_int.beat_interval)
-    beat_amp_int.axis2.set(title="Beat Interval", xlabel="Beat", 
+    beat_amp_int.axis2.set(title="Beat Interval", xlabel="Beat Pair", 
         ylabel="Interval (ms)")
     
     # Statistical plot for beat amplitude vs distance, per beat.
     beat_amp_int.axis3.scatter(local_act_time.distance_from_min[curr_beat],
         beat_amp_int.beat_amp[curr_beat])
     beat_amp_int.axis3.set(title="Beat Amplitude vs Distance", 
-        xlabel="Distance", ylabel="Beat Amplitude")
+        xlabel="Distance", ylabel="Beat Amplitude (μV)")
 
-    # What will axis4 be a plot of?
+    # What will axis4 be a plot of?  Let's try boxplot of beat amp.
+    beats_selected = beat_amp_int.beat_amp.columns[313:326]
+    print(beats_selected)
+    beat_amp_int.axis4.boxplot(beat_amp_int.beat_amp[beats_selected].dropna(),
+        vert=True, patch_artist=True)
+    beat_amp_int.axis4.set(title="Beat Amplitude Boxplot", 
+        ylabel="Amplitude (μV)")
+    beat_amp_int.axis4.set_xticklabels(labels=beats_selected, rotation = 45)
 
     beat_amp_int.amp_int_plot.tight_layout()
     beat_amp_int.amp_int_plot.canvas.draw()

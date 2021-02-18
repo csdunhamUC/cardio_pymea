@@ -88,7 +88,7 @@ electrode_config):
             str(input_param.parameter_thresh) + ", " + 
             str(input_param.sample_frequency) + "\n")
 
-        # For loops for finding beats (peaks) in each channel (electrode).  
+        # For loop for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
         # recorded (i.e. works for a single 120 or 60 electrode MEA.
         # Disclaimer: Not currently equipped to handle datasets with 
@@ -118,7 +118,8 @@ electrode_config):
                 height=input_param.min_peak_height,
                 distance=input_param.min_peak_dist, 
                 threshold=input_param.parameter_thresh)[0], name=column+1)
-            cm_beats.thresh_beats = pd.concat([cm_beats.thresh_beats, thresh_beats], axis='columns')
+            cm_beats.thresh_beats = pd.concat([cm_beats.thresh_beats, 
+                thresh_beats], axis='columns')
 
         # Data designation to ensure NaN values are properly handled by subsequent calculations.
         cm_beats.dist_beats.astype('float64')

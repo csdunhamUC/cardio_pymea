@@ -20,7 +20,8 @@
 import numpy as np
 import importlib
 from matplotlib import pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, 
+    NavigationToolbar2Tk)
 import pandas as pd
 # import dask.dataframe as dd
 import pandasgui as pgui
@@ -164,6 +165,7 @@ class ElectrodeConfig:
             '56A': [920, 1150], '58A': [920, 1610], '57A': [920, 1380]}
 
     def electrode_toggle(self, raw_data):
+        # If true, use 120 electrode config.  If false, use 60 electrode config.
         if raw_data.new_data_size[1] > 100:
             # Key values (electrode names) from mea_120_coordinates only.
             self.electrode_names = list(self.mea_120_coordinates.keys())
@@ -238,20 +240,19 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
 def reload_module():
     importlib.reload(param_vs_distance_stats)
     importlib.reload(calculate_cv)
-    # importlib.reload(determine_beats)
+    importlib.reload(determine_beats)
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
     importlib.reload(cv_quiver)
     importlib.reload(calculate_beat_amp_int)
-    print("Reloaded module.")
+    print("Reloaded modules.")
 
 
 # ##############################################################################
-# ############################# Graphing Starts ################################
+# ########################### Graphing All Starts ##############################
 # ##############################################################################
-
-# This function is called following the use of "Calculate All Parameters" from 
+# This function is called following the use of "Calculate All" from 
 # the drop-down menu and from the GUI slider on the main window.  It generates 
 # the heat maps observed in the main window of the program.
 # Graphing functions to produce heatmaps for individual parameters are located 
@@ -402,15 +403,15 @@ class MainGUI(tk.Frame):
     electrode_config, psd_data, beat_amp_int):
         tk.Frame.__init__(self, master)
         self.grid()
+        self.master = master
         self.winfo_toplevel().title("MEA Analysis - v4")
 
-        # Directory information for file import is stored here and called upon 
-        # by import function.  Default/initial "/"
+        # Directory information for file import is stored here and set by import 
+        # function.  Default/initial "/" for Linux.
         self.file_path = tk.StringVar()
         self.file_path.set("/")
 
-        ############################## Menu ####################################
-        self.master = master
+        ################################ Menus #################################
         menu = tk.Menu(self.master, tearoff=False)
         self.master.config(menu=menu)
         file_menu = tk.Menu(menu)
@@ -443,8 +444,8 @@ class MainGUI(tk.Frame):
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
-                calculate_lat.calculate_lat(self, cm_beats, local_act_time, heat_map, 
-                input_param, electrode_config),
+                calculate_lat.calculate_lat(self, cm_beats, local_act_time, 
+                heat_map, input_param, electrode_config),
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
                 conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
@@ -535,6 +536,7 @@ class MainGUI(tk.Frame):
         self.file_name_label = tk.Label(self.mea_parameters_frame, 
             text="No file", bg="white", wraplength=300)
         self.file_name_label.grid(row=0, column=11, columnspan=4, padx=5, pady=5)
+        
         self.file_length_label = tk.Label(self.mea_parameters_frame, 
             text="TBD", bg="white", wraplength=200)
         self.file_length_label.grid(row=1, column=11, columnspan=4, padx=5, pady=5)
@@ -543,6 +545,7 @@ class MainGUI(tk.Frame):
         self.min_peak_height_label = tk.Label(self.mea_parameters_frame, 
             text="Min Peak Height", bg="white", wraplength=80)
         self.min_peak_height_label.grid(row=0, column=1, padx=5, pady=2)
+        
         self.min_peak_height_val = tk.StringVar()
         self.min_peak_height_val.trace_add("write", self.min_peak_height_callback)
         self.min_peak_height_val.set("100")
@@ -554,6 +557,7 @@ class MainGUI(tk.Frame):
         self.min_peak_dist_label = tk.Label(self.mea_parameters_frame, 
             text="Min Peak Distance", bg="white", wraplength=80)
         self.min_peak_dist_label.grid(row=0, column=2, padx=5, pady=2)
+        
         self.min_peak_dist_val = tk.StringVar()
         self.min_peak_dist_val.trace_add("write", self.min_peak_dist_callback)
         self.min_peak_dist_val.set("1000")
@@ -565,6 +569,7 @@ class MainGUI(tk.Frame):
         self.parameter_prominence_label = tk.Label(self.mea_parameters_frame, 
             text="Peak Prominence", bg="white", wraplength=100)
         self.parameter_prominence_label.grid(row=0, column=3, padx=5, pady=2)
+        
         self.parameter_prominence_val = tk.StringVar()
         self.parameter_prominence_val.trace_add("write", self.parameter_prominence_callback)
         self.parameter_prominence_val.set("100")
@@ -576,6 +581,7 @@ class MainGUI(tk.Frame):
         self.parameter_width_label = tk.Label(self.mea_parameters_frame, 
             text="Peak Width", bg="white", wraplength=100)
         self.parameter_width_label.grid(row=0, column=4, padx=5, pady=2)
+        
         self.parameter_width_val = tk.StringVar()
         self.parameter_width_val.trace_add("write", self.parameter_width_callback)
         self.parameter_width_val.set("3")
@@ -587,6 +593,7 @@ class MainGUI(tk.Frame):
         self.parameter_thresh_label = tk.Label(self.mea_parameters_frame, 
             text="Peak Threshold", bg="white", wraplength=100)
         self.parameter_thresh_label.grid(row=0, column=5, padx=5, pady=2)
+        
         self.parameter_thresh_val = tk.StringVar()
         self.parameter_thresh_val.trace_add("write", self.parameter_thresh_callback)
         self.parameter_thresh_val.set("50")
@@ -598,6 +605,7 @@ class MainGUI(tk.Frame):
         self.sample_frequency_label = tk.Label(self.mea_parameters_frame,
             text="Sample Freq. (Hz)", bg="white", wraplength=100)
         self.sample_frequency_label.grid(row=0, column=6, padx=5, pady=2)
+        
         frequency_values = ('1000', '10000')
         self.sample_frequency_val = tk.StringVar()
         self.sample_frequency_val.set(frequency_values[0])
@@ -632,10 +640,11 @@ class MainGUI(tk.Frame):
         self.trunc_end_value.grid_remove()
 
         ############################### Heatmap ################################
-        # Frame and elements for pacemaker heat map plot.
+        # Frame and elements for MEA heat map plot.
         self.mea_heatmap_frame = tk.Frame(self, width=1620, height=800, bg="white")
         self.mea_heatmap_frame.grid(row=1, column=0, padx=5, pady=5)
         self.mea_heatmap_frame.grid_propagate(False)
+        
         self.gen_all_heatmap = FigureCanvasTkAgg(heat_map.curr_plot, self.mea_heatmap_frame)
         self.gen_all_heatmap.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         
@@ -647,6 +656,7 @@ class MainGUI(tk.Frame):
         self.mea_beat_select.bind("<ButtonRelease-1>",
             lambda event: graph_all(self, heat_map, cm_beats, pace_maker, 
                 upstroke_vel, local_act_time, conduction_vel, input_param))
+        
         self.toolbar_all_heatmap_frame = tk.Frame(self.mea_parameters_frame)
         self.toolbar_all_heatmap_frame.grid(row=0, column=10, rowspan=2, padx=5, pady=5)
         self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
@@ -677,7 +687,10 @@ class MainGUI(tk.Frame):
         self.psd_start_beat.set("Start (Beat)")
         self.psd_end_beat = tk.StringVar()
         self.psd_end_beat.set("End (Beat)")
-        self.psd_beats = ["Beat " + str(i) for i in range(1, 11)]
+        
+        # Establish initial beat choices for comboboxes in PSD, beat amp/int
+        self.psd_beats = self.amp_int_beats = ["Beat " + 
+            str(i) for i in range(1, 11)]
         
         self.psd_start_beat_value = None
         self.psd_end_beat_value = None
@@ -690,6 +703,15 @@ class MainGUI(tk.Frame):
         self.psd_param_default.set("Choose")
         self.psd_param_choice_opts = ["Orig. Signal", "Cond. Vel.",
              "Up. Vel.", "Pacemaker", "Local AT"]
+
+        self.amp_int_start_beat = tk.StringVar()
+        self.amp_int_start_beat.set("Start (Beat)")
+        self.amp_int_end_beat = tk.StringVar()
+        self.amp_int_end_beat.set("End (Beat)")
+        self.amp_int_start_beat_value = None
+        self.amp_int_end_beat_value = None
+        self.amp_int_electrode_choice = None
+
         # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param, electrode_config):
@@ -906,9 +928,9 @@ class MainGUI(tk.Frame):
             padx=5, pady=5)
         
         # Combobox for defining range of interest, in terms of beats.
-        psd_beat_interval_label = tk.Label(psd_window_options_frame, width=22,
+        psd_beat_range_label = tk.Label(psd_window_options_frame, width=22,
             bg="white smoke", text="Start/End Beats", borderwidth=1)
-        psd_beat_interval_label.grid(row=0, column=1, columnspan=2, padx=5,
+        psd_beat_range_label.grid(row=0, column=1, columnspan=2, padx=5,
             pady=2)
 
         self.psd_start_beat_value = ttk.Combobox(psd_window_options_frame, width=9, 
@@ -978,9 +1000,28 @@ class MainGUI(tk.Frame):
         beat_amp_window = tk.Toplevel(self)
         beat_amp_window.title("Beat Amplitude & Interval")
         beat_amp_int_opt_frame = tk.Frame(beat_amp_window, width=1400, 
-            height=100, bg="white")
+            height=80, bg="white")
         beat_amp_int_opt_frame.grid(row=0, column=0, padx=5, pady=5)
         beat_amp_int_opt_frame.grid_propagate(False)
+        
+        # Combobox for defining range of interest, in terms of beats.
+        amp_int_beat_range_label = tk.Label(beat_amp_int_opt_frame, width=22,
+            bg="white smoke", text="Start/End Beats", borderwidth=1)
+        amp_int_beat_range_label.grid(row=0, column=0, columnspan=2, padx=5,
+            pady=2)
+
+        self.amp_int_start_beat_value = ttk.Combobox(beat_amp_int_opt_frame, 
+            width=9, textvariable=self.amp_int_start_beat, 
+            values=self.amp_int_beats) # need to implement amp_int_beats
+        self.amp_int_start_beat_value.grid(row=1, column=0, padx=5, pady=2)
+        self.amp_int_start_beat_value.state(['readonly'])
+        
+        self.amp_int_end_beat_value = ttk.Combobox(beat_amp_int_opt_frame, width=9,
+            textvariable=self.amp_int_end_beat, values=self.amp_int_beats) # need to implement amp_int_beats
+        self.amp_int_end_beat_value.grid(row=1, column=1, padx=5, pady=2)
+        self.amp_int_end_beat_value.state(['readonly'])
+        
+        # Frame for beat amplitude and interval plots.
         beat_amp_int_frame = tk.Frame(beat_amp_window, width=1400, height=900, 
             bg="white")
         beat_amp_int_frame.grid(row=1, column=0, padx=5, pady=5)
@@ -991,14 +1032,14 @@ class MainGUI(tk.Frame):
             width=15, from_=1,
             to=int(cm_beats.beat_count_dist_mode[0]),
             orient="horizontal", bg="white", label="Current Beat")
-        self.beat_amp_beat_select.grid(row=0, column=0, padx=5, pady=5)
+        self.beat_amp_beat_select.grid(row=0, column=2, padx=5, pady=5)
         self.beat_amp_beat_select.bind("<ButtonRelease-1>",
             lambda event: calculate_beat_amp_int.beat_amp_interval_graph(self,
                 electrode_config, beat_amp_int, local_act_time, input_param))
         
         # Frame for matplotlib navigation toolbar.
         amp_int_toolbar_frame = tk.Frame(beat_amp_window)
-        amp_int_toolbar_frame.grid(row=0, column=1, in_=beat_amp_int_opt_frame)
+        amp_int_toolbar_frame.grid(row=0, column=3, in_=beat_amp_int_opt_frame)
         beat_amp_toolbar = NavigationToolbar2Tk(beat_amp_int_fig, 
             amp_int_toolbar_frame)
 
