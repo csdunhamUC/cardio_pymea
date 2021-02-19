@@ -16,10 +16,8 @@ from scipy.optimize import curve_fit
 # cm_beats.y_axis format: columns = electrodes, rows = voltages
 def calculate_beat_amp(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
-    analysisGUI.amp_int_start_beat_value['values'] = (
-        pace_maker.final_dist_beat_count)
-    analysisGUI.amp_int_end_beat_value['values'] = (
-        pace_maker.final_dist_beat_count)
+    
+    print("Calculating beat amplitude and interval.")
 
     # Find indices of electrodes with NaN values.
     nan_electrodes_idx = np.where(pace_maker.param_dist_raw['Beat 1'].isna())[0]
@@ -63,9 +61,7 @@ local_act_time, heat_map, input_param, electrode_config):
     beat_amp_int.beat_amp.insert(2, 'Y', electrode_config.electrode_coords_y)
     
     calculate_beat_interval(beat_amp_int, pace_maker, input_param)
-
-    beat_amp_interval_graph(analysisGUI, electrode_config, beat_amp_int, 
-        local_act_time, input_param)
+    print("Done.")
 
 
 def calculate_beat_interval(beat_amp_int, pace_maker, input_param):
@@ -85,6 +81,11 @@ local_act_time, input_param):
     beat_amp_int.axis2.cla()
     beat_amp_int.axis3.cla()
     beat_amp_int.axis4.cla()
+
+    analysisGUI.amp_int_start_beat_value['values'] = (
+        local_act_time.final_dist_beat_count)
+    analysisGUI.amp_int_end_beat_value['values'] = (
+        local_act_time.final_dist_beat_count)
 
     start_beat = analysisGUI.amp_int_start_beat_value.get()
     end_beat = analysisGUI.amp_int_end_beat_value.get()

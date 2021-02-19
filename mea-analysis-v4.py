@@ -411,6 +411,55 @@ class MainGUI(tk.Frame):
         self.file_path = tk.StringVar()
         self.file_path.set("/")
 
+        ####################### Assorted GUI StringVars ########################
+        self.elec_to_plot_val = tk.StringVar()
+        self.elec_to_plot_val.set("1")
+        self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
+        
+        self.pm_solo_beat_select = None
+        self.dvdt_solo_beat_select = None
+        self.lat_solo_beat_select = None
+        self.cv_solo_beat_select = None
+        self.param_vs_dist_beat_select = None
+        self.cv_vector_beat_select = None
+        
+        self.param_vs_dist_sigma_value = tk.StringVar()
+        self.param_vs_dist_sigma_value.set("3")
+        self.stat_readout_text = tk.StringVar()
+        self.stat_readout_text.set("TBD")
+        self.stat_file_name = tk.StringVar()
+        self.stat_file_name.set("No file")
+        self.psd_file_name = tk.StringVar()
+        self.psd_file_name.set("No file")
+        self.psd_start_beat = tk.StringVar()
+        self.psd_start_beat.set("Start (Beat)")
+        self.psd_end_beat = tk.StringVar()
+        self.psd_end_beat.set("End (Beat)")
+        
+        # Establish initial beat choices for comboboxes in PSD, beat amp/int
+        self.psd_beats = self.amp_int_beats = ["Beat " + 
+            str(i) for i in range(1, 11)]
+        
+        self.psd_start_beat_value = None
+        self.psd_end_beat_value = None
+        self.psd_electrode_choice = None
+        
+        self.psd_elec_choice = tk.StringVar()
+        self.psd_elec_choice.set("F7")
+        self.psd_electrodes = []
+        self.psd_param_default = tk.StringVar()
+        self.psd_param_default.set("Choose")
+        self.psd_param_choice_opts = ["Orig. Signal", "Cond. Vel.",
+             "Up. Vel.", "Pacemaker", "Local AT"]
+
+        self.amp_int_start_beat = tk.StringVar()
+        self.amp_int_start_beat.set("Beat 1")
+        self.amp_int_end_beat = tk.StringVar()
+        self.amp_int_end_beat.set("Beat 2")
+        self.amp_int_start_beat_value = None
+        self.amp_int_end_beat_value = None
+        self.amp_int_electrode_choice = None
+
         ################################ Menus #################################
         menu = tk.Menu(self.master, tearoff=False)
         self.master.config(menu=menu)
@@ -449,6 +498,9 @@ class MainGUI(tk.Frame):
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
                 conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
+                calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
+                beat_amp_int, pace_maker, local_act_time, heat_map, 
+                input_param, electrode_config),
                 graph_all(self, heat_map, cm_beats, pace_maker, upstroke_vel, 
                 local_act_time, conduction_vel, input_param)])
         # Add extra command for each solitary calculation that calls the 
@@ -484,18 +536,28 @@ class MainGUI(tk.Frame):
                 heat_map, input_param),
                 calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
                     conduction_vel, input_param)])
-        calc_menu.add_command(label="Cond. Vel. Vector Field",
+        calc_menu.add_command(label="Beat Amplitude & Interval", 
+            command=lambda: [calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
+                beat_amp_int, pace_maker, local_act_time, heat_map, 
+                input_param, electrode_config),
+                self.beat_amp_int_window(cm_beats, pace_maker, 
+                local_act_time, beat_amp_int, input_param, electrode_config),
+                calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                electrode_config, beat_amp_int, local_act_time, input_param)])
+
+        spec_plots_menu = tk.Menu(menu)
+        menu.add_cascade(label="Special Plots", menu=spec_plots_menu)
+        spec_plots_menu.add_command(label="Cond. Vel. Vector Field",
             command=lambda: [
                 self.cv_vector_window(cm_beats, local_act_time, conduction_vel, 
                 input_param),
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
                     conduction_vel), ])
-        calc_menu.add_command(label="Beat Amplitude & Interval", 
+        spec_plots_menu.add_command(label="Beat Amp & Interval Plots",
             command=lambda: [self.beat_amp_int_window(cm_beats, pace_maker, 
                 local_act_time, beat_amp_int, input_param, electrode_config),
-                calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
-                    beat_amp_int, pace_maker, local_act_time, heat_map, 
-                    input_param, electrode_config)])
+                calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                electrode_config, beat_amp_int, local_act_time, input_param)])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -661,57 +723,6 @@ class MainGUI(tk.Frame):
         self.toolbar_all_heatmap_frame.grid(row=0, column=10, rowspan=2, padx=5, pady=5)
         self.toolbar_all_heatmap = NavigationToolbar2Tk(self.gen_all_heatmap, self.toolbar_all_heatmap_frame)
 
-        # The following lines are for the GUI controls found in child 
-        # windows when doing beat detect or the individual,
-        # or solo, calculations for the respective parameter.
-        self.elec_to_plot_val = tk.StringVar()
-        self.elec_to_plot_val.set("1")
-        self.elec_to_plot_val.trace_add("write", self.col_sel_callback)
-        
-        self.pm_solo_beat_select = None
-        self.dvdt_solo_beat_select = None
-        self.lat_solo_beat_select = None
-        self.cv_solo_beat_select = None
-        self.param_vs_dist_beat_select = None
-        self.cv_vector_beat_select = None
-        
-        self.param_vs_dist_sigma_value = tk.StringVar()
-        self.param_vs_dist_sigma_value.set("3")
-        self.stat_readout_text = tk.StringVar()
-        self.stat_readout_text.set("TBD")
-        self.stat_file_name = tk.StringVar()
-        self.stat_file_name.set("No file")
-        self.psd_file_name = tk.StringVar()
-        self.psd_file_name.set("No file")
-        self.psd_start_beat = tk.StringVar()
-        self.psd_start_beat.set("Start (Beat)")
-        self.psd_end_beat = tk.StringVar()
-        self.psd_end_beat.set("End (Beat)")
-        
-        # Establish initial beat choices for comboboxes in PSD, beat amp/int
-        self.psd_beats = self.amp_int_beats = ["Beat " + 
-            str(i) for i in range(1, 11)]
-        
-        self.psd_start_beat_value = None
-        self.psd_end_beat_value = None
-        self.psd_electrode_choice = None
-        
-        self.psd_elec_choice = tk.StringVar()
-        self.psd_elec_choice.set("F7")
-        self.psd_electrodes = []
-        self.psd_param_default = tk.StringVar()
-        self.psd_param_default.set("Choose")
-        self.psd_param_choice_opts = ["Orig. Signal", "Cond. Vel.",
-             "Up. Vel.", "Pacemaker", "Local AT"]
-
-        self.amp_int_start_beat = tk.StringVar()
-        self.amp_int_start_beat.set("Start (Beat)")
-        self.amp_int_end_beat = tk.StringVar()
-        self.amp_int_end_beat.set("End (Beat)")
-        self.amp_int_start_beat_value = None
-        self.amp_int_end_beat_value = None
-        self.amp_int_electrode_choice = None
-
         # print(dir(self))
 
     def beat_detect_window(self, cm_beats, input_param, electrode_config):
@@ -818,9 +829,8 @@ class MainGUI(tk.Frame):
         cv_vector_fig = FigureCanvasTkAgg(conduction_vel.quiver_plot, cv_vector_frame)
         cv_vector_fig.get_tk_widget().grid(row=0, column=0, padx=5, pady=5)
         self.cv_vector_beat_select = tk.Scale(cv_vector_frame, length=125, 
-            width=15, from_=1,
-            to=int(cm_beats.beat_count_dist_mode[0]),
-            orient="horizontal", bg="white", label="Current Beat")
+            width=15, from_=1, to=10, orient="horizontal", bg="white", 
+            label="Current Beat")
         self.cv_vector_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.cv_vector_beat_select.bind("<ButtonRelease-1>",
             lambda event: cv_quiver.cv_quiver_plot(self, input_param, 
@@ -1032,14 +1042,14 @@ class MainGUI(tk.Frame):
             width=15, from_=1,
             to=int(cm_beats.beat_count_dist_mode[0]),
             orient="horizontal", bg="white", label="Current Beat")
-        self.beat_amp_beat_select.grid(row=0, column=2, padx=5, pady=5)
+        self.beat_amp_beat_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
         self.beat_amp_beat_select.bind("<ButtonRelease-1>",
             lambda event: calculate_beat_amp_int.beat_amp_interval_graph(self,
                 electrode_config, beat_amp_int, local_act_time, input_param))
         
         # Frame for matplotlib navigation toolbar.
         amp_int_toolbar_frame = tk.Frame(beat_amp_window)
-        amp_int_toolbar_frame.grid(row=0, column=3, in_=beat_amp_int_opt_frame)
+        amp_int_toolbar_frame.grid(row=0, rowspan=2, column=3, in_=beat_amp_int_opt_frame)
         beat_amp_toolbar = NavigationToolbar2Tk(beat_amp_int_fig, 
             amp_int_toolbar_frame)
 
