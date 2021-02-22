@@ -468,11 +468,9 @@ class MainGUI(tk.Frame):
         file_menu.add_command(label="Import Data (.csv or .txt)", 
             command=lambda: data_import(self, raw_data, electrode_config))
         file_menu.add_command(label="Save Processed Data", command=None)
-        file_menu.add_command(label="Save Heatmaps", command=None)
         file_menu.add_command(label="Print (Debug)", 
             command=lambda: data_print(self, raw_data, pace_maker, input_param,
             electrode_config))
-        file_menu.add_command(label="Truncate Data", command=None)
 
         view_menu = tk.Menu(menu)
         menu.add_cascade(label="View", menu=view_menu)

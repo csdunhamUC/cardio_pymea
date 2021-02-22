@@ -71,7 +71,7 @@ def calculate_beat_interval(beat_amp_int, pace_maker, input_param):
     mbt_end_removed = mean_beat_time.iloc[:-1]
     beat_amp_int.beat_interval = mbt_start_removed.values - mbt_end_removed.values
     beat_amp_int.mean_beat_int = np.nanmean(beat_amp_int.beat_interval)
-    print(beat_amp_int.mean_beat_int)
+    print("Mean beat interval: " + str(beat_amp_int.mean_beat_int))
     # Calculation needs to take into account input_param.sample_frequency
 
 
@@ -122,14 +122,15 @@ local_act_time, input_param):
         ylabel="Interval (ms)")
     
     # Statistical plot for beat amplitude vs distance, per beat.
+    # This plot isn't communicating much of value... need to consider something
+    # else.
     beat_amp_int.axis3.scatter(local_act_time.distance_from_min[curr_beat],
         beat_amp_int.beat_amp[curr_beat])
     beat_amp_int.axis3.set(title="Beat Amplitude vs Distance", 
         xlabel="Distance", ylabel="Beat Amplitude (μV)")
 
-    # What will axis4 be a plot of?  Let's try boxplot of beat amp.
+    # Boxplot of beat amp.
     beats_selected = beat_amp_int.beat_amp.columns[start_beat_idx+3:end_beat_idx+4]
-    print(beats_selected)
     beat_amp_int.axis4.boxplot(beat_amp_int.beat_amp[beats_selected].dropna(),
         vert=True, patch_artist=True)
     beat_amp_int.axis4.set(title="Beat Amplitude Boxplot", 
