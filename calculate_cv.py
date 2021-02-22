@@ -41,8 +41,8 @@ local_act_time, heat_map, input_param, electrode_config):
         # Generate 2xN, where N = number of non-NaN electrodes, of elec. coords.
         elec_nan_removed = np.array([x_elec, y_elec])
 
-        print(elec_nan_removed[0])
-        print(elec_nan_removed[1])
+        # print(elec_nan_removed[0])
+        # print(elec_nan_removed[1])
         
         # Generate new list with the electrode names with NaN values removed.
         elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]

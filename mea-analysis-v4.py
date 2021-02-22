@@ -5,8 +5,7 @@
 # Biochemistry
 # Laboratory PI: James K. Gimzewski
 # This is an original work, unless otherwise noted in comments, by CSD.
-# Technical start date: 7/22/2020
-# Effective start date: 9/10/2020
+
 # Designed to run on Python 3.6 or newer.  Programmed under Python 3.8.
 # Biggest known issues for Python versions earlier than 3.6:
 # 1) Use of dictionary to contain electrode coordinates (ordered vs unordered)
@@ -541,7 +540,8 @@ class MainGUI(tk.Frame):
                 self.beat_amp_int_window(cm_beats, pace_maker, 
                 local_act_time, beat_amp_int, input_param, electrode_config),
                 calculate_beat_amp_int.beat_amp_interval_graph(self, 
-                electrode_config, beat_amp_int, local_act_time, input_param)])
+                electrode_config, beat_amp_int, pace_maker, local_act_time, 
+                input_param)])
 
         spec_plots_menu = tk.Menu(menu)
         menu.add_cascade(label="Special Plots", menu=spec_plots_menu)
@@ -555,7 +555,8 @@ class MainGUI(tk.Frame):
             command=lambda: [self.beat_amp_int_window(cm_beats, pace_maker, 
                 local_act_time, beat_amp_int, input_param, electrode_config),
                 calculate_beat_amp_int.beat_amp_interval_graph(self, 
-                electrode_config, beat_amp_int, local_act_time, input_param)])
+                electrode_config, beat_amp_int, pace_maker, local_act_time, 
+                input_param)])
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -1043,7 +1044,8 @@ class MainGUI(tk.Frame):
         self.beat_amp_beat_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
         self.beat_amp_beat_select.bind("<ButtonRelease-1>",
             lambda event: calculate_beat_amp_int.beat_amp_interval_graph(self,
-                electrode_config, beat_amp_int, local_act_time, input_param))
+                electrode_config, beat_amp_int, pace_maker, local_act_time, 
+                input_param))
         
         # Frame for matplotlib navigation toolbar.
         amp_int_toolbar_frame = tk.Frame(beat_amp_window)

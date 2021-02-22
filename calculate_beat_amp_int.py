@@ -17,6 +17,12 @@ from scipy.optimize import curve_fit
 def calculate_beat_amp(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
     
+    if hasattr(beat_amp_int, 'beat_amp') is True:
+        print("Deleting previous data.")
+        delattr(beat_amp_int, 'beat_amp')
+        delattr(beat_amp_int, 'beat_interval')
+        delattr(beat_amp_int, 'mean_beat_int')
+
     print("Calculating beat amplitude and interval.")
 
     # Find indices of electrodes with NaN values.
@@ -60,11 +66,12 @@ local_act_time, heat_map, input_param, electrode_config):
     beat_amp_int.beat_amp.insert(1, 'X', electrode_config.electrode_coords_x)
     beat_amp_int.beat_amp.insert(2, 'Y', electrode_config.electrode_coords_y)
     
-    calculate_beat_interval(beat_amp_int, pace_maker, input_param)
+    calculate_beat_interval(beat_amp_int, pace_maker)
+    calculate_delta_amp(beat_amp_int)
     print("Done.")
 
 
-def calculate_beat_interval(beat_amp_int, pace_maker, input_param):
+def calculate_beat_interval(beat_amp_int, pace_maker):
     # Using pace_maker.param_dist_raw data, calculate the time between each beat.
     mean_beat_time = pace_maker.param_dist_raw.mean(axis=0, skipna=True)
     mbt_start_removed = mean_beat_time.iloc[1:]
@@ -75,8 +82,16 @@ def calculate_beat_interval(beat_amp_int, pace_maker, input_param):
     # Calculation needs to take into account input_param.sample_frequency
 
 
+def calculate_delta_amp(beat_amp_int):
+    mean_beat_amp = beat_amp_int.beat_amp.mean(axis=0, skipna=True)
+    mba_start_removed = mean_beat_amp.iloc[1:]
+    mba_end_removed = mean_beat_amp.iloc[:-1]
+    beat_amp_int.delta_beat_amp = mba_start_removed.values - mba_end_removed.values
+    print()
+
+
 def beat_amp_interval_graph(analysisGUI, electrode_config, beat_amp_int, 
-local_act_time, input_param):
+pace_maker, local_act_time, input_param):
     beat_amp_int.axis1.cla()
     beat_amp_int.axis2.cla()
     beat_amp_int.axis3.cla()
@@ -113,21 +128,32 @@ local_act_time, input_param):
     beat_amp_int.amp_cbar = beat_amp_int.axis1.figure.colorbar(mappable, 
         ax=beat_amp_int.axis1)
     beat_amp_int.amp_cbar.ax.set_title("μV", fontsize=10)
-    beat_amp_int.axis1.set(title="Beat Amplitude")
+    beat_amp_int.axis1.set(title="Beat Amplitude, " + str(curr_beat))
+
+    # Plot delta beat amplitude across dataset.
+    beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.delta_beat_amp) +1)), 
+        beat_amp_int.delta_beat_amp)
+    beat_amp_int.axis2.set(title="Delta Beat Amp", xlabel="Beat Pair", 
+        ylabel="Voltage (μV)")
 
     # Plot beat intervals across dataset.
-    beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
-        beat_amp_int.beat_interval)
-    beat_amp_int.axis2.set(title="Beat Interval", xlabel="Beat Pair", 
-        ylabel="Interval (ms)")
+    # beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
+    #     beat_amp_int.beat_interval)
+    # beat_amp_int.axis2.set(title="Beat Interval", xlabel="Beat Pair", 
+    #     ylabel="Interval (ms)")
     
     # Statistical plot for beat amplitude vs distance, per beat.
     # This plot isn't communicating much of value... need to consider something
-    # else.
-    beat_amp_int.axis3.scatter(local_act_time.distance_from_min[curr_beat],
-        beat_amp_int.beat_amp[curr_beat])
-    beat_amp_int.axis3.set(title="Beat Amplitude vs Distance", 
-        xlabel="Distance", ylabel="Beat Amplitude (μV)")
+    # else.  Max time lag per beat, perhaps?
+    beat_amp_int.axis3.scatter(np.arange(1, 
+        (len(pace_maker.param_dist_normalized_per_beat_max) +1)),
+        pace_maker.param_dist_normalized_per_beat_max)
+    # beat_amp_int.axis3.scatter(local_act_time.distance_from_min[curr_beat],
+    #     beat_amp_int.beat_amp[curr_beat])
+    beat_amp_int.axis3.set(title="Maximum Observed Time Lag vs Beat", 
+        xlabel="Beat", ylabel="Time Lag (ms)")
+    # beat_amp_int.axis3.set(title="Beat Amplitude vs Distance", 
+    #     xlabel="Distance", ylabel="Beat Amplitude (μV)")
 
     # Boxplot of beat amp.
     beats_selected = beat_amp_int.beat_amp.columns[start_beat_idx+3:end_beat_idx+4]

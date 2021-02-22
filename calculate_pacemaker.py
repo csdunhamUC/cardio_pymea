@@ -135,7 +135,10 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
 
         pace_maker.param_dist_raw = pace_maker.param_dist_raw.transpose()
 
-        # Find maximum time lag (interval)
+        # Find the maximum time lag per beat.
+        pace_maker.param_dist_normalized_per_beat_max = pace_maker.param_dist_normalized.max()
+
+        # Find maximum time lag (interval) in data set
         pace_maker.param_dist_normalized_max = pace_maker.param_dist_normalized.max().max()
 
         # Find the mean interval time.
