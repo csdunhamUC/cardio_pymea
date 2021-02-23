@@ -557,6 +557,8 @@ class MainGUI(tk.Frame):
                 calculate_beat_amp_int.beat_amp_interval_graph(self, 
                 electrode_config, beat_amp_int, pace_maker, local_act_time, 
                 input_param)])
+        spec_plots_menu.add_command(label="Manual Electrode Filter", 
+            command=None)
 
         statistics_menu = tk.Menu(menu)
         menu.add_cascade(label="Statistics", menu=statistics_menu)
@@ -573,7 +575,7 @@ class MainGUI(tk.Frame):
 
         tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Tools", menu=tools_menu)
-        tools_menu.add_command(label="Manual Electrode Filter", command=None)
+        tools_menu.add_command(label="None (To Be Added)", command=None)
 
         advanced_tools_menu = tk.Menu(menu)
         menu.add_cascade(label="Advanced Tools", menu=advanced_tools_menu)

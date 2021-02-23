@@ -87,7 +87,6 @@ def calculate_delta_amp(beat_amp_int):
     mba_start_removed = mean_beat_amp.iloc[1:]
     mba_end_removed = mean_beat_amp.iloc[:-1]
     beat_amp_int.delta_beat_amp = mba_start_removed.values - mba_end_removed.values
-    print()
 
 
 def beat_amp_interval_graph(analysisGUI, electrode_config, beat_amp_int, 
@@ -112,6 +111,10 @@ pace_maker, local_act_time, input_param):
         beat_amp_int.amp_cbar.remove()
         delattr(beat_amp_int, 'amp_cbar')
 
+    if hasattr(beat_amp_int, 'int_plot') is True:
+        beat_amp_int.int_plot.remove()
+        delattr(beat_amp_int, 'int_plot')
+
     input_param.beat_amp_int_slider = int(
         analysisGUI.beat_amp_beat_select.get()) - 1
     curr_beat = local_act_time.final_dist_beat_count[
@@ -131,10 +134,20 @@ pace_maker, local_act_time, input_param):
     beat_amp_int.axis1.set(title="Beat Amplitude, " + str(curr_beat))
 
     # Plot delta beat amplitude across dataset.
+    color = "tab:red"
     beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.delta_beat_amp) +1)), 
-        beat_amp_int.delta_beat_amp)
-    beat_amp_int.axis2.set(title="Delta Beat Amp", xlabel="Beat Pair", 
-        ylabel="Voltage (μV)")
+        beat_amp_int.delta_beat_amp, color=color)
+    beat_amp_int.axis2.set(title="Delta Beat Amp & Beat interval", 
+        xlabel="Beat Pair")
+    beat_amp_int.axis2.set_ylabel("Voltage (μV)", color=color)
+    beat_amp_int.axis2.tick_params(axis='y', labelcolor=color)
+
+    beat_amp_int.int_plot = beat_amp_int.axis2.twinx()
+    color = "tab:blue"
+    beat_amp_int.int_plot.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
+        beat_amp_int.beat_interval, color=color)
+    beat_amp_int.int_plot.set_ylabel("Beat Interval (ms)", color=color)
+    beat_amp_int.int_plot.tick_params(axis='y', labelcolor=color)
 
     # Plot beat intervals across dataset.
     # beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
