@@ -362,7 +362,13 @@ class AnalysisGUI(QMainWindow):
                 pace_maker, heat_map, input_param, electrode_config),
                 calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
                 input_param)])
-        self.calcMenu.addAction("&Calculate Local Act. Time")
+        self.calcMenu.addAction("&Calculate Local Act. Time",
+            lambda: [self.localActTimeWindow(cm_beats, local_act_time, heat_map, 
+                input_param),
+                calculate_lat.calculate_lat(self, cm_beats, local_act_time,
+                heat_map, input_param, electrode_config),
+                calculate_lat.graph_local_act_time(self, heat_map, 
+                local_act_time, input_param)])
         self.calcMenu.addAction("&Calculate Upstroke Velocity",
             lambda: [self.upVelocityWindow(cm_beats, upstroke_vel, heat_map,
                 input_param),
@@ -503,6 +509,9 @@ class AnalysisGUI(QMainWindow):
         self.latWindow = SoloHeatmapWindows()
         self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
         self.latWindow.show()
+        self.latWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_lat.graph_local_act_time(self, heat_map, local_act_time, 
+            input_param)])
 
     def condVelocityWindow(self, cm_beats, local_act_time, conduction_vel, 
     heat_map, input_param):

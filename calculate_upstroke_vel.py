@@ -66,7 +66,7 @@ input_param, electrode_config):
 
         # Set slider value to maximum number of beats
         analysisGUI.dvdtWindow.paramSlider.setMaximum(
-            int(cm_beats.beat_count_dist_mode[0]))
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
 
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.

@@ -70,7 +70,8 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         local_act_time.param_dist_normalized.name = 'Local Activation Time'
 
         # Set slider value to maximum number of beats
-        analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        analysisGUI.latWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
 
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.
@@ -207,8 +208,8 @@ def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
             heat_map.lat_solo_cbar.remove()
             delattr(heat_map, 'lat_solo_cbar')
         
-        heat_map.lat_solo_axis.cla()
-        input_param.lat_solo_beat_choice = int(analysisGUI.lat_solo_beat_select.get()) - 1
+        analysisGUI.latWindow.paramPlot.axes.cla()
+        input_param.lat_solo_beat_choice = analysisGUI.latWindow.paramSlider.value()
 
         electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
@@ -216,19 +217,19 @@ def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
             index='Y', columns='X', 
             values=local_act_time.final_dist_beat_count[input_param.lat_solo_beat_choice])
 
-        heat_map.lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", 
-            annot=electrode_names_3, fmt="", ax=heat_map.lat_solo_axis, 
+        lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", 
+            annot=electrode_names_3, fmt="", ax=analysisGUI.latWindow.paramPlot.axes, 
             vmax=local_act_time.param_dist_normalized_max, cbar=False)
-        mappable_3 = heat_map.lat_solo_temp.get_children()[0]
-        heat_map.lat_solo_cbar = heat_map.lat_solo_axis.figure.colorbar(mappable_3, 
-            ax=heat_map.lat_solo_axis)
+        mappable_3 = lat_solo_temp.get_children()[0]
+        heat_map.lat_solo_cbar = analysisGUI.latWindow.paramPlot.axes.figure.colorbar(mappable_3, 
+            ax=analysisGUI.latWindow.paramPlot.axes)
         heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        heat_map.lat_solo_axis.set(title="Local Activation Time, Beat " + 
+        analysisGUI.latWindow.paramPlot.axes.set(title="Local Activation Time, Beat " + 
             str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
-        heat_map.lat_solo_plot.tight_layout()
-        heat_map.lat_solo_plot.canvas.draw()
+        analysisGUI.latWindow.paramPlot.fig.tight_layout()
+        analysisGUI.latWindow.paramPlot.draw()
 
     except AttributeError:
         print("Please calculate LAT first.")
