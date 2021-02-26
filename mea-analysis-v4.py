@@ -33,7 +33,7 @@ import determine_beats_tk
 import calculate_pacemaker_tk
 import calculate_upstroke_vel_tk
 import calculate_lat_tk
-import calculate_cv
+import calculate_cv_tk
 import param_vs_distance_stats
 import psd_plotting
 import cv_quiver
@@ -237,7 +237,7 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
 # time vs re-running the program over and over.
 def reload_module():
     importlib.reload(param_vs_distance_stats)
-    importlib.reload(calculate_cv)
+    importlib.reload(calculate_cv_tk)
     importlib.reload(determine_beats_tk)
     # importlib.reload(calculate_lat_tk)
     # importlib.reload(calculate_upstroke_vel_tk)
@@ -491,7 +491,7 @@ class MainGUI(tk.Frame):
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_lat_tk.calculate_lat(self, cm_beats, local_act_time, 
                 heat_map, input_param, electrode_config),
-                calculate_cv.calculate_conduction_velocity(self, cm_beats, 
+                calculate_cv_tk.calculate_conduction_velocity(self, cm_beats, 
                 conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
                 calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
@@ -525,12 +525,12 @@ class MainGUI(tk.Frame):
                 calculate_lat_tk.graph_local_act_time(self, heat_map, 
                     local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", 
-            command=lambda: [calculate_cv.calculate_conduction_velocity(self, 
+            command=lambda: [calculate_cv_tk.calculate_conduction_velocity(self, 
                 cm_beats, conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
                 self.cv_heatmap_window(cm_beats, local_act_time, conduction_vel, 
                 heat_map, input_param),
-                calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
+                calculate_cv_tk.graph_conduction_vel(self, heat_map, local_act_time, 
                     conduction_vel, input_param)])
         calc_menu.add_command(label="Beat Amplitude & Interval", 
             command=lambda: [calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
@@ -816,7 +816,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.cv_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.cv_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
+            lambda event: calculate_cv_tk.graph_conduction_vel(self, heat_map, local_act_time, 
             conduction_vel, input_param))
     
     def cv_vector_window(self, cm_beats, local_act_time, conduction_vel, 
