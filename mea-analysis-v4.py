@@ -29,7 +29,7 @@ import os
 import tkinter as tk
 from tkinter import ttk
 import datetime
-import determine_beats
+import determine_beats_tk
 import calculate_pacemaker
 import calculate_upstroke_vel
 import calculate_lat
@@ -238,7 +238,7 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
 def reload_module():
     importlib.reload(param_vs_distance_stats)
     importlib.reload(calculate_cv)
-    importlib.reload(determine_beats)
+    importlib.reload(determine_beats_tk)
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
@@ -479,10 +479,10 @@ class MainGUI(tk.Frame):
         calc_menu = tk.Menu(menu)
         menu.add_cascade(label="Calculations", menu=calc_menu)
         calc_menu.add_command(label="Beat Detect (Run First!)", 
-            command=lambda: [determine_beats.determine_beats(self, raw_data, 
+            command=lambda: [determine_beats_tk.determine_beats(self, raw_data, 
                 cm_beats, input_param, electrode_config),
                 self.beat_detect_window(cm_beats, input_param, electrode_config),
-                determine_beats.graph_beats(self, cm_beats, input_param,
+                determine_beats_tk.graph_beats(self, cm_beats, input_param,
                     electrode_config)])
         calc_menu.add_command(label="Calculate All (PM, LAT, dV/dt, CV)",
             command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
@@ -749,7 +749,7 @@ class MainGUI(tk.Frame):
         # find peaks, after switching columns.
         graph_beats_button = tk.Button(beat_detect_frame, text="Graph Beats", 
             width=15, height=3, bg="red2",
-            command=lambda: determine_beats.graph_beats(self, cm_beats, 
+            command=lambda: determine_beats_tk.graph_beats(self, cm_beats, 
                 input_param, electrode_config))
         graph_beats_button.grid(row=0, rowspan=2, column=1, padx=2, pady=2)
 
