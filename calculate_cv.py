@@ -143,6 +143,9 @@ local_act_time, heat_map, input_param, electrode_config):
         conduction_vel.param_dist_raw.insert(1, 'X', electrode_config.electrode_coords_x)
         conduction_vel.param_dist_raw.insert(2, 'Y', electrode_config.electrode_coords_y)
 
+        analysisGUI.cvWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+
         end_time = time.process_time()
         print("CV calculation complete.")
         print(end_time - start_time)
@@ -230,8 +233,8 @@ input_param):
             heat_map.cv_solo_cbar.remove()
             delattr(heat_map, 'cv_solo_cbar')
         
-        heat_map.cv_solo_axis.cla()
-        input_param.cv_solo_beat_choice = int(analysisGUI.cv_solo_beat_select.get()) - 1
+        analysisGUI.cvWindow.paramPlot.axes.cla()
+        input_param.cv_solo_beat_choice = analysisGUI.cvWindow.paramSlider.value()
 
         electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
             columns='X', values='Electrode')
@@ -239,19 +242,19 @@ input_param):
             columns='X', values=local_act_time.final_dist_beat_count[
                 input_param.cv_solo_beat_choice])
 
-        heat_map.cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
-            annot=electrode_names_4, fmt="", ax=heat_map.cv_solo_axis, cbar=False)
-        mappable_4 = heat_map.cv_solo_temp.get_children()[0]
-        heat_map.cv_solo_cbar = heat_map.cv_solo_axis.figure.colorbar(mappable_4, 
-            ax=heat_map.cv_solo_axis)
+        cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
+            annot=electrode_names_4, fmt="", ax=analysisGUI.cvWindow.paramPlot.axes, cbar=False)
+        mappable_4 = cv_solo_temp.get_children()[0]
+        heat_map.cv_solo_cbar = analysisGUI.cvWindow.paramPlot.axes.figure.colorbar(mappable_4, 
+            ax=analysisGUI.cvWindow.paramPlot.axes)
         heat_map.cv_solo_cbar.ax.set_title("μm/(ms)", fontsize=10)
 
-        heat_map.cv_solo_axis.set(title="Conduction Velocity, Beat " + 
+        analysisGUI.cvWindow.paramPlot.axes.set(title="Conduction Velocity, Beat " + 
             str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
 
-        heat_map.cv_solo_plot.tight_layout()
-        heat_map.cv_solo_plot.canvas.draw()
+        analysisGUI.cvWindow.paramPlot.fig.tight_layout()
+        analysisGUI.cvWindow.paramPlot.draw()
 
     except AttributeError:
         print("Please make sure you've calculated Local Activation Time first.")

@@ -376,7 +376,14 @@ class AnalysisGUI(QMainWindow):
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.graph_upstroke(self, heat_map, 
                 upstroke_vel, input_param)])
-        self.calcMenu.addAction("&Calculate Conduction Velocity")
+        self.calcMenu.addAction("&Calculate Conduction Velocity",
+            lambda: [self.condVelocityWindow(cm_beats, local_act_time, 
+                conduction_vel, heat_map, input_param),
+                calculate_cv.calculate_conduction_velocity(self, cm_beats, 
+                conduction_vel, local_act_time, heat_map, input_param, 
+                electrode_config),
+                calculate_cv.graph_conduction_vel(self, heat_map, 
+                local_act_time, conduction_vel, input_param)])
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("&Special Plots")
@@ -518,6 +525,9 @@ class AnalysisGUI(QMainWindow):
         self.cvWindow = SoloHeatmapWindows()
         self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
         self.cvWindow.show()
+        self.cvWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
+            conduction_vel, input_param)])
 
     def condVelVectorWindow(self, cm_beats, local_act_time, conduction_vel, 
     input_param):
