@@ -11,7 +11,8 @@ import seaborn as sns
 
 
 # Calculates upstroke velocity (dV/dt)
-def calculate_upstroke_vel(analysisGUI, cm_beats, upstroke_vel, heat_map, input_param, electrode_config):
+def calculate_upstroke_vel(analysisGUI, cm_beats, upstroke_vel, heat_map, 
+input_param, electrode_config):
     try:
         if hasattr(upstroke_vel, 'param_dist_raw') is True:
             print("Clearing old dV/dt max data before running new calculation...")
@@ -64,7 +65,8 @@ def calculate_upstroke_vel(analysisGUI, cm_beats, upstroke_vel, heat_map, input_
         upstroke_vel.param_dist_normalized.name = 'Upstroke Velocity'
 
         # Set slider value to maximum number of beats
-        analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        analysisGUI.dvdtWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]))
 
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.
@@ -168,27 +170,27 @@ def graph_upstroke(analysisGUI, heat_map, upstroke_vel, input_param):
             heat_map.dvdt_solo_cbar.remove()
             delattr(heat_map, 'dvdt_solo_cbar')
 
-        heat_map.dvdt_solo_axis.cla()
-        input_param.dvdt_solo_beat_choice = int(analysisGUI.dvdt_solo_beat_select.get()) - 1
+        analysisGUI.dvdtWindow.paramPlot.axes.cla()
+        input_param.dvdt_solo_beat_choice = analysisGUI.dvdtWindow.paramSlider.value()
 
         electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
         heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
             columns='X', values=upstroke_vel.final_dist_beat_count[input_param.dvdt_solo_beat_choice])
 
-        heat_map.dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", 
-            annot=electrode_names_2, fmt="", ax=heat_map.dvdt_solo_axis, 
+        dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", 
+            annot=electrode_names_2, fmt="", ax=analysisGUI.dvdtWindow.paramPlot.axes, 
             vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
-        mappable_2 = heat_map.dvdt_solo_temp.get_children()[0]
-        heat_map.dvdt_solo_cbar = heat_map.dvdt_solo_axis.figure.colorbar(mappable_2, 
-            ax=heat_map.dvdt_solo_axis)
+        mappable_2 = dvdt_solo_temp.get_children()[0]
+        heat_map.dvdt_solo_cbar = analysisGUI.dvdtWindow.paramPlot.axes.figure.colorbar(mappable_2, 
+            ax=analysisGUI.dvdtWindow.paramPlot.axes)
         heat_map.dvdt_solo_cbar.ax.set_title("μV/ms", fontsize=10)
 
-        heat_map.dvdt_solo_axis.set(title="Upstroke Velocity, Beat " + 
+        analysisGUI.dvdtWindow.paramPlot.axes.set(title="Upstroke Velocity, Beat " + 
             str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
-        heat_map.dvdt_solo_plot.tight_layout()
-        heat_map.dvdt_solo_plot.canvas.draw()
+        analysisGUI.dvdtWindow.paramPlot.fig.tight_layout()
+        analysisGUI.dvdtWindow.paramPlot.draw()
 
     except AttributeError:
         print("Please calculate dV/dt first.")

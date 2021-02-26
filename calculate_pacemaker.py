@@ -11,7 +11,6 @@ from colorama import Style
 from colorama import init
 from colorama import deinit
 import seaborn as sns
-from matplotlib import pyplot as plt
 
 # Comment out init() if using Pycharm on Windows.
 init()

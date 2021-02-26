@@ -271,7 +271,7 @@ class MinorHeatmapCanvas(FigureCanvasQTAgg):
 
 
 class GenericPlotCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=5, dpi=100):
+    def __init__(self, parent=None, width=6, height=6, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
         self.axis1 = self.fig.add_subplot(221)
         self.axis2 = self.fig.add_subplot(222)
@@ -288,7 +288,7 @@ class SoloHeatmapWindows(QWidget):
 
     def setupUI(self):
         layout = QGridLayout()
-        self.paramPlot = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
+        self.paramPlot = MinorHeatmapCanvas(self, width=7, height=6, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
 
@@ -363,7 +363,13 @@ class AnalysisGUI(QMainWindow):
                 calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
                 input_param)])
         self.calcMenu.addAction("&Calculate Local Act. Time")
-        self.calcMenu.addAction("&Calculate Upstroke Velocity")
+        self.calcMenu.addAction("&Calculate Upstroke Velocity",
+            lambda: [self.upVelocityWindow(cm_beats, upstroke_vel, heat_map,
+                input_param),
+                calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
+                upstroke_vel, heat_map, input_param, electrode_config),
+                calculate_upstroke_vel.graph_upstroke(self, heat_map, 
+                upstroke_vel, input_param)])
         self.calcMenu.addAction("&Calculate Conduction Velocity")
 
         # Plot Menu
@@ -488,6 +494,9 @@ class AnalysisGUI(QMainWindow):
         self.dvdtWindow = SoloHeatmapWindows()
         self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
         self.dvdtWindow.show()
+        self.dvdtWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_upstroke_vel.graph_upstroke(self, heat_map, upstroke_vel, 
+            input_param)])
 
     def localActTimeWindow(self, cm_beats, local_act_time, heat_map, 
     input_param):
