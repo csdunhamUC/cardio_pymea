@@ -31,7 +31,7 @@ from tkinter import ttk
 import datetime
 import determine_beats_tk
 import calculate_pacemaker_tk
-import calculate_upstroke_vel
+import calculate_upstroke_vel_tk
 import calculate_lat
 import calculate_cv
 import param_vs_distance_stats
@@ -240,7 +240,7 @@ def reload_module():
     importlib.reload(calculate_cv)
     importlib.reload(determine_beats_tk)
     # importlib.reload(calculate_lat)
-    # importlib.reload(calculate_upstroke_vel)
+    # importlib.reload(calculate_upstroke_vel_tk)
     importlib.reload(psd_plotting)
     importlib.reload(cv_quiver)
     importlib.reload(calculate_beat_amp_int)
@@ -487,7 +487,7 @@ class MainGUI(tk.Frame):
         calc_menu.add_command(label="Calculate All (PM, LAT, dV/dt, CV)",
             command=lambda: [calculate_pacemaker_tk.calculate_pacemaker(self, 
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
-                calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
+                calculate_upstroke_vel_tk.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time, 
                 heat_map, input_param, electrode_config),
@@ -511,11 +511,11 @@ class MainGUI(tk.Frame):
                 calculate_pacemaker_tk.graph_pacemaker(self, heat_map, pace_maker, 
                     input_param)])
         calc_menu.add_command(label="Upstroke Velocity", 
-            command=lambda: [calculate_upstroke_vel.calculate_upstroke_vel(self, 
+            command=lambda: [calculate_upstroke_vel_tk.calculate_upstroke_vel(self, 
                 cm_beats, upstroke_vel, heat_map, input_param, electrode_config),
                 self.dvdt_heatmap_window(cm_beats, upstroke_vel, heat_map, 
                 input_param),
-                calculate_upstroke_vel.graph_upstroke(self, heat_map, 
+                calculate_upstroke_vel_tk.graph_upstroke(self, heat_map, 
                     upstroke_vel, input_param)])
         calc_menu.add_command(label="Local Activation Time", 
             command=lambda: [calculate_lat.calculate_lat(self, cm_beats, 
@@ -782,7 +782,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.dvdt_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.dvdt_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: calculate_upstroke_vel.graph_upstroke(self, heat_map, 
+            lambda event: calculate_upstroke_vel_tk.graph_upstroke(self, heat_map, 
                 upstroke_vel, input_param))
 
     def lat_heatmap_window(self, cm_beats, local_act_time, heat_map, input_param):
