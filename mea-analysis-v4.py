@@ -32,7 +32,7 @@ import datetime
 import determine_beats_tk
 import calculate_pacemaker_tk
 import calculate_upstroke_vel_tk
-import calculate_lat
+import calculate_lat_tk
 import calculate_cv
 import param_vs_distance_stats
 import psd_plotting
@@ -239,7 +239,7 @@ def reload_module():
     importlib.reload(param_vs_distance_stats)
     importlib.reload(calculate_cv)
     importlib.reload(determine_beats_tk)
-    # importlib.reload(calculate_lat)
+    # importlib.reload(calculate_lat_tk)
     # importlib.reload(calculate_upstroke_vel_tk)
     importlib.reload(psd_plotting)
     importlib.reload(cv_quiver)
@@ -489,7 +489,7 @@ class MainGUI(tk.Frame):
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel_tk.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
-                calculate_lat.calculate_lat(self, cm_beats, local_act_time, 
+                calculate_lat_tk.calculate_lat(self, cm_beats, local_act_time, 
                 heat_map, input_param, electrode_config),
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
                 conduction_vel, local_act_time, heat_map, input_param, 
@@ -518,11 +518,11 @@ class MainGUI(tk.Frame):
                 calculate_upstroke_vel_tk.graph_upstroke(self, heat_map, 
                     upstroke_vel, input_param)])
         calc_menu.add_command(label="Local Activation Time", 
-            command=lambda: [calculate_lat.calculate_lat(self, cm_beats, 
+            command=lambda: [calculate_lat_tk.calculate_lat(self, cm_beats, 
                 local_act_time, heat_map, input_param, electrode_config),
                 self.lat_heatmap_window(cm_beats, local_act_time, heat_map, 
                 input_param),
-                calculate_lat.graph_local_act_time(self, heat_map, 
+                calculate_lat_tk.graph_local_act_time(self, heat_map, 
                     local_act_time, input_param)])
         calc_menu.add_command(label="Conduction Velocity", 
             command=lambda: [calculate_cv.calculate_conduction_velocity(self, 
@@ -798,7 +798,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.lat_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.lat_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: calculate_lat.graph_local_act_time(self, heat_map, 
+            lambda event: calculate_lat_tk.graph_local_act_time(self, heat_map, 
                 local_act_time, input_param))
 
     def cv_heatmap_window(self, cm_beats, local_act_time, conduction_vel, 
