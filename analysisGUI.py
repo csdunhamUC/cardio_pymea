@@ -10,7 +10,7 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QMainWindow, 
     QPushButton, QWidget, QDialog, QSlider, QComboBox, QProgressBar, QLineEdit, 
-    QLabel, QFileDialog)
+    QLabel, QFileDialog, QCheckBox)
 from PyQt5.QtCore import QLine, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib import pyplot as plt
@@ -223,7 +223,10 @@ def data_import(analysisGUI, raw_data, electrode_config):
 class MainHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         fig = plt.Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
+        self.axis1 = fig.add_subplot(221)
+        self.axis2 = fig.add_subplot(222)
+        self.axis3 = fig.add_subplot(223)
+        self.axis4 = fig.add_subplot(224)
         super(MainHeatmapCanvas, self).__init__(fig)
 
 
@@ -231,7 +234,26 @@ class MinorHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         fig = plt.Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
+        
         super(MinorHeatmapCanvas, self).__init__(fig)
+
+
+class SoloParamWindows(QWidget):
+    def __init__(self):
+        super(SoloParamWindows, self).__init__()
+        self.setupUI()
+
+    def setupUI(self):
+        layout = QGridLayout()
+        self.paramPlot = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
+        self.paramSlider = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
+
+        layout.addWidget(self.paramPlot, 0, 0)
+        layout.addWidget(self.paramSlider, 1, 0)
+        layout.addWidget(paramToolbar, 2, 0)
+
+        self.setLayout(layout)
 
 
 def print_something():
@@ -239,31 +261,67 @@ def print_something():
 
 
 def print_slider(analysisGUI):
-    print(analysisGUI.slider.value())
+    print(analysisGUI.mainSlider.value())
+    print(analysisGUI.pkHeightEdit.text())
+
+
+def trunc_toggle(analysisGUI):
+    if analysisGUI.truncCheckbox.isChecked() == True:
+        analysisGUI.truncStartEdit.show()
+        analysisGUI.truncEndEdit.show()
+    elif analysisGUI.truncCheckbox.isChecked() == False:
+        analysisGUI.truncStartEdit.hide()
+        analysisGUI.truncEndEdit.hide()
+
+# Reloads given module.  This is used for testing/developing a module to save 
+# time vs re-running the program over and over.
+def reload_module():
+    importlib.reload(param_vs_distance_stats)
+    importlib.reload(calculate_cv)
+    importlib.reload(determine_beats)
+    # importlib.reload(calculate_lat)
+    # importlib.reload(calculate_upstroke_vel)
+    importlib.reload(psd_plotting)
+    importlib.reload(cv_quiver)
+    importlib.reload(calculate_beat_amp_int)
+    print("Reloaded modules.")
 
 
 class AnalysisGUI(QMainWindow):
-    def __init__(self, x_var, y_var, raw_data, electrode_config, parent=None):
+    def __init__(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
+    upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+    cm_stats, electrode_config, psd_data, beat_amp_int, parent=None):
         super().__init__(parent)
-        self.setup_UI(x_var, y_var, raw_data, electrode_config)
+        self.setup_UI(x_var, y_var, raw_data, cm_beats, pace_maker, 
+            upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+            cm_stats, electrode_config, psd_data, beat_amp_int,)
         self.file_path = "/"
 
-    def setup_UI(self, x_var, y_var, raw_data, electrode_config):
+    def setup_UI(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
+    upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+    cm_stats, electrode_config, psd_data, beat_amp_int,):
         self.setWindowTitle("Analysis GUI - PyQt Version 0.1")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
 
         # Menu options.
+        # File Menu
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction("&Import", lambda: data_import(self, 
             raw_data, electrode_config))
         self.fileMenu.addAction("&Save Processed Data")
         self.fileMenu.addAction("&Print (debug)", print_something)
         self.fileMenu.addAction("&Exit", self.close)
+        
+        # Calculation Menu
         self.calcMenu = self.menuBar().addMenu("&Calculations")
-        self.calcMenu.addAction("&Find Beats (Use First!)")
+        self.calcMenu.addAction("&Find Beats (Use First!)", 
+            lambda: [determine_beats.determine_beats(self, raw_data, cm_beats, 
+                input_param, electrode_config), self.determineBeatsWindow(
+                    cm_beats, input_param, electrode_config)])
         self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)")
-        self.calcMenu.addAction("&Calculate Pacemaker")
+        self.calcMenu.addAction("&Calculate Pacemaker", 
+            self.pacemakerWindow)
         self.calcMenu.addAction("&Calculate Local Act. Time")
         self.calcMenu.addAction("&Calculate Upstroke Velocity")
         self.calcMenu.addAction("&Calculate Conduction Velocity")
@@ -283,7 +341,7 @@ class AnalysisGUI(QMainWindow):
         self.advToolsMenu = self.menuBar().addMenu("&Advanced Tools")
 
         self.testingMenu = self.menuBar().addMenu("&Testing")
-        self.testingMenu.addAction("&Reload modules (debug)")
+        self.testingMenu.addAction("&Reload modules (debug)", reload_module)
 
         # Arrange Widgets using row, col grid arrangement.
         mainLayout = QGridLayout()
@@ -326,30 +384,53 @@ class AnalysisGUI(QMainWindow):
         self.pkThreshEdit.setText("50")
         paramLayout.addWidget(self.pkThresh, 0, 4)
         paramLayout.addWidget(self.pkThreshEdit, 1, 4)
-        self.sampleFreq = QLabel("Sample" + "\n" + "Frequency")
+        self.sampleFreq = QLabel("Sample" + "\n" + "Frequency (Hz)")
         self.sampleFreqEdit = QComboBox()
         self.sampleFreqEdit.setFixedWidth(100)
-        self.sampleFreqEdit.addItem("1000 Hz")
-        self.sampleFreqEdit.addItem("10,000 Hz")
+        self.sampleFreqEdit.addItem("1000")
+        self.sampleFreqEdit.addItem("10000")
         paramLayout.addWidget(self.sampleFreq, 0, 5)
         paramLayout.addWidget(self.sampleFreqEdit, 1, 5)
+        self.truncCheckbox = QCheckBox("Truncate Data")
+        self.truncCheckbox.clicked.connect(lambda: trunc_toggle(self))
+        self.truncStartEdit = QLineEdit()
+        self.truncStartEdit.setFixedWidth(55)
+        self.truncEndEdit = QLineEdit()
+        self.truncEndEdit.setFixedWidth(55)
+        paramLayout.addWidget(self.truncCheckbox, 0, 6, 1, 2)
+        paramLayout.addWidget(self.truncStartEdit, 1, 6)
+        paramLayout.addWidget(self.truncEndEdit, 1, 7)
+        self.truncStartEdit.setVisible(False)
+        self.truncEndEdit.setVisible(False)
         
         # Plots, linked to plotLayout widget
-        self.plotWindow = MainHeatmapCanvas(self, width=6, height=6, dpi=100)
+        self.mainHeatmap = MainHeatmapCanvas(self, width=10, height=8, dpi=100)
         # (row, column, rowspan, colspan)
-        plotLayout.addWidget(self.plotWindow, 2, 0, 1, 2)
-        self.plotWindow.axes.plot(x_var, y_var)
-        self.plotTwo = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
-        plotLayout.addWidget(self.plotTwo, 4, 0, 1, 2)
-        self.plotTwo.axes.plot(x_var, y_var)
-        self.slider = QSlider(Qt.Horizontal)
-        plotLayout.addWidget(self.slider, 3, 0)
-        self.slider.sliderReleased.connect(lambda: print_slider(self))
+        plotLayout.addWidget(self.mainHeatmap, 2, 0, 1, 2)
+        self.mainHeatmap.axis1.plot(x_var, y_var)
+
+        self.mainSlider = QSlider(Qt.Horizontal)
+        plotLayout.addWidget(self.mainSlider, 3, 0)
+        self.mainSlider.valueChanged.connect(lambda: print_slider(self))
+
+        mainToolbar = NavigationToolbar2QT(self.mainHeatmap, self)
+        plotLayout.addWidget(mainToolbar, 4, 0)
 
         # Add parameter and plot widgets to the main GUI layout, then display.
         mainLayout.addWidget(self.paramWidget, 0, 0)
         mainLayout.addWidget(self.plotWidget, 1, 0)
         self.mainWidget.setLayout(mainLayout)
+    
+    def determineBeatsWindow(self, cm_beats, input_param, electrode_config):
+        self.beatsWindow = SoloParamWindows()
+        self.beatsWindow.setWindowTitle("Beat Finder Results")
+        self.beatsWindow.paramPlot.axes.plot([1,2,3,4,5],[10,20,30,40,50])
+        self.beatsWindow.show()
+
+    def pacemakerWindow(self):
+        self.pmWindow = SoloParamWindows()
+        self.pmWindow.setWindowTitle("Pacemaker Results")
+        self.pmWindow.show()
 
 
 def main():
@@ -372,9 +453,16 @@ def main():
     x_var = [0,1,2,3,4,8]
     y_var = [10,20,30,40,50,60]
 
-    analysisGUI = AnalysisGUI(x_var, y_var, raw_data, electrode_config)
+    analysisGUI = AnalysisGUI(x_var, y_var, raw_data, cm_beats, pace_maker, 
+        upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+        cm_stats, electrode_config, psd_data, beat_amp_int,)
     # analysisGUI.resize(1200, 800)
     analysisGUI.show()
     sys.exit(app.exec_())
 
 main()
+
+############################## Dump for later. #################################
+    # self.plotTwo = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
+    # plotLayout.addWidget(self.plotTwo, 4, 0, 1, 2)
+    # self.plotTwo.axes.plot(x_var, y_var)

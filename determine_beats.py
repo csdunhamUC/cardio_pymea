@@ -26,22 +26,25 @@ electrode_config):
             delattr(cm_beats, 'width_beats')
             delattr(cm_beats, 'thresh_beats')
 
-        input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
-        input_param.min_peak_dist = float(analysisGUI.min_peak_dist_val.get())
-        input_param.min_peak_height = float(analysisGUI.min_peak_height_val.get())
-        input_param.parameter_prominence = float(analysisGUI.parameter_prominence_val.get())
-        input_param.parameter_width = float(analysisGUI.parameter_width_val.get())
-        input_param.parameter_thresh = float(analysisGUI.parameter_thresh_val.get())
-        input_param.sample_frequency = float(analysisGUI.sample_frequency_val.get())
+        # Needs fixing.
+        # input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
+        input_param.min_peak_dist = float(analysisGUI.pkDistEdit.text())
+        input_param.min_peak_height = float(analysisGUI.pkHeightEdit.text())
+        input_param.parameter_prominence = float(analysisGUI.pkPromEdit.text())
+        input_param.parameter_width = float(analysisGUI.pkWidthEdit.text())
+        input_param.parameter_thresh = float(analysisGUI.pkThreshEdit.text())
+        input_param.sample_frequency = float(analysisGUI.sampleFreqEdit.currentText())
 
         # file_length = # of rows / sample_freq --> # of seconds in data set 
         # multiply by 60s in 1 min --> number of minutes in data set (rounded)
         file_length = ((len(raw_data.imported.index) / 
             input_param.sample_frequency) / 60)
-        analysisGUI.file_length_label.configure(text=str(round(file_length, 2)) +
-            " minutes")
 
-        if analysisGUI.trunc_toggle_on_off.get() == False:
+        # Needs fixing
+        # analysisGUI.file_length_label.configure(text=str(round(file_length, 2)) +
+        #     " minutes")
+
+        if analysisGUI.truncCheckbox.isChecked() == False:
             print("Calculating using full data set.")
             cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
             # y_axis indexing ends at column -1, or second to last column, to 
@@ -50,9 +53,9 @@ electrode_config):
                 cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
             else:
                 cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
-        elif analysisGUI.trunc_toggle_on_off.get() == True:
-            trunc_start = float(analysisGUI.trunc_start_value.get())
-            trunc_end = float(analysisGUI.trunc_end_value.get())
+        elif analysisGUI.truncCheckbox.isChecked() == True:
+            trunc_start = float(analysisGUI.truncStartEdit.text())
+            trunc_end = float(analysisGUI.truncEndEdit.text())
             print("Truncating between {} and {} minutes.".format(
                 trunc_start, trunc_end))
             
