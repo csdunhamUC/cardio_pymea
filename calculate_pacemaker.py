@@ -11,6 +11,7 @@ from colorama import Style
 from colorama import init
 from colorama import deinit
 import seaborn as sns
+from matplotlib import pyplot as plt
 
 # Comment out init() if using Pycharm on Windows.
 init()
@@ -82,7 +83,8 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
             pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0).div(10)
 
         # Set slider value to maximum number of beats
-        analysisGUI.mea_beat_select.configure(to=int(cm_beats.beat_count_dist_mode[0]))
+        analysisGUI.pmWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
 
         # Find the number of excluded electrodes (removed for noise, etc)
         excluded_elec = np.count_nonzero(pace_maker.param_dist_normalized.count() == 0)
@@ -184,27 +186,30 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
             heat_map.pm_solo_cbar.remove()
             delattr(heat_map, 'pm_solo_cbar')
 
-        heat_map.pm_solo_axis.cla()
-        input_param.pm_solo_beat_choice = int(analysisGUI.pm_solo_beat_select.get()) - 1
+        analysisGUI.pmWindow.paramPlot.axes.cla()
+        input_param.pm_solo_beat_choice = analysisGUI.pmWindow.paramSlider.value()
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
         heatmap_pivot_table = pace_maker.param_dist_normalized.pivot(index='Y', 
-            columns='X', values=pace_maker.final_dist_beat_count[input_param.pm_solo_beat_choice])
+            columns='X', values=pace_maker.final_dist_beat_count[
+                input_param.pm_solo_beat_choice])
 
-        heat_map.pm_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
-            annot=electrode_names, fmt="", ax=heat_map.pm_solo_axis, vmin=0, 
+        pm_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
+            annot=electrode_names, fmt="", 
+            ax=analysisGUI.pmWindow.paramPlot.axes, vmin=0, 
             vmax=pace_maker.param_dist_normalized_max, cbar=False)
-        mappable = heat_map.pm_solo_temp.get_children()[0]
-        heat_map.pm_solo_cbar = heat_map.pm_solo_axis.figure.colorbar(mappable, 
-            ax=heat_map.pm_solo_axis)
+        mappable = pm_solo_temp.get_children()[0]
+        heat_map.pm_solo_cbar = (
+            analysisGUI.pmWindow.paramPlot.axes.figure.colorbar(mappable, 
+            ax=analysisGUI.pmWindow.paramPlot.axes))
         heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        heat_map.pm_solo_axis.set(title="Pacemaker, Beat " + 
+        analysisGUI.pmWindow.paramPlot.axes.set(title="Pacemaker, Beat " + 
             str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
-        heat_map.pm_solo_plot.tight_layout()
-        heat_map.pm_solo_plot.canvas.draw()
+        analysisGUI.pmWindow.paramPlot.fig.tight_layout()
+        analysisGUI.pmWindow.paramPlot.draw()
 
     except AttributeError:
         print("Please calculate PM first.")

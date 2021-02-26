@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (QApplication, QGridLayout, QMainWindow,
 from PyQt5.QtCore import QLine, Qt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -206,54 +207,18 @@ def data_import(analysisGUI, raw_data, electrode_config):
             datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         # Update file name display in GUI following import
-        # analysisGUI.file_name_label.configure(text=import_filename)
+        analysisGUI.fileName.setText(import_filename)
         analysisGUI.file_path = import_path
 
-        print(analysisGUI.file_path)
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
         electrode_config.electrode_toggle(raw_data)
+        print(analysisGUI.file_path)
 
     except FileNotFoundError:
         print()
     except TypeError:
         print()
-
-
-class MainHeatmapCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=5, dpi=100):
-        fig = plt.Figure(figsize=(width, height), dpi=dpi)
-        self.axis1 = fig.add_subplot(221)
-        self.axis2 = fig.add_subplot(222)
-        self.axis3 = fig.add_subplot(223)
-        self.axis4 = fig.add_subplot(224)
-        super(MainHeatmapCanvas, self).__init__(fig)
-
-
-class MinorHeatmapCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=5, height=5, dpi=100):
-        fig = plt.Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
-        
-        super(MinorHeatmapCanvas, self).__init__(fig)
-
-
-class SoloParamWindows(QWidget):
-    def __init__(self):
-        super(SoloParamWindows, self).__init__()
-        self.setupUI()
-
-    def setupUI(self):
-        layout = QGridLayout()
-        self.paramPlot = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
-        self.paramSlider = QSlider(Qt.Horizontal)
-        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
-
-        layout.addWidget(self.paramPlot, 0, 0)
-        layout.addWidget(self.paramSlider, 1, 0)
-        layout.addWidget(paramToolbar, 2, 0)
-
-        self.setLayout(layout)
 
 
 def print_something():
@@ -287,14 +252,81 @@ def reload_module():
     print("Reloaded modules.")
 
 
+# Classes for the plots of GUI.
+class MainHeatmapCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=5, dpi=100):
+        self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
+        self.axis1 = self.fig.add_subplot(221)
+        self.axis2 = self.fig.add_subplot(222)
+        self.axis3 = self.fig.add_subplot(223)
+        self.axis4 = self.fig.add_subplot(224)
+        super(MainHeatmapCanvas, self).__init__(self.fig)
+
+
+class MinorHeatmapCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=5, dpi=100):
+        self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
+        self.axes = self.fig.add_subplot(111)
+        super(MinorHeatmapCanvas, self).__init__(self.fig)
+
+
+class GenericPlotCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=5, height=5, dpi=100):
+        self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
+        self.axis1 = self.fig.add_subplot(221)
+        self.axis2 = self.fig.add_subplot(222)
+        self.axis3 = self.fig.add_subplot(223)
+        self.axis4 = self.fig.add_subplot(224)
+        super(GenericPlotCanvas, self).__init__(self.fig)
+
+
+# Classes for the actual GUI windows
+class SoloHeatmapWindows(QWidget):
+    def __init__(self):
+        super(SoloHeatmapWindows, self).__init__()
+        self.setupUI()
+
+    def setupUI(self):
+        layout = QGridLayout()
+        self.paramPlot = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
+        self.paramSlider = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
+
+        layout.addWidget(self.paramPlot, 0, 0)
+        layout.addWidget(self.paramSlider, 1, 0)
+        layout.addWidget(paramToolbar, 2, 0)
+
+        self.setLayout(layout)
+
+
+class GeneralPlotWindows(QWidget):
+    def __init__(self):
+        super(GeneralPlotWindows, self).__init__()
+        self.setupUI()
+
+    def setupUI(self):
+        layout = QGridLayout()
+        self.paramPlot = GenericPlotCanvas(self, width=7, height=7, dpi=100)
+        self.paramSlider = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
+
+        layout.addWidget(self.paramPlot, 0, 0)
+        layout.addWidget(self.paramSlider, 1, 0)
+        layout.addWidget(paramToolbar, 2, 0)
+
+        self.setLayout(layout)
+
+
 class AnalysisGUI(QMainWindow):
     def __init__(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
     cm_stats, electrode_config, psd_data, beat_amp_int, parent=None):
         super().__init__(parent)
+        # Function call to establish GUI widgets
         self.setup_UI(x_var, y_var, raw_data, cm_beats, pace_maker, 
             upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
             cm_stats, electrode_config, psd_data, beat_amp_int,)
+        # Initial file path
         self.file_path = "/"
 
     def setup_UI(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
@@ -316,28 +348,38 @@ class AnalysisGUI(QMainWindow):
         # Calculation Menu
         self.calcMenu = self.menuBar().addMenu("&Calculations")
         self.calcMenu.addAction("&Find Beats (Use First!)", 
-            lambda: [determine_beats.determine_beats(self, raw_data, cm_beats, 
-                input_param, electrode_config), self.determineBeatsWindow(
-                    cm_beats, input_param, electrode_config)])
+            lambda: [self.determineBeatsWindow(cm_beats, input_param, 
+                electrode_config),
+                determine_beats.determine_beats(self, raw_data, cm_beats, 
+                input_param, electrode_config),
+                determine_beats.graph_beats(self, cm_beats, input_param, 
+                electrode_config)])
         self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)")
         self.calcMenu.addAction("&Calculate Pacemaker", 
-            self.pacemakerWindow)
+            lambda: [self.pacemakerWindow(cm_beats, pace_maker, heat_map, 
+                input_param),
+                calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
+                pace_maker, heat_map, input_param, electrode_config),
+                calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
+                input_param)])
         self.calcMenu.addAction("&Calculate Local Act. Time")
         self.calcMenu.addAction("&Calculate Upstroke Velocity")
         self.calcMenu.addAction("&Calculate Conduction Velocity")
 
+        # Plot Menu
         self.plotMenu = self.menuBar().addMenu("&Special Plots")
         self.plotMenu.addAction("&Cond. Vel. Vector Field")
         self.plotMenu.addAction("&Beat Amplitude & Interval")
         self.plotMenu.addAction("&Manual Electrode Filter")
 
+        # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
         self.statMenu.addAction("&Param vs Distance w/ R-value")
         self.statMenu.addAction("&Power Spectrum")
 
-        # To be filled later
+        # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
-        # To be filled later
+        # Advanced Tools Menu (ML, etc); To be filled later
         self.advToolsMenu = self.menuBar().addMenu("&Advanced Tools")
 
         self.testingMenu = self.menuBar().addMenu("&Testing")
@@ -391,6 +433,7 @@ class AnalysisGUI(QMainWindow):
         self.sampleFreqEdit.addItem("10000")
         paramLayout.addWidget(self.sampleFreq, 0, 5)
         paramLayout.addWidget(self.sampleFreqEdit, 1, 5)
+        # Truncation widgets.
         self.truncCheckbox = QCheckBox("Truncate Data")
         self.truncCheckbox.clicked.connect(lambda: trunc_toggle(self))
         self.truncStartEdit = QLineEdit()
@@ -402,6 +445,9 @@ class AnalysisGUI(QMainWindow):
         paramLayout.addWidget(self.truncEndEdit, 1, 7)
         self.truncStartEdit.setVisible(False)
         self.truncEndEdit.setVisible(False)
+        # File name label.
+        self.fileName = QLabel("Waiting for file.")
+        paramLayout.addWidget(self.fileName, 0, 8)
         
         # Plots, linked to plotLayout widget
         self.mainHeatmap = MainHeatmapCanvas(self, width=10, height=8, dpi=100)
@@ -422,15 +468,65 @@ class AnalysisGUI(QMainWindow):
         self.mainWidget.setLayout(mainLayout)
     
     def determineBeatsWindow(self, cm_beats, input_param, electrode_config):
-        self.beatsWindow = SoloParamWindows()
+        self.beatsWindow = GeneralPlotWindows()
         self.beatsWindow.setWindowTitle("Beat Finder Results")
-        self.beatsWindow.paramPlot.axes.plot([1,2,3,4,5],[10,20,30,40,50])
+        # self.beatsWindow.paramPlot.axis1.plot([1,2,3,4,5],[10,20,30,40,50])
         self.beatsWindow.show()
+        self.beatsWindow.paramSlider.valueChanged.connect(lambda: [
+            determine_beats.graph_beats(self, cm_beats, input_param, 
+            electrode_config)])
 
-    def pacemakerWindow(self):
-        self.pmWindow = SoloParamWindows()
+    def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
+        self.pmWindow = SoloHeatmapWindows()
         self.pmWindow.setWindowTitle("Pacemaker Results")
         self.pmWindow.show()
+        self.pmWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
+            input_param)])
+
+    def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):
+        self.dvdtWindow = SoloHeatmapWindows()
+        self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
+        self.dvdtWindow.show()
+
+    def localActTimeWindow(self, cm_beats, local_act_time, heat_map, 
+    input_param):
+        self.latWindow = SoloHeatmapWindows()
+        self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
+        self.latWindow.show()
+
+    def condVelocityWindow(self, cm_beats, local_act_time, conduction_vel, 
+    heat_map, input_param):
+        self.cvWindow = SoloHeatmapWindows()
+        self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
+        self.cvWindow.show()
+
+    def condVelVectorWindow(self, cm_beats, local_act_time, conduction_vel, 
+    input_param):
+        self.cvVectWindow = GeneralPlotWindows()
+        self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
+        self.cvVectWindow.show()
+
+    # This probably needs a new class for its window, as there's a lot of info
+    # to display that the other windows don't need.
+    def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
+    local_act_time, conduction_vel, input_param, cm_stats):
+        self.pvdWindow = GeneralPlotWindows()
+        self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
+        self.pvdWindow.show()
+
+    def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
+    upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
+    psd_data):
+        self.psdWindow = GeneralPlotWindows()
+        self.psdWindow.setWindowTitle("Power Spectra")
+        self.psdWindow.show()
+
+    def beatAmpIntWindow(self, cm_beats, pace_maker, local_act_time,
+    beat_amp_int, input_param, electrode_config):
+        self.ampIntWindow = GeneralPlotWindows()
+        self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
+        self.ampIntWindow.show()
 
 
 def main():

@@ -78,6 +78,9 @@ electrode_config):
         print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)))
         print("Number of rows in cm_beats.y_axis: " + str(len(cm_beats.y_axis)) + "\n")
 
+        analysisGUI.beatsWindow.paramSlider.setMaximum(
+            len(cm_beats.y_axis.columns) - 1)
+
         # Establish "strucs" as dataframes for subsequent operations.
         cm_beats.dist_beats = pd.DataFrame()
         cm_beats.prom_beats = pd.DataFrame()
@@ -182,66 +185,69 @@ electrode_config):
 # button. Will throw exception of data does not exist.
 def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
     try:
-        cm_beats.axis1.cla()
-        cm_beats.axis2.cla()
-        cm_beats.axis3.cla()
-        cm_beats.axis4.cla()
+        analysisGUI.beatsWindow.paramPlot.axis1.cla()
+        analysisGUI.beatsWindow.paramPlot.axis2.cla()
+        analysisGUI.beatsWindow.paramPlot.axis3.cla()
+        analysisGUI.beatsWindow.paramPlot.axis4.cla()
 
-        input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
-        print("Generating graph for electrode " + str(input_param.elec_choice + 1) + ".")
-        cm_beats.comp_plot.suptitle("Comparisons of find_peaks methodologies: electrode " + (str(input_param.elec_choice + 1)) + ".")
+        input_param.elec_choice = analysisGUI.beatsWindow.paramSlider.value()
+        print("Generating graph for electrode " + 
+            str(input_param.elec_choice + 1) + ".")
+        analysisGUI.beatsWindow.paramPlot.fig.suptitle(
+            "Comparisons of find_peaks methodologies: electrode " + 
+            (str(input_param.elec_choice + 1)) + ".")
 
         mask_dist = ~np.isnan(cm_beats.dist_beats.iloc[0:, 
             input_param.elec_choice].values)
         dist_without_nan = cm_beats.dist_beats.iloc[0:, 
                 input_param.elec_choice].values[mask_dist].astype('int64')
-        cm_beats.axis1.plot(cm_beats.x_axis[dist_without_nan], 
+        analysisGUI.beatsWindow.paramPlot.axis1.plot(cm_beats.x_axis[dist_without_nan], 
             cm_beats.y_axis[electrode_config.electrode_names[input_param.elec_choice]].values[
                 dist_without_nan], "xr")
-        cm_beats.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
+        analysisGUI.beatsWindow.paramPlot.axis1.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
             input_param.elec_choice].values)
-        cm_beats.axis1.legend(['distance = ' + 
-            str(analysisGUI.min_peak_dist_val.get())], loc='lower left')
+        analysisGUI.beatsWindow.paramPlot.axis1.legend(['distance = ' + 
+            str(input_param.min_peak_dist)], loc='lower left')
 
         mask_prom = ~np.isnan(cm_beats.prom_beats.iloc[0:, 
             input_param.elec_choice].values)
         prom_without_nan = cm_beats.prom_beats.iloc[0:, 
             input_param.elec_choice].values[mask_prom].astype('int64')
-        cm_beats.axis2.plot(cm_beats.x_axis[prom_without_nan], 
+        analysisGUI.beatsWindow.paramPlot.axis2.plot(cm_beats.x_axis[prom_without_nan], 
             cm_beats.y_axis[electrode_config.electrode_names[input_param.elec_choice]].values[
                 prom_without_nan], "ob")
-        cm_beats.axis2.plot(cm_beats.x_axis, cm_beats.y_axis[
+        analysisGUI.beatsWindow.paramPlot.axis2.plot(cm_beats.x_axis, cm_beats.y_axis[
             electrode_config.electrode_names[input_param.elec_choice]].values)
-        cm_beats.axis2.legend(['prominence = ' + 
+        analysisGUI.beatsWindow.paramPlot.axis2.legend(['prominence = ' + 
             str(input_param.parameter_prominence)], loc='lower left')
 
         mask_width = ~np.isnan(cm_beats.width_beats.iloc[0:, 
             input_param.elec_choice].values)
         width_without_nan = cm_beats.width_beats.iloc[0:, 
             input_param.elec_choice].values[mask_width].astype('int64')
-        cm_beats.axis3.plot(cm_beats.x_axis[width_without_nan], 
+        analysisGUI.beatsWindow.paramPlot.axis3.plot(cm_beats.x_axis[width_without_nan], 
             cm_beats.y_axis[electrode_config.electrode_names[
                 input_param.elec_choice]].values[
                 width_without_nan], "vg")
-        cm_beats.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
+        analysisGUI.beatsWindow.paramPlot.axis3.plot(cm_beats.x_axis, cm_beats.y_axis.iloc[0:, 
             input_param.elec_choice].values)
-        cm_beats.axis3.legend(['width = ' + 
+        analysisGUI.beatsWindow.paramPlot.axis3.legend(['width = ' + 
             str(input_param.parameter_width)], loc='lower left')
 
         mask_thresh = ~np.isnan(cm_beats.thresh_beats.iloc[0:, 
             input_param.elec_choice].values)
         thresh_without_nan = cm_beats.thresh_beats.iloc[0:, 
             input_param.elec_choice].values[mask_thresh].astype('int64')
-        cm_beats.axis4.plot(cm_beats.x_axis[thresh_without_nan], 
+        analysisGUI.beatsWindow.paramPlot.axis4.plot(cm_beats.x_axis[thresh_without_nan], 
             cm_beats.y_axis[electrode_config.electrode_names[
                 input_param.elec_choice]].values[
                 thresh_without_nan], "xk")
-        cm_beats.axis4.plot(cm_beats.x_axis, cm_beats.y_axis[
+        analysisGUI.beatsWindow.paramPlot.axis4.plot(cm_beats.x_axis, cm_beats.y_axis[
             electrode_config.electrode_names[input_param.elec_choice]].values)
-        cm_beats.axis4.legend(['threshold = ' + 
+        analysisGUI.beatsWindow.paramPlot.axis4.legend(['threshold = ' + 
             str(input_param.parameter_thresh)], loc='lower left')
 
-        cm_beats.comp_plot.canvas.draw()
+        analysisGUI.beatsWindow.paramPlot.draw()
         print("Plotting complete.")
     except AttributeError:
         print("Please use Find Peaks first.")
