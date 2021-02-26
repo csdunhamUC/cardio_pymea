@@ -30,7 +30,7 @@ import tkinter as tk
 from tkinter import ttk
 import datetime
 import determine_beats_tk
-import calculate_pacemaker
+import calculate_pacemaker_tk
 import calculate_upstroke_vel
 import calculate_lat
 import calculate_cv
@@ -485,7 +485,7 @@ class MainGUI(tk.Frame):
                 determine_beats_tk.graph_beats(self, cm_beats, input_param,
                     electrode_config)])
         calc_menu.add_command(label="Calculate All (PM, LAT, dV/dt, CV)",
-            command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
+            command=lambda: [calculate_pacemaker_tk.calculate_pacemaker(self, 
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
@@ -504,11 +504,11 @@ class MainGUI(tk.Frame):
         # appropriate method to open the window.  This will allow for individual
         # parameter analysis.
         calc_menu.add_command(label="Pacemaker", 
-            command=lambda: [calculate_pacemaker.calculate_pacemaker(self, 
+            command=lambda: [calculate_pacemaker_tk.calculate_pacemaker(self, 
                 cm_beats, pace_maker, heat_map, input_param, electrode_config),
                 self.pacemaker_heatmap_window(cm_beats, pace_maker, heat_map, 
                 input_param),
-                calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
+                calculate_pacemaker_tk.graph_pacemaker(self, heat_map, pace_maker, 
                     input_param)])
         calc_menu.add_command(label="Upstroke Velocity", 
             command=lambda: [calculate_upstroke_vel.calculate_upstroke_vel(self, 
@@ -766,7 +766,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.pm_solo_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.pm_solo_beat_select.bind("<ButtonRelease-1>",
-            lambda event: calculate_pacemaker.graph_pacemaker(self, heat_map, 
+            lambda event: calculate_pacemaker_tk.graph_pacemaker(self, heat_map, 
                 pace_maker, input_param))
 
     def dvdt_heatmap_window(self, cm_beats, upstroke_vel, heat_map, input_param):
