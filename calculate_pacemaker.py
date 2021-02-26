@@ -81,8 +81,8 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
             pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(pace_maker.param_width_raw.min(axis=1), axis=0).div(10)
             pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(pace_maker.param_thresh_raw.min(axis=1), axis=0).div(10)
 
-        # Set slider value to maximum number of beats
-        analysisGUI.pmWindow.paramSlider.setMaximum(
+        # Set slider values to maximum number of beats
+        analysisGUI.mainSlider.setMaximum(
             int(cm_beats.beat_count_dist_mode[0]) - 1)
 
         # Find the number of excluded electrodes (removed for noise, etc)

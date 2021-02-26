@@ -26,6 +26,7 @@ import calculate_pacemaker
 import calculate_upstroke_vel
 import calculate_lat
 import calculate_cv
+import main_heatmap
 import param_vs_distance_stats
 import psd_plotting
 import cv_quiver
@@ -354,7 +355,19 @@ class AnalysisGUI(QMainWindow):
                 input_param, electrode_config),
                 determine_beats.graph_beats(self, cm_beats, input_param, 
                 electrode_config)])
-        self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)")
+        self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)",
+            lambda: [calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
+                pace_maker, heat_map, input_param, electrode_config),
+                calculate_lat.calculate_lat(self, cm_beats, local_act_time,
+                heat_map, input_param, electrode_config),
+                calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
+                upstroke_vel, heat_map, input_param, electrode_config),
+                calculate_cv.calculate_conduction_velocity(self, cm_beats, 
+                conduction_vel, local_act_time, heat_map, input_param, 
+                electrode_config),
+                main_heatmap.graph_all(self, heat_map, cm_beats, 
+                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+                input_param)])
         self.calcMenu.addAction("&Calculate Pacemaker", 
             lambda: [self.pacemakerWindow(cm_beats, pace_maker, heat_map, 
                 input_param),
@@ -476,7 +489,9 @@ class AnalysisGUI(QMainWindow):
 
         self.mainSlider = QSlider(Qt.Horizontal)
         plotLayout.addWidget(self.mainSlider, 3, 0)
-        self.mainSlider.valueChanged.connect(lambda: print_slider(self))
+        self.mainSlider.valueChanged.connect(lambda: main_heatmap.graph_all(
+            self, heat_map, cm_beats, pace_maker, upstroke_vel, 
+            local_act_time, conduction_vel, input_param))
 
         mainToolbar = NavigationToolbar2QT(self.mainHeatmap, self)
         plotLayout.addWidget(mainToolbar, 4, 0)
@@ -499,6 +514,9 @@ class AnalysisGUI(QMainWindow):
         self.pmWindow = SoloHeatmapWindows()
         self.pmWindow.setWindowTitle("Pacemaker Results")
         self.pmWindow.show()
+        # Set slider value to maximum number of beats
+        self.pmWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
         self.pmWindow.paramSlider.valueChanged.connect(lambda: [
             calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
             input_param)])
@@ -507,6 +525,9 @@ class AnalysisGUI(QMainWindow):
         self.dvdtWindow = SoloHeatmapWindows()
         self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
         self.dvdtWindow.show()
+        # Set slider value to maximum number of beats
+        self.dvdtWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
         self.dvdtWindow.paramSlider.valueChanged.connect(lambda: [
             calculate_upstroke_vel.graph_upstroke(self, heat_map, upstroke_vel, 
             input_param)])
@@ -516,6 +537,9 @@ class AnalysisGUI(QMainWindow):
         self.latWindow = SoloHeatmapWindows()
         self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
         self.latWindow.show()
+        # Set slider value to maximum number of beats
+        self.latWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
         self.latWindow.paramSlider.valueChanged.connect(lambda: [
             calculate_lat.graph_local_act_time(self, heat_map, local_act_time, 
             input_param)])
@@ -525,13 +549,16 @@ class AnalysisGUI(QMainWindow):
         self.cvWindow = SoloHeatmapWindows()
         self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
         self.cvWindow.show()
+        # Set slider value to maximum number of beats
+        self.cvWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
         self.cvWindow.paramSlider.valueChanged.connect(lambda: [
             calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
             conduction_vel, input_param)])
 
     def condVelVectorWindow(self, cm_beats, local_act_time, conduction_vel, 
     input_param):
-        self.cvVectWindow = GeneralPlotWindows()
+        self.cvVectWindow = SoloHeatmapWindows()
         self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
         self.cvVectWindow.show()
 
@@ -543,6 +570,8 @@ class AnalysisGUI(QMainWindow):
         self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
         self.pvdWindow.show()
 
+    # This probably needs a new class for its window, as there's a lot of info
+    # to display that the other windows don't need.
     def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
     psd_data):

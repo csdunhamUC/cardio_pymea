@@ -64,10 +64,6 @@ input_param, electrode_config):
         # Assign name to resulting dataframe.
         upstroke_vel.param_dist_normalized.name = 'Upstroke Velocity'
 
-        # Set slider value to maximum number of beats
-        analysisGUI.dvdtWindow.paramSlider.setMaximum(
-            int(cm_beats.beat_count_dist_mode[0]) - 1)
-
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()

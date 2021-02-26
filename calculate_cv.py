@@ -143,9 +143,6 @@ local_act_time, heat_map, input_param, electrode_config):
         conduction_vel.param_dist_raw.insert(1, 'X', electrode_config.electrode_coords_x)
         conduction_vel.param_dist_raw.insert(2, 'Y', electrode_config.electrode_coords_y)
 
-        analysisGUI.cvWindow.paramSlider.setMaximum(
-            int(cm_beats.beat_count_dist_mode[0]) - 1)
-
         end_time = time.process_time()
         print("CV calculation complete.")
         print(end_time - start_time)

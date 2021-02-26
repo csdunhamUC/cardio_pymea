@@ -69,10 +69,6 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         # Assign name to resulting dataframe.
         local_act_time.param_dist_normalized.name = 'Local Activation Time'
 
-        # Set slider value to maximum number of beats
-        analysisGUI.latWindow.paramSlider.setMaximum(
-            int(cm_beats.beat_count_dist_mode[0]) - 1)
-
         print("Done")
         # Finishes tabulating time for the calculation and prints the time.
         end_time = time.process_time()
