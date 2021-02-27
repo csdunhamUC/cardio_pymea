@@ -295,7 +295,6 @@ class SoloHeatmapWindows(QWidget):
         layout.addWidget(self.paramPlot, 0, 0)
         layout.addWidget(self.paramSlider, 1, 0)
         layout.addWidget(paramToolbar, 2, 0)
-
         self.setLayout(layout)
 
 
@@ -313,8 +312,61 @@ class GeneralPlotWindows(QWidget):
         layout.addWidget(self.paramPlot, 0, 0)
         layout.addWidget(self.paramSlider, 1, 0)
         layout.addWidget(paramToolbar, 2, 0)
-
         self.setLayout(layout)
+
+
+class PlotBeatSelectWindows(QWidget):
+    def __init__(self):
+        super(PlotBeatSelectWindows, self).__init__()
+        self.setupUI()
+    
+    def setupUI(self):
+        mainLayout = QGridLayout()
+        paramLayout = QGridLayout()
+        plotLayout = QGridLayout()
+        paramWidget = QWidget()
+        plotWidget = QWidget()
+        paramWidget.setLayout(paramLayout)
+        plotWidget.setLayout(plotLayout)
+        self.beatRangeLabel = QLabel("Start/End Beats")
+        self.startBeat = QComboBox()
+        self.startBeat.setFixedWidth(70)
+        self.startBeat.addItem("Beat 1")
+        self.endBeat = QComboBox()
+        self.endBeat.setFixedWidth(70)
+        self.endBeat.addItem("Beat 1")
+        self.elecLabel = QLabel("Electrode")
+        self.elecSelect = QComboBox()
+        self.elecSelect.setFixedWidth(70)
+        self.elecSelect.addItem("F7")
+        self.paramLabel = QLabel("Parameter")
+        self.paramChoice = QComboBox()
+        self.paramChoice.setFixedWidth(110)
+        paramItems = ["Orig. Signal", "Cond. Vel.", "Up. Vel.", "Pacemaker", 
+            "Local AT"]
+        self.paramChoice.addItems(paramItems)
+        self.plotButton = QPushButton()
+        self.plotButton.setFixedWidth(70)
+        self.plotButton.setFixedHeight(70)
+        paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
+        paramLayout.addWidget(self.beatRangeLabel, 0, 1, 1, 2)
+        paramLayout.addWidget(self.startBeat, 1, 1)
+        paramLayout.addWidget(self.endBeat, 1, 2)
+        paramLayout.addWidget(self.elecLabel, 0, 3)
+        paramLayout.addWidget(self.elecSelect, 1, 3)
+        paramLayout.addWidget(self.paramLabel, 0, 4)
+        paramLayout.addWidget(self.paramChoice, 1, 4)
+
+        self.paramPlot = GenericPlotCanvas(self, width=7, height=7, dpi=100)
+        self.paramSlider = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
+        plotLayout.addWidget(self.paramPlot, 0, 0)
+        plotLayout.addWidget(self.paramSlider, 1, 0)
+        plotLayout.addWidget(paramToolbar, 2, 0)
+
+        mainLayout.addWidget(paramWidget, 0, 0)
+        mainLayout.addWidget(plotWidget, 1, 0)
+        self.setLayout(mainLayout)
 
 
 class AnalysisGUI(QMainWindow):
@@ -370,28 +422,28 @@ class AnalysisGUI(QMainWindow):
                 main_heatmap.graph_all(self, heat_map, cm_beats, 
                 pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                 input_param)])
-        self.calcMenu.addAction("&Calculate Pacemaker", 
+        self.calcMenu.addAction("Calculate &Pacemaker", 
             lambda: [self.pacemakerWindow(cm_beats, pace_maker, heat_map, 
                 input_param),
                 calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
                 pace_maker, heat_map, input_param, electrode_config),
                 calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
                 input_param)])
-        self.calcMenu.addAction("&Calculate Local Act. Time",
+        self.calcMenu.addAction("Calculate &Local Act. Time",
             lambda: [self.localActTimeWindow(cm_beats, local_act_time, heat_map, 
                 input_param),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time,
                 heat_map, input_param, electrode_config),
                 calculate_lat.graph_local_act_time(self, heat_map, 
                 local_act_time, input_param)])
-        self.calcMenu.addAction("&Calculate Upstroke Velocity",
+        self.calcMenu.addAction("Calculate &Upstroke Velocity",
             lambda: [self.upVelocityWindow(cm_beats, upstroke_vel, heat_map,
                 input_param),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.graph_upstroke(self, heat_map, 
                 upstroke_vel, input_param)])
-        self.calcMenu.addAction("&Calculate Conduction Velocity",
+        self.calcMenu.addAction("Calculate Conduction &Velocity",
             lambda: [self.condVelocityWindow(cm_beats, local_act_time, 
                 conduction_vel, heat_map, input_param),
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
@@ -402,28 +454,31 @@ class AnalysisGUI(QMainWindow):
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("&Special Plots")
-        self.plotMenu.addAction("&Cond. Vel. Vector Field",
+        self.plotMenu.addAction("Cond. Vel. Vector &Field",
             lambda: [self.condVelVectorWindow(cm_beats, local_act_time, conduction_vel, 
                 input_param),
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
                 conduction_vel)])
-        self.plotMenu.addAction("&Beat Amplitude & Interval",
-            lambda: calculate_beat_amp_int.beat_amp_interval_graph(self, 
-                electrode_config, beat_amp_int, pace_maker, local_act_time, 
-                input_param))
+        self.plotMenu.addAction("&Beat Amplitude && Interval",
+            lambda: self.beatAmpIntWindow(cm_beats, pace_maker, local_act_time,
+                beat_amp_int, input_param, electrode_config)
+                # , calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                # electrode_config, beat_amp_int, pace_maker, local_act_time, 
+                # input_param)
+                )
         self.plotMenu.addAction("&Manual Electrode Filter")
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
         self.statMenu.addAction("&Param vs Distance w/ R-value")
-        self.statMenu.addAction("&Power Spectrum")
+        self.statMenu.addAction("Power &Spectrum")
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
         # Advanced Tools Menu (ML, etc); To be filled later
-        self.advToolsMenu = self.menuBar().addMenu("&Advanced Tools")
+        self.advToolsMenu = self.menuBar().addMenu("Advanced T&ools")
 
-        self.testingMenu = self.menuBar().addMenu("&Testing")
+        self.testingMenu = self.menuBar().addMenu("Testin&g")
         self.testingMenu.addAction("&Reload modules (debug)", reload_module)
 
         # Arrange Widgets using row, col grid arrangement.
@@ -595,15 +650,15 @@ class AnalysisGUI(QMainWindow):
 
     def beatAmpIntWindow(self, cm_beats, pace_maker, local_act_time,
     beat_amp_int, input_param, electrode_config):
-        self.ampIntWindow = GeneralPlotWindows()
+        self.ampIntWindow = PlotBeatSelectWindows()
         self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
         self.ampIntWindow.show()
-        self.ampIntWindow.paramSlider.setMaximum(
-            int(cm_beats.beat_count_dist_mode[0]) - 1)
-        self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
-            calculate_beat_amp_int.beat_amp_interval_graph(self, 
-            electrode_config, beat_amp_int, pace_maker, local_act_time, 
-            input_param)])
+        # self.ampIntWindow.paramSlider.setMaximum(
+        #     int(cm_beats.beat_count_dist_mode[0]) - 1)
+        # self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
+        #     calculate_beat_amp_int.beat_amp_interval_graph(self, 
+        #     electrode_config, beat_amp_int, pace_maker, local_act_time, 
+        #     input_param)])
 
 
 def main():
