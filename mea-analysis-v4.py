@@ -36,8 +36,8 @@ import calculate_lat_tk
 import calculate_cv_tk
 import param_vs_distance_stats
 import psd_plotting
-import cv_quiver
-import calculate_beat_amp_int
+import cv_quiver_tk
+import calculate_beat_amp_int_tk
 
 
 ################################################################################
@@ -242,8 +242,8 @@ def reload_module():
     # importlib.reload(calculate_lat_tk)
     # importlib.reload(calculate_upstroke_vel_tk)
     importlib.reload(psd_plotting)
-    importlib.reload(cv_quiver)
-    importlib.reload(calculate_beat_amp_int)
+    importlib.reload(cv_quiver_tk)
+    importlib.reload(calculate_beat_amp_int_tk)
     print("Reloaded modules.")
 
 
@@ -494,7 +494,7 @@ class MainGUI(tk.Frame):
                 calculate_cv_tk.calculate_conduction_velocity(self, cm_beats, 
                 conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
-                calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
+                calculate_beat_amp_int_tk.calculate_beat_amp(self, cm_beats, 
                 beat_amp_int, pace_maker, local_act_time, heat_map, 
                 input_param, electrode_config),
                 graph_all(self, heat_map, cm_beats, pace_maker, upstroke_vel, 
@@ -533,12 +533,12 @@ class MainGUI(tk.Frame):
                 calculate_cv_tk.graph_conduction_vel(self, heat_map, local_act_time, 
                     conduction_vel, input_param)])
         calc_menu.add_command(label="Beat Amplitude & Interval", 
-            command=lambda: [calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
+            command=lambda: [calculate_beat_amp_int_tk.calculate_beat_amp(self, cm_beats, 
                 beat_amp_int, pace_maker, local_act_time, heat_map, 
                 input_param, electrode_config),
                 self.beat_amp_int_window(cm_beats, pace_maker, 
                 local_act_time, beat_amp_int, input_param, electrode_config),
-                calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                calculate_beat_amp_int_tk.beat_amp_interval_graph(self, 
                 electrode_config, beat_amp_int, pace_maker, local_act_time, 
                 input_param)])
 
@@ -548,12 +548,12 @@ class MainGUI(tk.Frame):
             command=lambda: [
                 self.cv_vector_window(cm_beats, local_act_time, conduction_vel, 
                 input_param),
-                cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
+                cv_quiver_tk.cv_quiver_plot(self, input_param, local_act_time, 
                     conduction_vel), ])
         spec_plots_menu.add_command(label="Beat Amp & Interval Plots",
             command=lambda: [self.beat_amp_int_window(cm_beats, pace_maker, 
                 local_act_time, beat_amp_int, input_param, electrode_config),
-                calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                calculate_beat_amp_int_tk.beat_amp_interval_graph(self, 
                 electrode_config, beat_amp_int, pace_maker, local_act_time, 
                 input_param)])
         spec_plots_menu.add_command(label="Manual Electrode Filter", 
@@ -833,7 +833,7 @@ class MainGUI(tk.Frame):
             label="Current Beat")
         self.cv_vector_beat_select.grid(row=1, column=0, padx=5, pady=5)
         self.cv_vector_beat_select.bind("<ButtonRelease-1>",
-            lambda event: cv_quiver.cv_quiver_plot(self, input_param, 
+            lambda event: cv_quiver_tk.cv_quiver_plot(self, input_param, 
                 local_act_time, conduction_vel))
 
     def param_vs_dist_stats_window(self, cm_beats, pace_maker, upstroke_vel, 
@@ -1044,7 +1044,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.beat_amp_beat_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
         self.beat_amp_beat_select.bind("<ButtonRelease-1>",
-            lambda event: calculate_beat_amp_int.beat_amp_interval_graph(self,
+            lambda event: calculate_beat_amp_int_tk.beat_amp_interval_graph(self,
                 electrode_config, beat_amp_int, pace_maker, local_act_time, 
                 input_param))
         
