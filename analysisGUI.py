@@ -214,7 +214,6 @@ def data_import(analysisGUI, raw_data, electrode_config):
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
         electrode_config.electrode_toggle(raw_data)
-        print(analysisGUI.file_path)
 
     except FileNotFoundError:
         print()
@@ -365,6 +364,9 @@ class AnalysisGUI(QMainWindow):
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
                 conduction_vel, local_act_time, heat_map, input_param, 
                 electrode_config),
+                calculate_beat_amp_int.calculate_beat_amp(self, cm_beats, 
+                beat_amp_int, pace_maker, local_act_time, heat_map, input_param, 
+                electrode_config),
                 main_heatmap.graph_all(self, heat_map, cm_beats, 
                 pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                 input_param)])
@@ -400,8 +402,15 @@ class AnalysisGUI(QMainWindow):
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("&Special Plots")
-        self.plotMenu.addAction("&Cond. Vel. Vector Field")
-        self.plotMenu.addAction("&Beat Amplitude & Interval")
+        self.plotMenu.addAction("&Cond. Vel. Vector Field",
+            lambda: [self.condVelVectorWindow(cm_beats, local_act_time, conduction_vel, 
+                input_param),
+                cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
+                conduction_vel)])
+        self.plotMenu.addAction("&Beat Amplitude & Interval",
+            lambda: calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                electrode_config, beat_amp_int, pace_maker, local_act_time, 
+                input_param))
         self.plotMenu.addAction("&Manual Electrode Filter")
 
         # Statistics Menu
@@ -561,6 +570,11 @@ class AnalysisGUI(QMainWindow):
         self.cvVectWindow = SoloHeatmapWindows()
         self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
         self.cvVectWindow.show()
+        self.cvVectWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.cvVectWindow.paramSlider.valueChanged.connect(lambda: [
+            cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
+            conduction_vel)])
 
     # This probably needs a new class for its window, as there's a lot of info
     # to display that the other windows don't need.
@@ -584,6 +598,12 @@ class AnalysisGUI(QMainWindow):
         self.ampIntWindow = GeneralPlotWindows()
         self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
         self.ampIntWindow.show()
+        self.ampIntWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_beat_amp_int.beat_amp_interval_graph(self, 
+            electrode_config, beat_amp_int, pace_maker, local_act_time, 
+            input_param)])
 
 
 def main():

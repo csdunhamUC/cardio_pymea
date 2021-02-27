@@ -4,42 +4,33 @@
 # Original work
 
 import numpy as np
-from numpy.lib.function_base import interp
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-from scipy.interpolate import interp2d
 import matplotlib.tri as tri
-from scipy.interpolate import griddata
-from scipy.interpolate import bisplev, bisplrep
 
 
 def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     try:
-        input_param.cv_vector_beat_choice = int(
-            analysisGUI.cv_vector_beat_select.get()) - 1
-
-        analysisGUI.cv_vector_beat_select.configure(
-            to=int(len(local_act_time.final_dist_beat_count)))
+        input_param.cv_vector_beat_choice = analysisGUI.cvVectWindow.paramSlider.value()
         
         # X and Y electrode coordinates
-        conduction_vel.quiver_plot_axis.cla()
+        analysisGUI.cvVectWindow.paramPlot.axes.cla()
+
+        curr_beat = local_act_time.final_dist_beat_count[
+            input_param.cv_vector_beat_choice]
 
         cv_beat_mag = conduction_vel.vector_mag[
-            ['X', 'Y', local_act_time.final_dist_beat_count
-                [input_param.cv_vector_beat_choice]]].dropna()
+            ['X', 'Y', curr_beat]].dropna()
 
         cv_beat_raw = conduction_vel.param_dist_raw[
-            ['X', 'Y', local_act_time.final_dist_beat_count
-                [input_param.cv_vector_beat_choice]]].dropna()
+            ['X', 'Y', curr_beat]].dropna()
 
         x_comp = conduction_vel.vector_x_comp[
-            ['X', 'Y', local_act_time.final_dist_beat_count
-                [input_param.cv_vector_beat_choice]]].dropna()
+            ['X', 'Y', curr_beat]].dropna()
 
         y_comp = conduction_vel.vector_y_comp[
-            ['X', 'Y', local_act_time.final_dist_beat_count
-                [input_param.cv_vector_beat_choice]]].dropna()
+            ['X', 'Y', curr_beat]].dropna()
 
         # For vector mag and plotting x, y coordinates in a grid
         contZ_mag = cv_beat_mag.pivot_table(index='Y', 
@@ -55,28 +46,30 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
         # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
-        conduction_vel.quiver_plot_axis.contour(contX, contY, contZ_mag,
+        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_mag,
             cmap='jet')
-        contf = conduction_vel.quiver_plot_axis.contourf(contX, contY, contZ_mag, 
-            cmap='jet')
+        contf = analysisGUI.cvVectWindow.paramPlot.axes.contourf(contX, contY, 
+            contZ_mag, cmap='jet')
         # Plot streamplot.
-        conduction_vel.quiver_plot_axis.streamplot(contX, contY, contU, contV)
+        analysisGUI.cvVectWindow.paramPlot.axes.streamplot(contX, contY, contU, 
+            contV)
         # Plot quiver plot.
-        conduction_vel.quiver_plot_axis.quiver(contX, contY, contU, contV,
-            angles='xy')
-        conduction_vel.quiver_plot_axis.set(xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)", title="Quiver, Stream, Contour of CV")
+        analysisGUI.cvVectWindow.paramPlot.axes.quiver(contX, contY, contU, 
+            contV, angles='xy')
+        analysisGUI.cvVectWindow.paramPlot.axes.set(xlabel="X coordinate (μm)", 
+            ylabel="Y coordinate (μm)", title="Quiver, Stream, Contour of CV. " + 
+                str(curr_beat))
 
         # Add colorbar.
-        cbar = plt.colorbar(contf, ax=conduction_vel.quiver_plot_axis)
+        cbar = plt.colorbar(contf, ax=analysisGUI.cvVectWindow.paramPlot.axes)
         cbar.ax.set_ylabel('Conduction Velocity (μm/(ms))')
 
         # Invert y-axis
-        conduction_vel.quiver_plot_axis.invert_yaxis()
+        analysisGUI.cvVectWindow.paramPlot.axes.invert_yaxis()
 
         # Draw plot.
-        conduction_vel.quiver_plot.tight_layout()
-        conduction_vel.quiver_plot.canvas.draw()
+        analysisGUI.cvVectWindow.paramPlot.fig.tight_layout()
+        analysisGUI.cvVectWindow.paramPlot.draw()
 
         cbar.remove()
     except AttributeError:
