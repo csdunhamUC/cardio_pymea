@@ -223,11 +223,6 @@ def print_something():
     print("Something.")
 
 
-def print_slider(analysisGUI):
-    print(analysisGUI.mainSlider.value())
-    print(analysisGUI.pkHeightEdit.text())
-
-
 def trunc_toggle(analysisGUI):
     if analysisGUI.truncCheckbox.isChecked() == True:
         analysisGUI.truncStartEdit.show()
@@ -328,7 +323,6 @@ class PlotBeatSelectWindows(QWidget):
         plotWidget.setLayout(plotLayout)
         self.beatRangeLabel = QLabel("Start/End Beats")
         self.beatRangeLabel.setFixedWidth(170)
-        self.beatRangeLabel.setAlignment(Qt.AlignCenter)
         self.startBeat = QComboBox()
         self.startBeat.setFixedWidth(80)
         self.startBeat.addItem("Beat 1")
