@@ -180,8 +180,6 @@ def data_import(analysisGUI, raw_data, electrode_config):
             analysisGUI.file_path, "Text files (*.txt)")
 
         import_path, import_filename = os.path.split(data_filename_and_path[0])
-        print(import_path)
-        print(import_filename)
 
         # Checks whether data was previously imported into program.  If True, 
         # the previous data is deleted.
@@ -305,7 +303,7 @@ class GeneralPlotWindows(QWidget):
 
     def setupUI(self):
         layout = QGridLayout()
-        self.paramPlot = GenericPlotCanvas(self, width=7, height=7, dpi=100)
+        self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
 
@@ -329,22 +327,24 @@ class PlotBeatSelectWindows(QWidget):
         paramWidget.setLayout(paramLayout)
         plotWidget.setLayout(plotLayout)
         self.beatRangeLabel = QLabel("Start/End Beats")
+        self.beatRangeLabel.setFixedWidth(170)
+        self.beatRangeLabel.setAlignment(Qt.AlignCenter)
         self.startBeat = QComboBox()
-        self.startBeat.setFixedWidth(70)
+        self.startBeat.setFixedWidth(80)
         self.startBeat.addItem("Beat 1")
         self.endBeat = QComboBox()
-        self.endBeat.setFixedWidth(70)
+        self.endBeat.setFixedWidth(80)
         self.endBeat.addItem("Beat 1")
         self.elecLabel = QLabel("Electrode")
         self.elecSelect = QComboBox()
         self.elecSelect.setFixedWidth(70)
         self.elecSelect.addItem("F7")
         self.paramLabel = QLabel("Parameter")
-        self.paramChoice = QComboBox()
-        self.paramChoice.setFixedWidth(110)
+        self.paramSelect = QComboBox()
+        self.paramSelect.setFixedWidth(110)
         paramItems = ["Orig. Signal", "Cond. Vel.", "Up. Vel.", "Pacemaker", 
             "Local AT"]
-        self.paramChoice.addItems(paramItems)
+        self.paramSelect.addItems(paramItems)
         self.plotButton = QPushButton()
         self.plotButton.setFixedWidth(70)
         self.plotButton.setFixedHeight(70)
@@ -355,9 +355,9 @@ class PlotBeatSelectWindows(QWidget):
         paramLayout.addWidget(self.elecLabel, 0, 3)
         paramLayout.addWidget(self.elecSelect, 1, 3)
         paramLayout.addWidget(self.paramLabel, 0, 4)
-        paramLayout.addWidget(self.paramChoice, 1, 4)
+        paramLayout.addWidget(self.paramSelect, 1, 4)
 
-        self.paramPlot = GenericPlotCanvas(self, width=7, height=7, dpi=100)
+        self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
         plotLayout.addWidget(self.paramPlot, 0, 0)
@@ -460,12 +460,11 @@ class AnalysisGUI(QMainWindow):
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
                 conduction_vel)])
         self.plotMenu.addAction("&Beat Amplitude && Interval",
-            lambda: self.beatAmpIntWindow(cm_beats, pace_maker, local_act_time,
-                beat_amp_int, input_param, electrode_config)
-                # , calculate_beat_amp_int.beat_amp_interval_graph(self, 
-                # electrode_config, beat_amp_int, pace_maker, local_act_time, 
-                # input_param)
-                )
+            lambda: [self.beatAmpIntWindow(cm_beats, pace_maker, local_act_time,
+                beat_amp_int, input_param, electrode_config), 
+                calculate_beat_amp_int.beat_amp_interval_graph(self, 
+                electrode_config, beat_amp_int, pace_maker, local_act_time, 
+                input_param)])
         self.plotMenu.addAction("&Manual Electrode Filter")
 
         # Statistics Menu
@@ -653,12 +652,16 @@ class AnalysisGUI(QMainWindow):
         self.ampIntWindow = PlotBeatSelectWindows()
         self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
         self.ampIntWindow.show()
-        # self.ampIntWindow.paramSlider.setMaximum(
-        #     int(cm_beats.beat_count_dist_mode[0]) - 1)
-        # self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
-        #     calculate_beat_amp_int.beat_amp_interval_graph(self, 
-        #     electrode_config, beat_amp_int, pace_maker, local_act_time, 
-        #     input_param)])
+        self.ampIntWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_beat_amp_int.beat_amp_interval_graph(self, 
+            electrode_config, beat_amp_int, pace_maker, local_act_time, 
+            input_param)])
+        self.ampIntWindow.elecLabel.hide()
+        self.ampIntWindow.elecSelect.hide()
+        self.ampIntWindow.paramLabel.hide()
+        self.ampIntWindow.paramSelect.hide()
 
 
 def main():
