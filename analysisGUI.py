@@ -246,7 +246,7 @@ def reload_module():
     print("Reloaded modules.")
 
 
-# Classes for the plots of GUI.
+# Classes for the plots (axes) of GUI.
 class MainHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
@@ -317,6 +317,50 @@ class GeneralPlotWindows(QWidget):
         self.setLayout(layout)
 
 
+class ParamStatWindows(QWidget):
+    def __init__(self):
+        super(ParamStatWindows, self).__init__()
+        self.setupUI()
+
+    def setupUI(self):
+        mainLayout = QGridLayout()
+        paramLayout = QGridLayout()
+        plotLayout = QGridLayout()
+        statsSumLayout = QGridLayout()
+        
+        paramWidget = QWidget()
+        paramWidget.setLayout(paramLayout)
+        paramWidget.setFixedWidth(200)
+        plotWidget = QWidget()
+        plotWidget.setLayout(plotLayout)
+        statsSumWidget = QWidget()
+        statsSumWidget.setLayout(statsSumLayout)
+        
+        sigmaLabel = QLabel("Sigma Value")
+        sigmaLabel.setFixedWidth(85)
+        sigmaEdit = QLineEdit()
+        sigmaEdit.setText("3")
+        sigmaEdit.setFixedWidth(70)
+        paramLayout.addWidget(sigmaLabel, 0, 0)
+        paramLayout.addWidget(sigmaEdit, 1, 0)
+        sigmaButton = QPushButton("Filter \n Outliers")
+        sigmaButton.setFixedWidth(70)
+        sigmaButton.setFixedHeight(60)
+        paramLayout.addWidget(sigmaButton, 0, 1, 2, 1)
+
+        self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+        self.paramSlider = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
+        plotLayout.addWidget(self.paramPlot, 0, 0)
+        plotLayout.addWidget(self.paramSlider, 1, 0)
+        plotLayout.addWidget(paramToolbar, 2, 0)
+
+        mainLayout.addWidget(paramWidget, 0, 0)
+        mainLayout.addWidget(plotWidget, 1, 0)
+        mainLayout.addWidget(statsSumWidget, 0, 1, 2, 1)
+        self.setLayout(mainLayout)
+
+
 class PlotBeatSelectWindows(QWidget):
     def __init__(self, analysisGUI):
         super(PlotBeatSelectWindows, self).__init__()
@@ -379,6 +423,7 @@ class PlotBeatSelectWindows(QWidget):
         self.setLayout(mainLayout)
 
 
+# Primary GUI class.
 class AnalysisGUI(QMainWindow):
     def __init__(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
@@ -486,7 +531,10 @@ class AnalysisGUI(QMainWindow):
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
-        self.statMenu.addAction("&Param vs Distance w/ R-value")
+        self.statMenu.addAction("&Param vs Distance w/ R-value",
+            lambda: [self.paramVsDistStatsWindow(cm_beats, pace_maker, 
+                upstroke_vel, local_act_time, conduction_vel, input_param, 
+                cm_stats)])
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
@@ -646,16 +694,14 @@ class AnalysisGUI(QMainWindow):
             cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
             conduction_vel)])
 
-    # This probably needs a new class for its window, as there's a lot of info
-    # to display that the other windows don't need.
     def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):
-        self.pvdWindow = GeneralPlotWindows()
+        self.pvdWindow = ParamStatWindows()
         self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
         self.pvdWindow.show()
+        # self.pvdWindow.paramSlider.setMaximum(
+        #     int(cm_beats.beat_count_dist_mode[0]) - 1)
 
-    # This probably needs a new class for its window, as there's a lot of info
-    # to display that the other windows don't need.
     def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
     psd_data):
