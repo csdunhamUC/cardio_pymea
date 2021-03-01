@@ -34,7 +34,7 @@ import calculate_pacemaker_tk
 import calculate_upstroke_vel_tk
 import calculate_lat_tk
 import calculate_cv_tk
-import param_vs_distance_stats
+import param_vs_distance_stats_tk
 import psd_plotting_tk
 import cv_quiver_tk
 import calculate_beat_amp_int_tk
@@ -236,7 +236,7 @@ def data_print(analysisGUI, raw_data, pace_maker, input_param, electrode_config)
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
 def reload_module():
-    importlib.reload(param_vs_distance_stats)
+    importlib.reload(param_vs_distance_stats_tk)
     importlib.reload(calculate_cv_tk)
     importlib.reload(determine_beats_tk)
     # importlib.reload(calculate_lat_tk)
@@ -853,7 +853,7 @@ class MainGUI(tk.Frame):
         param_vs_dist_sigma_entry.grid(row=1, column=0, padx=5, pady=5)
         param_vs_dist_remove_outliers = tk.Button(param_vs_dist_options_frame, 
             text="Remove Outliers", bg="silver", height=2,
-            command=lambda: param_vs_distance_stats.param_vs_distance_analysis(self, 
+            command=lambda: param_vs_distance_stats_tk.param_vs_distance_analysis(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                 input_param, cm_stats))
         param_vs_dist_remove_outliers.grid(row=0, rowspan=2, column=1, 
@@ -879,7 +879,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Current Beat")
         self.param_vs_dist_beat_select.grid(row=0, rowspan=2, column=2, padx=5, pady=5)
         self.param_vs_dist_beat_select.bind("<ButtonRelease-1>", 
-            lambda event: param_vs_distance_stats.param_vs_distance_graphing(self, 
+            lambda event: param_vs_distance_stats_tk.param_vs_distance_graphing(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                     input_param, cm_stats))
         
