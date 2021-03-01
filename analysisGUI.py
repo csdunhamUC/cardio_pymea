@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (QApplication, QGridLayout, QMainWindow,
     QPushButton, QWidget, QDialog, QSlider, QComboBox, QProgressBar, QLineEdit, 
     QLabel, QFileDialog, QCheckBox)
 from PyQt5.QtCore import QLine, Qt
+from matplotlib.backends.backend_qt5 import SaveFigureQt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
@@ -273,6 +274,14 @@ class GenericPlotCanvas(FigureCanvasQTAgg):
         super(GenericPlotCanvas, self).__init__(self.fig)
 
 
+class PSDPlotCanvas(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=7, height=7, dpi=100):
+        self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
+        self.axis1 = self.fig.add_subplot(211)
+        self.axis2 = self.fig.add_subplot(212)
+        super(PSDPlotCanvas, self).__init__(self.fig)
+
+
 # Classes for the actual GUI windows
 class SoloHeatmapWindows(QWidget):
     def __init__(self):
@@ -309,11 +318,11 @@ class GeneralPlotWindows(QWidget):
 
 
 class PlotBeatSelectWindows(QWidget):
-    def __init__(self):
+    def __init__(self, analysisGUI):
         super(PlotBeatSelectWindows, self).__init__()
-        self.setupUI()
+        self.setupUI(analysisGUI)
     
-    def setupUI(self):
+    def setupUI(self, analysisGUI):
         mainLayout = QGridLayout()
         paramLayout = QGridLayout()
         plotLayout = QGridLayout()
@@ -351,7 +360,14 @@ class PlotBeatSelectWindows(QWidget):
         paramLayout.addWidget(self.paramLabel, 0, 4)
         paramLayout.addWidget(self.paramSelect, 1, 4)
 
-        self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+        # Toggle correct canvas function based on PSD vs Beat Amp window.
+        if (hasattr(analysisGUI, "psdCheck") is True 
+        and analysisGUI.psdCheck is True):
+            self.paramPlot = PSDPlotCanvas(self, width=8, height=7, dpi=100)
+        elif (hasattr(analysisGUI, "ampCheck") is True 
+        and analysisGUI.ampCheck is True):
+            self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
         plotLayout.addWidget(self.paramPlot, 0, 0)
@@ -459,12 +475,18 @@ class AnalysisGUI(QMainWindow):
                 calculate_beat_amp_int.beat_amp_interval_graph(self, 
                 electrode_config, beat_amp_int, pace_maker, local_act_time, 
                 input_param)])
+        self.plotMenu.addAction("Power &Spectrum", 
+            lambda: [self.psdPlotWindow(cm_beats, electrode_config, pace_maker, 
+                upstroke_vel, local_act_time, conduction_vel, input_param, 
+                cm_stats, psd_data),
+                psd_plotting.psd_plotting(self, cm_beats, 
+                electrode_config, pace_maker, upstroke_vel, local_act_time, 
+                conduction_vel, input_param, psd_data)])
         self.plotMenu.addAction("&Manual Electrode Filter")
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
         self.statMenu.addAction("&Param vs Distance w/ R-value")
-        self.statMenu.addAction("Power &Spectrum")
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
@@ -637,13 +659,22 @@ class AnalysisGUI(QMainWindow):
     def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
     psd_data):
-        self.psdWindow = GeneralPlotWindows()
+        self.psdCheck = True
+        self.psdWindow = PlotBeatSelectWindows(self)
         self.psdWindow.setWindowTitle("Power Spectra")
         self.psdWindow.show()
+        self.psdWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.psdWindow.paramSlider.valueChanged.connect(lambda: [
+            psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, psd_data)])
+        self.psdCheck = False
 
     def beatAmpIntWindow(self, cm_beats, pace_maker, local_act_time,
     beat_amp_int, input_param, electrode_config):
-        self.ampIntWindow = PlotBeatSelectWindows()
+        self.ampCheck = True
+        self.ampIntWindow = PlotBeatSelectWindows(self)
         self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
         self.ampIntWindow.show()
         self.ampIntWindow.paramSlider.setMaximum(
@@ -656,6 +687,7 @@ class AnalysisGUI(QMainWindow):
         self.ampIntWindow.elecSelect.hide()
         self.ampIntWindow.paramLabel.hide()
         self.ampIntWindow.paramSelect.hide()
+        self.ampCheck = False
 
 
 def main():
