@@ -35,7 +35,7 @@ import calculate_upstroke_vel_tk
 import calculate_lat_tk
 import calculate_cv_tk
 import param_vs_distance_stats
-import psd_plotting
+import psd_plotting_tk
 import cv_quiver_tk
 import calculate_beat_amp_int_tk
 
@@ -241,7 +241,7 @@ def reload_module():
     importlib.reload(determine_beats_tk)
     # importlib.reload(calculate_lat_tk)
     # importlib.reload(calculate_upstroke_vel_tk)
-    importlib.reload(psd_plotting)
+    importlib.reload(psd_plotting_tk)
     importlib.reload(cv_quiver_tk)
     importlib.reload(calculate_beat_amp_int_tk)
     print("Reloaded modules.")
@@ -931,7 +931,7 @@ class MainGUI(tk.Frame):
         # Button to generate plots.
         psd_window_plotting = tk.Button(psd_window_options_frame, 
             text="Plot PSD", bg="silver", height=2,
-            command=lambda: psd_plotting.psd_plotting(self, cm_beats, 
+            command=lambda: psd_plotting_tk.psd_plotting(self, cm_beats, 
                 electrode_config, pace_maker, upstroke_vel, local_act_time, 
                 conduction_vel, input_param, psd_data))
         psd_window_plotting.grid(row=0, rowspan=2, column=0, 
@@ -994,7 +994,7 @@ class MainGUI(tk.Frame):
             orient="horizontal", bg="white", label="Beat")
         self.psd_electrode_select.grid(row=0, rowspan=2, column=5, padx=5, pady=5)
         self.psd_electrode_select.bind("<ButtonRelease-1>", 
-            lambda event: psd_plotting.psd_plotting(self, cm_beats, 
+            lambda event: psd_plotting_tk.psd_plotting(self, cm_beats, 
                 electrode_config, pace_maker, upstroke_vel, local_act_time, 
                 conduction_vel, input_param, psd_data))
         
