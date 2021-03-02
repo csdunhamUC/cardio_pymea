@@ -422,6 +422,7 @@ class PlotBeatSelectWindows(QWidget):
             self.paramPlot = PSDPlotCanvas(self, width=8, height=7, dpi=100)
         elif (hasattr(analysisGUI, "ampCheck") is True 
         and analysisGUI.ampCheck is True):
+            paramWidget.setFixedWidth(180)
             self.paramPlot = GenericPlotCanvas(self, width=9, height=7, dpi=100)
 
         self.paramSlider = QSlider(Qt.Horizontal)
@@ -732,6 +733,11 @@ class AnalysisGUI(QMainWindow):
         self.psdWindow = PlotBeatSelectWindows(self)
         self.psdWindow.setWindowTitle("Power Spectra")
         self.psdWindow.show()
+        self.psdWindow.plotButton.setText("Plot")
+        self.psdWindow.plotButton.clicked.connect(lambda: [
+            psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, psd_data)])
         self.psdWindow.paramSlider.setMaximum(
             int(cm_beats.beat_count_dist_mode[0]) - 1)
         self.psdWindow.paramSlider.valueChanged.connect(lambda: [
@@ -754,6 +760,7 @@ class AnalysisGUI(QMainWindow):
             input_param)])
         self.ampIntWindow.elecLabel.hide()
         self.ampIntWindow.elecSelect.hide()
+        self.ampIntWindow.plotButton.hide()
         self.ampIntWindow.paramLabel.hide()
         self.ampIntWindow.paramSelect.hide()
         self.ampCheck = False

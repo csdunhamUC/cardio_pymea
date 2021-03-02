@@ -26,12 +26,15 @@ local_act_time, conduction_vel, input_param, psd_data):
     local_act_time.final_dist_beat_count):
         analysisGUI.psdWindow.startBeat.clear()
         analysisGUI.psdWindow.endBeat.clear()
+        analysisGUI.psdWindow.elecSelect.clear()
 
     if analysisGUI.psdWindow.startBeat.count() < 2:
         analysisGUI.psdWindow.startBeat.addItems(
             local_act_time.final_dist_beat_count)
         analysisGUI.psdWindow.endBeat.addItems(
             local_act_time.final_dist_beat_count)
+        analysisGUI.psdWindow.elecSelect.addItems(
+            electrode_config.electrode_names)
 
     start_beat = analysisGUI.psdWindow.startBeat.currentText()
     end_beat = analysisGUI.psdWindow.endBeat.currentText()
