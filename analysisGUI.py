@@ -10,8 +10,9 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QMainWindow, 
     QPushButton, QWidget, QDialog, QSlider, QComboBox, QProgressBar, QLineEdit, 
-    QLabel, QFileDialog, QCheckBox)
+    QLabel, QFileDialog, QCheckBox, QPlainTextEdit)
 from PyQt5.QtCore import QLine, Qt
+from PyQt5.QtGui import QFont
 from matplotlib.backends.backend_qt5 import SaveFigureQt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT
 from matplotlib import pyplot as plt
@@ -177,8 +178,8 @@ class ElectrodeConfig:
 # checks to support more data types.
 def data_import(analysisGUI, raw_data, electrode_config):
     try:
-        data_filename_and_path = QFileDialog.getOpenFileName(analysisGUI, "Select File",
-            analysisGUI.file_path, "Text files (*.txt)")
+        data_filename_and_path = QFileDialog.getOpenFileName(analysisGUI, 
+            "Select File", analysisGUI.file_path, "Text files (*.txt)")
 
         import_path, import_filename = os.path.split(data_filename_and_path[0])
 
@@ -317,6 +318,7 @@ class GeneralPlotWindows(QWidget):
         self.setLayout(layout)
 
 
+# Used for parameter vs distance statistics window.
 class ParamStatWindows(QWidget):
     def __init__(self):
         super(ParamStatWindows, self).__init__()
@@ -334,19 +336,19 @@ class ParamStatWindows(QWidget):
         plotWidget = QWidget()
         plotWidget.setLayout(plotLayout)
         statsSumWidget = QWidget()
+        statsSumWidget.setFixedSize(225, 700)
         statsSumWidget.setLayout(statsSumLayout)
         
         sigmaLabel = QLabel("Sigma Value")
         sigmaLabel.setFixedWidth(85)
-        sigmaEdit = QLineEdit()
-        sigmaEdit.setText("3")
-        sigmaEdit.setFixedWidth(70)
+        self.sigmaEdit = QLineEdit()
+        self.sigmaEdit.setText("3")
+        self.sigmaEdit.setFixedWidth(70)
         paramLayout.addWidget(sigmaLabel, 0, 0)
-        paramLayout.addWidget(sigmaEdit, 1, 0)
-        sigmaButton = QPushButton("Filter \n Outliers")
-        sigmaButton.setFixedWidth(70)
-        sigmaButton.setFixedHeight(60)
-        paramLayout.addWidget(sigmaButton, 0, 1, 2, 1)
+        paramLayout.addWidget(self.sigmaEdit, 1, 0)
+        self.sigmaButton = QPushButton("Filter \n Outliers")
+        self.sigmaButton.setFixedSize(70, 60)
+        paramLayout.addWidget(self.sigmaButton, 0, 1, 2, 1)
 
         self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
@@ -355,12 +357,23 @@ class ParamStatWindows(QWidget):
         plotLayout.addWidget(self.paramSlider, 1, 0)
         plotLayout.addWidget(paramToolbar, 2, 0)
 
+        statTextFont = QFont()
+        statTextFont.setBold(True)
+        self.statsLabel = QLabel("Statistics Readout")
+        self.statsLabel.setFont(statTextFont)
+        statsSumLayout.addWidget(self.statsLabel, 0, 0)
+        self.statsPrintout = QPlainTextEdit("To be populated")
+        self.statsPrintout.setFixedHeight(650)
+        self.statsPrintout.setReadOnly(True)
+        statsSumLayout.addWidget(self.statsPrintout, 1, 0)
+
         mainLayout.addWidget(paramWidget, 0, 0)
         mainLayout.addWidget(plotWidget, 1, 0)
         mainLayout.addWidget(statsSumWidget, 0, 1, 2, 1)
         self.setLayout(mainLayout)
 
 
+# Currently used for beat amplitude, power spectra GUI windows.
 class PlotBeatSelectWindows(QWidget):
     def __init__(self, analysisGUI):
         super(PlotBeatSelectWindows, self).__init__()
@@ -393,8 +406,7 @@ class PlotBeatSelectWindows(QWidget):
             "Local AT"]
         self.paramSelect.addItems(paramItems)
         self.plotButton = QPushButton()
-        self.plotButton.setFixedWidth(70)
-        self.plotButton.setFixedHeight(70)
+        self.plotButton.setFixedSize(70, 70)
         paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
         paramLayout.addWidget(self.beatRangeLabel, 0, 1, 1, 2)
         paramLayout.addWidget(self.startBeat, 1, 1)
@@ -410,7 +422,7 @@ class PlotBeatSelectWindows(QWidget):
             self.paramPlot = PSDPlotCanvas(self, width=8, height=7, dpi=100)
         elif (hasattr(analysisGUI, "ampCheck") is True 
         and analysisGUI.ampCheck is True):
-            self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+            self.paramPlot = GenericPlotCanvas(self, width=9, height=7, dpi=100)
 
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
@@ -510,8 +522,8 @@ class AnalysisGUI(QMainWindow):
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("&Special Plots")
         self.plotMenu.addAction("Cond. Vel. Vector &Field",
-            lambda: [self.condVelVectorWindow(cm_beats, local_act_time, conduction_vel, 
-                input_param),
+            lambda: [self.condVelVectorWindow(cm_beats, local_act_time, 
+                conduction_vel, input_param),
                 cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
                 conduction_vel)])
         self.plotMenu.addAction("&Beat Amplitude && Interval",
@@ -595,6 +607,7 @@ class AnalysisGUI(QMainWindow):
         # Truncation widgets.
         self.truncCheckbox = QCheckBox("Truncate Data")
         self.truncCheckbox.clicked.connect(lambda: trunc_toggle(self))
+        self.truncCheckbox.setFixedWidth(115)
         self.truncStartEdit = QLineEdit()
         self.truncStartEdit.setFixedWidth(55)
         self.truncEndEdit = QLineEdit()
@@ -606,6 +619,8 @@ class AnalysisGUI(QMainWindow):
         self.truncEndEdit.setVisible(False)
         # File name label.
         self.fileName = QLabel("Waiting for file.")
+        self.fileName.setFixedWidth(200)
+        self.fileName.setWordWrap(True)
         paramLayout.addWidget(self.fileName, 0, 8)
         
         # Plots, linked to plotLayout widget
@@ -699,8 +714,16 @@ class AnalysisGUI(QMainWindow):
         self.pvdWindow = ParamStatWindows()
         self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
         self.pvdWindow.show()
-        # self.pvdWindow.paramSlider.setMaximum(
-        #     int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.pvdWindow.sigmaButton.clicked.connect(lambda: [
+            param_vs_distance_stats.param_vs_distance_analysis(self, 
+            cm_beats, pace_maker, upstroke_vel, local_act_time, 
+            conduction_vel, input_param, cm_stats)])
+        self.pvdWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.pvdWindow.paramSlider.valueChanged.connect(lambda: [
+            param_vs_distance_stats.param_vs_distance_graphing(self, cm_beats, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, cm_stats)])
 
     def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
@@ -758,8 +781,7 @@ def main():
 
     analysisGUI = AnalysisGUI(x_var, y_var, raw_data, cm_beats, pace_maker, 
         upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-        cm_stats, electrode_config, psd_data, beat_amp_int,)
-    # analysisGUI.resize(1200, 800)
+        cm_stats, electrode_config, psd_data, beat_amp_int)
     analysisGUI.show()
     sys.exit(app.exec_())
 
