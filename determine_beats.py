@@ -102,7 +102,7 @@ electrode_config):
             silencedElecs = analysisGUI.elecCombobox.currentData()
             for elec in silencedElecs:
                 cm_beats.y_axis.loc[:, elec] = 0
-            print("Silenced electrodes: " + str(*silencedElecs))
+            print("Silenced electrodes: " + str(silencedElecs))
 
         # For loop for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
