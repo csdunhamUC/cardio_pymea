@@ -26,6 +26,9 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         cv_beat_raw = conduction_vel.param_dist_raw[
             ['X', 'Y', curr_beat]].dropna()
 
+        lat_beat = local_act_time.param_dist_normalized[
+            ['X', 'Y', curr_beat]].dropna()
+
         x_comp = conduction_vel.vector_x_comp[
             ['X', 'Y', curr_beat]].dropna()
 
@@ -37,6 +40,8 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
             columns='X', values=cv_beat_mag).values
         contZ_raw = cv_beat_raw.pivot_table(index='Y',
             columns='X', values=cv_beat_raw).values
+        contZ_lat = lat_beat.pivot_table(index='Y', 
+            columns='X', values=lat_beat).values
         contX_uniq = np.sort(cv_beat_mag.X.unique())
         contY_uniq = np.sort(cv_beat_mag.Y.unique())
         contX, contY = np.meshgrid(contX_uniq, contY_uniq)
@@ -46,10 +51,10 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
         # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
-        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_mag,
+        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_lat,
             cmap='jet')
         contf = analysisGUI.cvVectWindow.paramPlot.axes.contourf(contX, contY, 
-            contZ_mag, cmap='jet')
+            contZ_lat, cmap='jet')
         # Plot streamplot.
         analysisGUI.cvVectWindow.paramPlot.axes.streamplot(contX, contY, contU, 
             contV)
