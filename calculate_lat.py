@@ -61,6 +61,10 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
             local_act_time.param_dist_normalized.max())
 
         # Assign row labels (electrodes), insert electrode names & coords.
+        local_act_time.param_dist_raw.index = electrode_config.electrode_names
+        local_act_time.param_dist_raw.insert(0, 'Electrode', electrode_config.electrode_names)
+        local_act_time.param_dist_raw.insert(1, 'X', electrode_config.electrode_coords_x)
+        local_act_time.param_dist_raw.insert(2, 'Y', electrode_config.electrode_coords_y)
         local_act_time.param_dist_normalized.index = electrode_config.electrode_names
         local_act_time.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
         local_act_time.param_dist_normalized.insert(1, 'X', electrode_config.electrode_coords_x)

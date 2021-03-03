@@ -32,7 +32,7 @@ local_act_time, heat_map, input_param, electrode_config):
         conduction_vel.cv_popt = [0]*int(cm_beats.beat_count_dist_mode[0])
         conduction_vel.cv_pcov = [0]*int(cm_beats.beat_count_dist_mode[0])
         # Find indices of electrodes with NaN values.
-        nan_electrodes_idx = np.where(local_act_time.param_dist_normalized[
+        nan_electrodes_idx = np.where(local_act_time.param_dist_raw[
             'Beat 1'].isna())[0]
         # Remove electrodes with NaN values for fitting modules (which cannot 
         # handle NaN values)
@@ -57,10 +57,10 @@ local_act_time, heat_map, input_param, electrode_config):
         # for each beat using lmfit's Model.fit()
         model_params = twod_poly_model.make_params(
             a=1, b=1, c=1, d=1, e=1, f=1)
-        for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
+        for num, beat in enumerate(local_act_time.param_dist_raw.drop(
         columns=['Electrode', 'X', 'Y'])):
             model_result = twod_poly_model.fit(
-                local_act_time.param_dist_normalized[beat].dropna(), 
+                local_act_time.param_dist_raw[beat].dropna(), 
                 model_params, x = x_elec, y = y_elec)
             conduction_vel.cv_popt[num] = list(model_result.params.values())
             # print(model_result.fit_report())
@@ -128,7 +128,7 @@ local_act_time, heat_map, input_param, electrode_config):
         conduction_vel.vector_y_comp.insert(1, 'X', electrode_config.electrode_coords_x)
         conduction_vel.vector_y_comp.insert(2, 'Y', electrode_config.electrode_coords_y)
 
-        # Calculate CV using finite difference methods.
+        # Calculate CV using simplistic finite difference methods.
         conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(
             local_act_time.param_dist_normalized.loc[
                 :, local_act_time.final_dist_beat_count]).replace(
@@ -219,7 +219,6 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
     conduction_vel.vector_mag = pd.DataFrame(vector_mag)
     conduction_vel.vector_x_comp = pd.DataFrame(vector_x_comp)
     conduction_vel.vector_y_comp = pd.DataFrame(vector_y_comp)
-
     print()
 
 
