@@ -56,7 +56,7 @@ local_act_time, conduction_vel, input_param):
     mappable_2 = temp_2.get_children()[0]
     heat_map.cbar_2 = analysisGUI.mainHeatmap.axis3.figure.colorbar(mappable_2, 
         ax=analysisGUI.mainHeatmap.axis2)
-    heat_map.cbar_2.ax.set_title("μV/ms", fontsize=10)
+    heat_map.cbar_2.ax.set_title("μV/(ms)", fontsize=10)
 
     analysisGUI.mainHeatmap.axis2.set(title="Upstroke Velocity", 
         xlabel="X coordinate (μm)", 
