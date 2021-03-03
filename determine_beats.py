@@ -40,9 +40,8 @@ electrode_config):
         file_length = ((len(raw_data.imported.index) / 
             input_param.sample_frequency) / 60)
 
-        # Needs fixing
-        # analysisGUI.file_length_label.configure(text=str(round(file_length, 2)) +
-        #     " minutes")
+        analysisGUI.fileLength.setText(str(round(file_length, 2)) +
+            " minutes")
 
         if analysisGUI.truncCheckbox.isChecked() == False:
             print("Calculating using full data set.")
