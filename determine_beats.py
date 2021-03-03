@@ -70,9 +70,11 @@ electrode_config):
             if '\r' in raw_data.imported.columns:
                 cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
                 1:-1]
+                cm_beats.y_axis.reset_index(drop=True, inplace=True)
             else:
                 cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
                 1:]
+                cm_beats.y_axis.reset_index(drop=True, inplace=True)
 
         # print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
         print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)))
