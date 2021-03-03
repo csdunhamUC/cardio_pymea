@@ -40,8 +40,7 @@ electrode_config):
         file_length = ((len(raw_data.imported.index) / 
             input_param.sample_frequency) / 60)
 
-        analysisGUI.fileLength.setText(str(round(file_length, 2)) +
-            " minutes")
+        analysisGUI.fileLength.setText(str(round(file_length, 2)) + " minutes")
 
         if analysisGUI.truncCheckbox.isChecked() == False:
             print("Calculating using full data set.")
@@ -94,6 +93,16 @@ electrode_config):
             str(input_param.parameter_width) + ", " +
             str(input_param.parameter_thresh) + ", " + 
             str(input_param.sample_frequency) + "\n")
+
+        # Assign electrode labels to cm_beats.y_axis columns
+        cm_beats.y_axis.columns = electrode_config.electrode_names
+        
+        # Manually silence selected electrodes if toggle silence is checked.
+        if analysisGUI.toggleSilence.isChecked() == True:
+            silencedElecs = analysisGUI.elecCombobox.currentData()
+            for elec in silencedElecs:
+                cm_beats.y_axis.loc[:, elec] = 0
+            print("Silenced electrodes: " + str(*silencedElecs))
 
         # For loop for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
@@ -156,9 +165,6 @@ electrode_config):
         cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
         cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
         cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
-
-        # Assign electrode labels to cm_beats.y_axis columns
-        cm_beats.y_axis.columns = electrode_config.electrode_names
 
         # Prints the output from the preceding operations.
         print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode[0]))

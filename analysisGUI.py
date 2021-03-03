@@ -335,6 +335,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
         electrode_config.electrode_toggle(raw_data)
+        analysisGUI.elecCombobox.addItems(electrode_config.electrode_names)
 
     except FileNotFoundError:
         print()
@@ -354,12 +355,21 @@ def trunc_toggle(analysisGUI):
         analysisGUI.truncStartEdit.hide()
         analysisGUI.truncEndEdit.hide()
 
+
+def silence_toggle(analysisGUI):
+    if analysisGUI.toggleSilence.isChecked() == True:
+        analysisGUI.elecCombobox.show()
+    elif analysisGUI.toggleSilence.isChecked() == False:
+        analysisGUI.elecCombobox.hide()
+
+
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
 def reload_module():
     importlib.reload(param_vs_distance_stats)
     importlib.reload(calculate_cv)
     importlib.reload(determine_beats)
+    importlib.reload(main_heatmap)
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
@@ -573,7 +583,7 @@ class AnalysisGUI(QMainWindow):
     def setup_UI(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
     cm_stats, electrode_config, psd_data, beat_amp_int):
-        self.setWindowTitle("Analysis GUI - PyQt Version 0.1")
+        self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
 
@@ -642,7 +652,7 @@ class AnalysisGUI(QMainWindow):
                 local_act_time, conduction_vel, input_param)])
 
         # Plot Menu
-        self.plotMenu = self.menuBar().addMenu("&Special Plots")
+        self.plotMenu = self.menuBar().addMenu("Special &Plots")
         self.plotMenu.addAction("Cond. Vel. Vector &Field",
             lambda: [self.condVelVectorWindow(cm_beats, local_act_time, 
                 conduction_vel, input_param),
@@ -729,7 +739,7 @@ class AnalysisGUI(QMainWindow):
         # Truncation widgets.
         self.truncCheckbox = QCheckBox("Truncate Data")
         self.truncCheckbox.clicked.connect(lambda: trunc_toggle(self))
-        self.truncCheckbox.setFixedWidth(115)
+        self.truncCheckbox.setFixedWidth(120)
         self.truncStartEdit = QLineEdit()
         self.truncStartEdit.setFixedWidth(55)
         self.truncEndEdit = QLineEdit()
@@ -740,13 +750,19 @@ class AnalysisGUI(QMainWindow):
         self.truncStartEdit.setVisible(False)
         self.truncEndEdit.setVisible(False)
         # Electrode silence widgets (toggle, special combobox w/ multi-select)
+        self.toggleSilence = QCheckBox("Silence Electrodes")
+        self.toggleSilence.clicked.connect(lambda: silence_toggle(self))
+        self.elecCombobox = CheckableComboBox()
+        paramLayout.addWidget(self.toggleSilence, 0, 8)
+        paramLayout.addWidget(self.elecCombobox, 1, 8)
+        self.elecCombobox.setVisible(False)
         # File name label.
         self.fileName = QLabel("Waiting for file.")
         self.fileName.setFixedWidth(200)
         self.fileName.setWordWrap(True)
         paramLayout.addWidget(self.fileName, 0, 9)
         # File duration label.
-        self.fileLength = QLabel("Waiting for file.")
+        self.fileLength = QLabel("Waiting for calculation.")
         self.fileLength.setFixedWidth(200)
         self.fileLength.setWordWrap(True)
         paramLayout.addWidget(self.fileLength, 1, 9)
