@@ -51,10 +51,10 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
         # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
-        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_lat,
+        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_mag,
             cmap='jet')
         contf = analysisGUI.cvVectWindow.paramPlot.axes.contourf(contX, contY, 
-            contZ_lat, cmap='jet')
+            contZ_mag, cmap='jet')
         # Plot streamplot.
         analysisGUI.cvVectWindow.paramPlot.axes.streamplot(contX, contY, contU, 
             contV)

@@ -320,7 +320,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
             lineterminator='\n', skiprows=[0, 1, 3], header=None, nrows=1, 
             encoding='iso-8859-15', skipinitialspace=True, engine='python')
 
-        # # Import data from file.
+        # Import data from file.
         raw_data.imported = pd.read_csv(data_filename_and_path[0], sep='\s+', 
             lineterminator='\n', skiprows=3, header=0, encoding='iso-8859-15', 
             skipinitialspace=True, low_memory=False)
