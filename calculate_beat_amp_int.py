@@ -83,7 +83,8 @@ def calculate_beat_interval(beat_amp_int, pace_maker):
 
 
 def calculate_delta_amp(beat_amp_int):
-    mean_beat_amp = beat_amp_int.beat_amp.mean(axis=0, skipna=True)
+    mean_beat_amp = beat_amp_int.beat_amp.drop(
+        columns=['Electrode', 'X', 'Y']).mean(axis=0, skipna=True)
     mba_start_removed = mean_beat_amp.iloc[1:]
     mba_end_removed = mean_beat_amp.iloc[:-1]
     beat_amp_int.delta_beat_amp = mba_start_removed.values - mba_end_removed.values
@@ -153,12 +154,13 @@ pace_maker, local_act_time, input_param):
     analysisGUI.ampIntWindow.paramPlot.axis2.tick_params(
         axis='y', labelcolor=color)
 
-    int_plot = analysisGUI.ampIntWindow.paramPlot.axis2.twinx()
+    beat_amp_int.int_plot = analysisGUI.ampIntWindow.paramPlot.axis2.twinx()
     color = "tab:blue"
-    int_plot.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
+    beat_amp_int.int_plot.scatter(np.arange(1, 
+        (len(beat_amp_int.beat_interval) +1)), 
         beat_amp_int.beat_interval, color=color)
-    int_plot.set_ylabel("Beat Interval (ms)", color=color)
-    int_plot.tick_params(axis='y', labelcolor=color)
+    beat_amp_int.int_plot.set_ylabel("Beat Interval (ms)", color=color)
+    beat_amp_int.int_plot.tick_params(axis='y', labelcolor=color)
 
     # Plot beat intervals across dataset.
     # beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 

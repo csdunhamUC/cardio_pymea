@@ -325,20 +325,25 @@ def data_import(analysisGUI, raw_data, electrode_config):
             lineterminator='\n', skiprows=3, header=0, encoding='iso-8859-15', 
             skipinitialspace=True, low_memory=False)
 
-        print("Import data completed at: ", 
-            datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
         # Update file name display in GUI following import
         analysisGUI.fileName.setText(import_filename)
         analysisGUI.file_path = import_path
+
+        print("Import data completed at: ", 
+            datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
         electrode_config.electrode_toggle(raw_data)
         analysisGUI.elecCombobox.addItems(electrode_config.electrode_names)
+        analysisGUI.mainHeatmap.axis1.cla()
+        analysisGUI.mainHeatmap.axis2.cla()
+        analysisGUI.mainHeatmap.axis3.cla()
+        analysisGUI.mainHeatmap.axis4.cla()
+        analysisGUI.mainHeatmap.draw()
 
     except FileNotFoundError:
-        print()
+        print("Operation cancelled.")
     except TypeError:
         print()
 
@@ -532,11 +537,11 @@ class PlotBeatSelectWindows(QWidget):
         self.elecSelect.addItem("F7")
         self.paramLabel = QLabel("Parameter")
         self.paramSelect = QComboBox()
-        self.paramSelect.setFixedWidth(110)
+        self.paramSelect.setFixedWidth(180)
         paramItems = ["Orig. Signal", "Cond. Vel.", "Up. Vel.", "Pacemaker", 
             "Local AT"]
         self.paramSelect.addItems(paramItems)
-        self.plotButton = QPushButton()
+        self.plotButton = QPushButton("Plot")
         self.plotButton.setFixedSize(70, 70)
         paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
         paramLayout.addWidget(self.beatRangeLabel, 0, 1, 1, 2)
@@ -553,7 +558,6 @@ class PlotBeatSelectWindows(QWidget):
             self.paramPlot = PSDPlotCanvas(self, width=8, height=7, dpi=100)
         elif (hasattr(analysisGUI, "ampCheck") is True 
         and analysisGUI.ampCheck is True):
-            paramWidget.setFixedWidth(180)
             self.paramPlot = GenericPlotCanvas(self, width=9, height=7, dpi=100)
 
         self.paramSlider = QSlider(Qt.Horizontal)
@@ -876,7 +880,6 @@ class AnalysisGUI(QMainWindow):
         self.psdWindow = PlotBeatSelectWindows(self)
         self.psdWindow.setWindowTitle("Power Spectra")
         self.psdWindow.show()
-        self.psdWindow.plotButton.setText("Plot")
         self.psdWindow.plotButton.clicked.connect(lambda: [
             psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
             pace_maker, upstroke_vel, local_act_time, conduction_vel, 
@@ -901,9 +904,12 @@ class AnalysisGUI(QMainWindow):
             calculate_beat_amp_int.beat_amp_interval_graph(self, 
             electrode_config, beat_amp_int, pace_maker, local_act_time, 
             input_param)])
+        self.ampIntWindow.plotButton.clicked.connect(lambda: [
+            calculate_beat_amp_int.beat_amp_interval_graph(self, 
+            electrode_config, beat_amp_int, pace_maker, local_act_time, 
+            input_param)])
         self.ampIntWindow.elecLabel.hide()
         self.ampIntWindow.elecSelect.hide()
-        self.ampIntWindow.plotButton.hide()
         self.ampIntWindow.paramLabel.hide()
         self.ampIntWindow.paramSelect.hide()
         self.ampCheck = False
