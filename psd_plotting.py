@@ -63,9 +63,6 @@ def plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel,
 local_act_time, conduction_vel, input_param, psd_data, start_beat, end_beat,
 elec_choice, param_choices, electrode_config):
     analysisGUI.psdWindow.paramPlot.axis1.cla()
-    # Only here for testing, will remove later.
-    print(pace_maker.param_dist_raw.loc[elec_choice, start_beat])
-    print(pace_maker.param_dist_raw.loc[elec_choice, end_beat])
 
     check_param = analysisGUI.psdWindow.paramSelect.currentText()
     if check_param == "Orig. Signal":

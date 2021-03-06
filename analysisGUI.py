@@ -31,7 +31,6 @@ import calculate_cv
 import main_heatmap
 import param_vs_distance_stats
 import psd_plotting
-import cv_quiver
 import calculate_beat_amp_int
 
 
@@ -378,7 +377,6 @@ def reload_module():
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
-    importlib.reload(cv_quiver)
     importlib.reload(calculate_beat_amp_int)
     print("Reloaded modules.")
 
@@ -660,7 +658,7 @@ class AnalysisGUI(QMainWindow):
         self.plotMenu.addAction("Cond. Vel. Vector &Field",
             lambda: [self.condVelVectorWindow(cm_beats, local_act_time, 
                 conduction_vel, input_param),
-                cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
+                calculate_cv.cv_quiver_plot(self, input_param, local_act_time, 
                 conduction_vel)])
         self.plotMenu.addAction("&Beat Amplitude && Interval",
             lambda: [self.beatAmpIntWindow(cm_beats, pace_maker, local_act_time,
@@ -854,7 +852,7 @@ class AnalysisGUI(QMainWindow):
         self.cvVectWindow.paramSlider.setMaximum(
             int(cm_beats.beat_count_dist_mode[0]) - 1)
         self.cvVectWindow.paramSlider.valueChanged.connect(lambda: [
-            cv_quiver.cv_quiver_plot(self, input_param, local_act_time, 
+            calculate_cv.cv_quiver_plot(self, input_param, local_act_time, 
             conduction_vel)])
 
     def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
@@ -942,8 +940,3 @@ def main():
     sys.exit(app.exec_())
 
 main()
-
-############################## Dump for later. #################################
-    # self.plotTwo = MinorHeatmapCanvas(self, width=6, height=6, dpi=100)
-    # plotLayout.addWidget(self.plotTwo, 4, 0, 1, 2)
-    # self.plotTwo.axes.plot(x_var, y_var)
