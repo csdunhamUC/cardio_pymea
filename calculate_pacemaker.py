@@ -214,3 +214,7 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
         print("Please calculate PM first.")
     except IndexError:
         print("You entered a beat that does not exist.")
+
+
+def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
+    print()

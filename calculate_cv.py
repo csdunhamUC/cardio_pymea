@@ -66,29 +66,6 @@ local_act_time, heat_map, input_param, electrode_config):
             conduction_vel.cv_popt[num] = list(model_result.params.values())
             # print(model_result.fit_report())
 
-        # # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
-        # # for each beat using curve_fit
-        # for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
-        # columns=['Electrode', 'X', 'Y'])):
-        #     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
-        #         two_dim_polynomial, elec_nan_removed, 
-        #         local_act_time.param_dist_normalized[beat].dropna(),
-        #         method="trf")
-
-        # # Alternative to the preceding lines, using sorted values
-        # # Gives truly nonsensical results.  Probably needs better sorting.
-        # cv_without_nan = conduction_vel.param_dist_raw[beat].dropna()
-        # cv_without_nan = cv_without_nan.sort_values(ascending=True)
-        # x_sorted = local_act_time.distance_from_min.loc[cv_without_nan.index, 
-        #     beat].sort_values(ascending=True)
-        # elec_removed_sorted = np.sort(elec_nan_removed)
-        # for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
-        # columns=['Electrode', 'X', 'Y'])):
-        #     lat_sorted = local_act_time.param_dist_normalized[
-        #         beat].dropna().sort_values(ascending=True)
-        #     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
-        #         two_dim_polynomial, elec_removed_sorted, lat_sorted)
-
         # Calculate derivatives using SymPy diff and lambdify at each electrode
         # for each beat, using the parameters for the two-dimensional polynomial
         # obtained from curve_fit
@@ -359,3 +336,26 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
 # for var in [x, y]:
 #     print("\\frac{\\partial g}{\\partial " + str(var) + "} =", 
 #         sym.latex(sym.simplify(t_xy.diff(var))))
+
+# # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
+# # for each beat using curve_fit
+# for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
+# columns=['Electrode', 'X', 'Y'])):
+#     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
+#         two_dim_polynomial, elec_nan_removed, 
+#         local_act_time.param_dist_normalized[beat].dropna(),
+#         method="trf")
+
+# # Alternative to the preceding lines, using sorted values
+# # Gives truly nonsensical results.  Probably needs better sorting.
+# cv_without_nan = conduction_vel.param_dist_raw[beat].dropna()
+# cv_without_nan = cv_without_nan.sort_values(ascending=True)
+# x_sorted = local_act_time.distance_from_min.loc[cv_without_nan.index, 
+#     beat].sort_values(ascending=True)
+# elec_removed_sorted = np.sort(elec_nan_removed)
+# for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
+# columns=['Electrode', 'X', 'Y'])):
+#     lat_sorted = local_act_time.param_dist_normalized[
+#         beat].dropna().sort_values(ascending=True)
+#     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
+#         two_dim_polynomial, elec_removed_sorted, lat_sorted)
