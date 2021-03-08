@@ -377,6 +377,7 @@ def reload_module():
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
+    importlib.reload(calculate_pacemaker)
     importlib.reload(calculate_beat_amp_int)
     print("Reloaded modules.")
 
@@ -675,7 +676,9 @@ class AnalysisGUI(QMainWindow):
                 conduction_vel, input_param, psd_data)])
         self.plotMenu.addAction("&Estimated Pacemaker Origin",
             lambda: [self.pmOriginWindow(cm_beats, pace_maker, heat_map, 
-            input_param)])
+                input_param),
+                calculate_pacemaker.estmimate_pm_origin(self, pace_maker, 
+                input_param)])
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
@@ -815,6 +818,11 @@ class AnalysisGUI(QMainWindow):
         self.circFitWindow = SoloHeatmapWindows()
         self.circFitWindow.setWindowTitle("Predicted PM Origin")
         self.circFitWindow.show()
+        self.circFitWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.circFitWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_pacemaker.estmimate_pm_origin(self, pace_maker, 
+            input_param)])
 
 
     def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):

@@ -11,7 +11,7 @@ from colorama import Style
 from colorama import init
 from colorama import deinit
 import seaborn as sns
-from lmfit import model
+from scipy import optimize
 from matplotlib import pyplot as plt
 
 # Comment out init() if using Pycharm on Windows.
@@ -218,21 +218,86 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
         print("You entered a beat that does not exist.")
 
 
+# Much appreciation to the author of this Stack Exchange post, whose code I
+# adapted for the purpose of the circle fitting.
+# (https://stackoverflow.com/questions/44647239/
+# how-to-fit-a-circle-to-a-set-of-points-with-a-constrained-radius)
 def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
-    
-    
-    # contZ_lat = lat_beat.pivot_table(index='Y', 
-    # columns='X', values=lat_beat).values
-    # contX_uniq = np.sort(cv_beat_mag.X.unique())
-    # contY_uniq = np.sort(cv_beat_mag.Y.unique())
-    # contX, contY = np.meshgrid(contX_uniq, contY_uniq)
+    try:
+        analysisGUI.circFitWindow.paramPlot.axes.cla()
+        # pace_maker.param_dist_normalized
+        curr_beat = pace_maker.final_dist_beat_count[
+            analysisGUI.circFitWindow.paramSlider.value()]
+        temp_without_nan = pace_maker.param_dist_normalized[
+            ['X', 'Y', curr_beat]].dropna()
+        contX_uniq = np.sort(temp_without_nan.X.unique())
+        contY_uniq = np.sort(temp_without_nan.Y.unique())
+        contX, contY = np.meshgrid(contX_uniq, contY_uniq)
+        contPM = temp_without_nan.pivot_table(index='Y', columns='X', 
+            values=temp_without_nan).values
 
-    # Get values of wave front from contour plot of PM
-    pm_contour = plt.contour()
+        # Get values of wave front from contour plot of PM
+        pm_contour = plt.contour(contX, contY, 
+            contPM, cmap='jet')
 
-    print()
+        # Depending on the segment used from the contour plot, circle fitting is
+        # failing and ultimately generating a nonsensical plot that's curved the
+        # wrong way.  Will need to either use some sort of center of mass calc
+        # and/or set limits on R such that one cannot escape the boundaries of
+        # the MEA well.
+        print(len(pm_contour.allsegs))
+        # print(pm_contour.allsegs[0][0])
+        print(pm_contour.allsegs[3][0][0])
+        print(np.shape(pm_contour.allsegs[4][0]))
+        print("Length of allsegs: " + str(len(pm_contour.allsegs[4][0])))
+        if len(pm_contour.allsegs[2][0]) > 9:
+            temp_array = pm_contour.allsegs[2][0][0:]
+            print("Using position 2 from allsegs.")
+        elif len(pm_contour.allsegs[3][0]) > 9:
+            temp_array = pm_contour.allsegs[3][0][0:]
+            print("Using position 3 from allsegs.")
+        elif len(pm_contour.allsegs[4][0]) > 9:
+            temp_array = pm_contour.allsegs[4][0][0:]
+            print("Using position 4 from allsegs.")
+        print(np.shape(temp_array))
+        x_test = temp_array[0:, 0]
+        y_test = temp_array[0:, 1]
+        cont_data = np.array([x_test, y_test]).T
+        print(np.shape(cont_data))
+
+        # Estimated h, k and R of circle for 200x30 120 electrode MEA w/ PM @ center
+        estimates = [1265, 1265, 1000]
+        circle_fit_pts, misc = optimize.leastsq(circle_residual, estimates, 
+            args=(cont_data))
+
+        print(circle_fit_pts)
+        phi_vals = np.linspace(0, 2*np.pi, 500)
+        pm_estimate=np.array(
+            [gen_circle(phi,*circle_fit_pts) for phi in phi_vals])
+
+        analysisGUI.circFitWindow.paramPlot.axes.plot(pm_estimate[:,0], 
+            pm_estimate[:,1])
+        analysisGUI.circFitWindow.paramPlot.axes.contourf(contX, contY, contPM, 
+            cmap='jet')
+        analysisGUI.circFitWindow.paramPlot.axes.scatter(x_test, y_test)
+        analysisGUI.circFitWindow.paramPlot.axes.scatter(circle_fit_pts[0], 
+            circle_fit_pts[1], c="orange")
+        analysisGUI.circFitWindow.paramPlot.axes.invert_yaxis()
+        analysisGUI.circFitWindow.paramPlot.axes.set(
+            title="Estimated Origin of Pacemaker During " + curr_beat, 
+            xlabel="Coordinates (μm)", ylabel="Coordinates (μm)")
+        analysisGUI.circFitWindow.paramPlot.draw()
+    except TypeError:
+        print("Issue with chosen allseg.  Select a new band.")
 
 
-def circle_radius(x, y, h, k):
+def circle_residual(parameters, data_points):
+    h, k, Ri = parameters
     # r = sqrt((x-h)^2 + (y-k)^2)
-    return ((x-h)**2 + (y-k)**2)**0.5
+    radius = [np.sqrt((x-h)**2 + (y-k)**2) for x,y in data_points]
+    residual = [(Ri - rad)**2 for rad in radius]
+    return residual
+
+
+def gen_circle(phi,h,k,r):
+    return [h+r*np.cos(phi),k+r*np.sin(phi)]

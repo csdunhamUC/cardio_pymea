@@ -16,59 +16,61 @@ from scipy.optimize import curve_fit
 # cm_beats.y_axis format: columns = electrodes, rows = voltages
 def calculate_beat_amp(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
-    
-    if hasattr(beat_amp_int, 'beat_amp') is True:
-        print("Deleting previous data.")
-        delattr(beat_amp_int, 'beat_amp')
-        delattr(beat_amp_int, 'beat_interval')
-        delattr(beat_amp_int, 'mean_beat_int')
+    try:
+        if hasattr(beat_amp_int, 'beat_amp') is True:
+            print("Deleting previous data.")
+            delattr(beat_amp_int, 'beat_amp')
+            delattr(beat_amp_int, 'beat_interval')
+            delattr(beat_amp_int, 'mean_beat_int')
 
-    print("Calculating beat amplitude and interval.")
+        print("Calculating beat amplitude and interval.")
 
-    # Find indices of electrodes with NaN values.
-    nan_electrodes_idx = np.where(pace_maker.param_dist_raw['Beat 1'].isna())[0]
-    # Remove electrodes with NaN values
-    x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
-    y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
-    # Generate 2xN matrix, where N = number of non-NaN electrodes, 
-    # of elec. coords.
-    elec_nan_removed = np.array([x_elec, y_elec])
+        # Find indices of electrodes with NaN values.
+        nan_electrodes_idx = np.where(pace_maker.param_dist_raw['Beat 1'].isna())[0]
+        # Remove electrodes with NaN values
+        x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
+        y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
+        # Generate 2xN matrix, where N = number of non-NaN electrodes, 
+        # of elec. coords.
+        elec_nan_removed = np.array([x_elec, y_elec])
+            
+        # Generate new list with the electrode names with NaN values removed.
+        elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
+        elec_removed_names = [
+            i for i in electrode_config.electrode_names if i not in elec_to_remove]
+
+        amps_array = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
+            int(len(elec_nan_removed[0]))))
+        temp_amps = np.zeros(int(len(elec_nan_removed[0])))
+
+        for num, beat in enumerate(pace_maker.param_dist_raw):
+            for num2, elec in enumerate(elec_removed_names):
+                temp_idx = int(pace_maker.param_dist_raw.loc[elec, beat])
+                temp_amps[num2] = cm_beats.y_axis.loc[temp_idx, elec]
+            
+            amps_array[num] = temp_amps.T
+
+        beat_amp_int.beat_amp = pd.DataFrame(amps_array)
+        beat_amp_int.beat_amp.columns = elec_removed_names
+        beat_amp_int.beat_amp.index = pace_maker.param_dist_raw.columns
+
+        # Fill in the void of omitted electrodes with NaN values.
+        missing_elec_fill = [np.nan] * int(cm_beats.beat_count_dist_mode[0])
+        for missing in nan_electrodes_idx:
+            nan_elec = electrode_config.electrode_names[missing]
+            beat_amp_int.beat_amp.insert(int(missing), nan_elec, 
+                missing_elec_fill)
+
+        beat_amp_int.beat_amp = beat_amp_int.beat_amp.T
+        beat_amp_int.beat_amp.insert(0, 'Electrode', electrode_config.electrode_names)
+        beat_amp_int.beat_amp.insert(1, 'X', electrode_config.electrode_coords_x)
+        beat_amp_int.beat_amp.insert(2, 'Y', electrode_config.electrode_coords_y)
         
-    # Generate new list with the electrode names with NaN values removed.
-    elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
-    elec_removed_names = [
-        i for i in electrode_config.electrode_names if i not in elec_to_remove]
-
-    amps_array = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
-        int(len(elec_nan_removed[0]))))
-    temp_amps = np.zeros(int(len(elec_nan_removed[0])))
-
-    for num, beat in enumerate(pace_maker.param_dist_raw):
-        for num2, elec in enumerate(elec_removed_names):
-            temp_idx = int(pace_maker.param_dist_raw.loc[elec, beat])
-            temp_amps[num2] = cm_beats.y_axis.loc[temp_idx, elec]
-        
-        amps_array[num] = temp_amps.T
-
-    beat_amp_int.beat_amp = pd.DataFrame(amps_array)
-    beat_amp_int.beat_amp.columns = elec_removed_names
-    beat_amp_int.beat_amp.index = pace_maker.param_dist_raw.columns
-
-    # Fill in the void of omitted electrodes with NaN values.
-    missing_elec_fill = [np.nan] * int(cm_beats.beat_count_dist_mode[0])
-    for missing in nan_electrodes_idx:
-        nan_elec = electrode_config.electrode_names[missing]
-        beat_amp_int.beat_amp.insert(int(missing), nan_elec, 
-            missing_elec_fill)
-
-    beat_amp_int.beat_amp = beat_amp_int.beat_amp.T
-    beat_amp_int.beat_amp.insert(0, 'Electrode', electrode_config.electrode_names)
-    beat_amp_int.beat_amp.insert(1, 'X', electrode_config.electrode_coords_x)
-    beat_amp_int.beat_amp.insert(2, 'Y', electrode_config.electrode_coords_y)
-    
-    calculate_beat_interval(beat_amp_int, pace_maker)
-    calculate_delta_amp(beat_amp_int)
-    print("Done.")
+        calculate_beat_interval(beat_amp_int, pace_maker)
+        calculate_delta_amp(beat_amp_int)
+        print("Done.")
+    except KeyError:
+        print("Please find beats before performing other calculations.")
 
 
 def calculate_beat_interval(beat_amp_int, pace_maker):
