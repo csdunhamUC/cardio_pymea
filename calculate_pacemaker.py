@@ -11,6 +11,8 @@ from colorama import Style
 from colorama import init
 from colorama import deinit
 import seaborn as sns
+from lmfit import model
+from matplotlib import pyplot as plt
 
 # Comment out init() if using Pycharm on Windows.
 init()
@@ -217,4 +219,20 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
 
 
 def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
+    
+    
+    # contZ_lat = lat_beat.pivot_table(index='Y', 
+    # columns='X', values=lat_beat).values
+    # contX_uniq = np.sort(cv_beat_mag.X.unique())
+    # contY_uniq = np.sort(cv_beat_mag.Y.unique())
+    # contX, contY = np.meshgrid(contX_uniq, contY_uniq)
+
+    # Get values of wave front from contour plot of PM
+    pm_contour = plt.contour()
+
     print()
+
+
+def circle_radius(x, y, h, k):
+    # r = sqrt((x-h)^2 + (y-k)^2)
+    return ((x-h)**2 + (y-k)**2)**0.5

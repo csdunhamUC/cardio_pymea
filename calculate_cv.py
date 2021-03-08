@@ -238,30 +238,24 @@ input_param):
 
 def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     try:
-        input_param.cv_vector_beat_choice = analysisGUI.cvVectWindow.paramSlider.value()
-        
-        # X and Y electrode coordinates
+        input_param.cv_vector_beat_choice = analysisGUI.cvVectWindow.paramSlider.value() 
         analysisGUI.cvVectWindow.paramPlot.axes.cla()
-
         curr_beat = local_act_time.final_dist_beat_count[
             input_param.cv_vector_beat_choice]
 
         cv_beat_mag = conduction_vel.vector_mag[
             ['X', 'Y', curr_beat]].dropna()
-
         cv_beat_raw = conduction_vel.param_dist_raw[
             ['X', 'Y', curr_beat]].dropna()
-
         lat_beat = local_act_time.param_dist_normalized[
             ['X', 'Y', curr_beat]].dropna()
-
+        
         x_comp = conduction_vel.vector_x_comp[
             ['X', 'Y', curr_beat]].dropna()
-
         y_comp = conduction_vel.vector_y_comp[
             ['X', 'Y', curr_beat]].dropna()
 
-        # For vector mag and plotting x, y coordinates in a grid
+        # For vector magnitude and plotting x, y coordinates in a grid
         contZ_mag = cv_beat_mag.pivot_table(index='Y', 
             columns='X', values=cv_beat_mag).values
         contZ_raw = cv_beat_raw.pivot_table(index='Y',

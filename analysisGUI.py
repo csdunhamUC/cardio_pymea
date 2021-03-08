@@ -673,7 +673,9 @@ class AnalysisGUI(QMainWindow):
                 psd_plotting.psd_plotting(self, cm_beats, 
                 electrode_config, pace_maker, upstroke_vel, local_act_time, 
                 conduction_vel, input_param, psd_data)])
-        self.plotMenu.addAction("&Manual Electrode Filter")
+        self.plotMenu.addAction("&Estimated Pacemaker Origin",
+            lambda: [self.pmOriginWindow(cm_beats, pace_maker, heat_map, 
+            input_param)])
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
@@ -808,6 +810,12 @@ class AnalysisGUI(QMainWindow):
         self.pmWindow.paramSlider.valueChanged.connect(lambda: [
             calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
             input_param)])
+
+    def pmOriginWindow(self, cm_beats, pace_maker, heat_map, input_param):
+        self.circFitWindow = SoloHeatmapWindows()
+        self.circFitWindow.setWindowTitle("Predicted PM Origin")
+        self.circFitWindow.show()
+
 
     def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):
         self.dvdtWindow = SoloHeatmapWindows()
