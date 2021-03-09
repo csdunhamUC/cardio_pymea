@@ -246,7 +246,6 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         if best_vals is False:
             for i in range(len(pm_contour.allsegs)):
                 if len(pm_contour.allsegs[i]) > 0:
-                    print(len(pm_contour.allsegs[i][0]))
                     if len(pm_contour.allsegs[i][0]) >= 11:
                         temp_array = pm_contour.allsegs[i][0][0:]
                         print("Using position " + str(i) + " from allsegs.")
@@ -296,8 +295,8 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         # Estimated h, k and initial radius Ri of circle for 200x30um spacing 
         # and electrode size, 120 electrode MEA w/ PM @ center
         # x, y, R_pred, r_min, r_max
-        low_bounds = np.array([-10000, -10000, 0, 0, 0])
-        up_bounds = np.array([10000, 10000, 9500, 100, 9500])
+        low_bounds = np.array([-10000, -10000, 150, 75, 150])
+        up_bounds = np.array([10000, 10000, 9500, 150, 9500])
         estimates = [x_guess, y_guess, 1000, 100, 9500]
 
         circle_fit_pts = optimize.least_squares(circle_residual, 
@@ -320,7 +319,7 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
             title="Estimated Origin of Pacemaker During " + curr_beat, 
             xlabel="Coordinates (μm)", ylabel="Coordinates (μm)")
         analysisGUI.circFitWindow.paramPlot.draw()
-        
+
     except TypeError:
         print("Issue with chosen allseg.  Select a new band.")
     except IndexError:

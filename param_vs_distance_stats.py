@@ -15,6 +15,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
     try:
         if hasattr(cm_stats, 'pace_maker_filtered_data') is True:
                 print("Clearing old statistics data before running new calculation.")
+                delattr(cm_stats, 'pace_maker_filtered_data')
                 delattr(cm_stats, 'upstroke_vel_filtered_data')
                 delattr(cm_stats, 'local_act_time_filtered_data')
                 delattr(cm_stats, 'conduction_vel_filtered_data')
