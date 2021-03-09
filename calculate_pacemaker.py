@@ -246,11 +246,10 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         # and/or set limits on R such that one cannot escape the boundaries of
         # the MEA well.
         print(len(pm_contour.allsegs))
-        # print(pm_contour.allsegs[0][0])
-        print(pm_contour.allsegs[3][0][0])
-        print(np.shape(pm_contour.allsegs[4][0]))
-        print("Length of allsegs: " + str(len(pm_contour.allsegs[4][0])))
-        if len(pm_contour.allsegs[2][0]) > 9:
+        if len(pm_contour.allsegs[1][0]) > 9:
+            temp_array = pm_contour.allsegs[1][0][0:]
+            print("Using position 1 from allsegs.")
+        elif len(pm_contour.allsegs[2][0]) > 9:
             temp_array = pm_contour.allsegs[2][0][0:]
             print("Using position 2 from allsegs.")
         elif len(pm_contour.allsegs[3][0]) > 9:
@@ -259,18 +258,58 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         elif len(pm_contour.allsegs[4][0]) > 9:
             temp_array = pm_contour.allsegs[4][0][0:]
             print("Using position 4 from allsegs.")
+        elif len(pm_contour.allsegs[5][0]) > 9:
+            temp_array = pm_contour.allsegs[4][0][0:]
+            print("Using position 5 from allsegs.")
+        elif len(pm_contour.allsegs[6][0]) > 9:
+            temp_array = pm_contour.allsegs[4][0][0:]
+            print("Using position 6 from allsegs.")
+        elif len(pm_contour.allsegs[1][0]) > 4:
+            print("No segments with more than 9 points.  Using 4.")
+            temp_array = pm_contour.allsegs[1][0][0:]
+            print("Using position 1 from allsegs.")
+        elif len(pm_contour.allsegs[2][0]) > 4:
+            print("No segments with more than 9 points.  Using 4.")
+            temp_array = pm_contour.allsegs[2][0][0:]
+            print("Using position 2 from allsegs.")
+        elif len(pm_contour.allsegs[3][0]) > 4:
+            print("No segments with more than 9 points.  Using 4.")
+            temp_array = pm_contour.allsegs[3][0][0:]
+            print("Using position 3 from allsegs.")
+        elif len(pm_contour.allsegs[4][0]) > 4:
+            print("No segments with more than 9 points.  Using 4.")
+            temp_array = pm_contour.allsegs[4][0][0:]
+            print("Using position 4 from allsegs.")
+        elif len(pm_contour.allsegs[5][0]) > 4:
+            print("No segments with more than 9 points.  Using 4.")
+            temp_array = pm_contour.allsegs[4][0][0:]
+            print("Using position 5 from allsegs.")
+        elif len(pm_contour.allsegs[6][0]) > 4:
+            print("No segments with more than 9 points.  Using 4.")
+            temp_array = pm_contour.allsegs[4][0][0:]
+            print("Using position 6 from allsegs.")
+        
         print(np.shape(temp_array))
         x_test = temp_array[0:, 0]
         y_test = temp_array[0:, 1]
         cont_data = np.array([x_test, y_test]).T
-        print(np.shape(cont_data))
 
-        # Estimated h, k and R of circle for 200x30 120 electrode MEA w/ PM @ center
-        estimates = [1265, 1265, 1000]
-        circle_fit_pts, misc = optimize.leastsq(circle_residual, estimates, 
-            args=(cont_data))
+        x_guess = np.mean(x_test)
+        y_guess = np.mean(y_test)
+        print(x_guess)
+        print(y_guess)
 
+        # Estimated h, k and initial radius Ri of circle for 200x30um spacing 
+        # and electrode size, 120 electrode MEA w/ PM @ center
+        # x, y, R_pred, r_min, r_max
+        low_bounds = np.array([-10000, -10000, 0, 0, 0])
+        up_bounds = np.array([10000, 10000, 9500, 100, 9500])
+        estimates = [x_guess, y_guess, 1000, 100, 9500]
+
+        circle_fit_pts = optimize.least_squares(circle_residual, 
+            estimates, bounds=(low_bounds, up_bounds), args=([cont_data])).x
         print(circle_fit_pts)
+
         phi_vals = np.linspace(0, 2*np.pi, 500)
         pm_estimate=np.array(
             [gen_circle(phi,*circle_fit_pts) for phi in phi_vals])
@@ -291,13 +330,16 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         print("Issue with chosen allseg.  Select a new band.")
 
 
+# With bounds on R
 def circle_residual(parameters, data_points):
-    h, k, Ri = parameters
+    h, k, Rp, r_min, r_max = parameters
     # r = sqrt((x-h)^2 + (y-k)^2)
+    Ri= r_min + (r_max - r_min)*0.5*(1+np.tanh(Rp))
     radius = [np.sqrt((x-h)**2 + (y-k)**2) for x,y in data_points]
-    residual = [(Ri - rad)**2 for rad in radius]
+    residual = np.array([(Ri - rad)**2 for rad in radius])
     return residual
 
 
-def gen_circle(phi,h,k,r):
-    return [h+r*np.cos(phi),k+r*np.sin(phi)]
+def gen_circle(phi, h, k, Rp, r_min, r_max):
+    r_limited = (r_min + (r_max - r_min)*0.5*(1 + np.tanh(r_max)))
+    return [h+r_limited*np.cos(phi),k+r_limited*np.sin(phi)]
