@@ -240,55 +240,49 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         pm_contour = plt.contour(contX, contY, 
             contPM, cmap='jet')
 
-        # Depending on the segment used from the contour plot, circle fitting is
-        # failing and ultimately generating a nonsensical plot that's curved the
-        # wrong way.  Will need to either use some sort of center of mass calc
-        # and/or set limits on R such that one cannot escape the boundaries of
-        # the MEA well.
-        print(len(pm_contour.allsegs))
-        if len(pm_contour.allsegs[1][0]) > 9:
-            temp_array = pm_contour.allsegs[1][0][0:]
-            print("Using position 1 from allsegs.")
-        elif len(pm_contour.allsegs[2][0]) > 9:
-            temp_array = pm_contour.allsegs[2][0][0:]
-            print("Using position 2 from allsegs.")
-        elif len(pm_contour.allsegs[3][0]) > 9:
-            temp_array = pm_contour.allsegs[3][0][0:]
-            print("Using position 3 from allsegs.")
-        elif len(pm_contour.allsegs[4][0]) > 9:
-            temp_array = pm_contour.allsegs[4][0][0:]
-            print("Using position 4 from allsegs.")
-        elif len(pm_contour.allsegs[5][0]) > 9:
-            temp_array = pm_contour.allsegs[4][0][0:]
-            print("Using position 5 from allsegs.")
-        elif len(pm_contour.allsegs[6][0]) > 9:
-            temp_array = pm_contour.allsegs[4][0][0:]
-            print("Using position 6 from allsegs.")
-        elif len(pm_contour.allsegs[1][0]) > 4:
-            print("No segments with more than 9 points.  Using 4.")
-            temp_array = pm_contour.allsegs[1][0][0:]
-            print("Using position 1 from allsegs.")
-        elif len(pm_contour.allsegs[2][0]) > 4:
-            print("No segments with more than 9 points.  Using 4.")
-            temp_array = pm_contour.allsegs[2][0][0:]
-            print("Using position 2 from allsegs.")
-        elif len(pm_contour.allsegs[3][0]) > 4:
-            print("No segments with more than 9 points.  Using 4.")
-            temp_array = pm_contour.allsegs[3][0][0:]
-            print("Using position 3 from allsegs.")
-        elif len(pm_contour.allsegs[4][0]) > 4:
-            print("No segments with more than 9 points.  Using 4.")
-            temp_array = pm_contour.allsegs[4][0][0:]
-            print("Using position 4 from allsegs.")
-        elif len(pm_contour.allsegs[5][0]) > 4:
-            print("No segments with more than 9 points.  Using 4.")
-            temp_array = pm_contour.allsegs[4][0][0:]
-            print("Using position 5 from allsegs.")
-        elif len(pm_contour.allsegs[6][0]) > 4:
-            print("No segments with more than 9 points.  Using 4.")
-            temp_array = pm_contour.allsegs[4][0][0:]
-            print("Using position 6 from allsegs.")
+        # Figure out which contour lines to used.  Currently favors the lines
+        # containing the most points (x,y).
+        best_vals = False
+        if best_vals is False:
+            for i in range(len(pm_contour.allsegs)):
+                if len(pm_contour.allsegs[i]) > 0:
+                    print(len(pm_contour.allsegs[i][0]))
+                    if len(pm_contour.allsegs[i][0]) >= 11:
+                        temp_array = pm_contour.allsegs[i][0][0:]
+                        print("Using position " + str(i) + " from allsegs.")
+                        best_vals = True
+                        break
+
+        if best_vals is False:
+            for i in range(len(pm_contour.allsegs)):
+                if len(pm_contour.allsegs[i]) > 0:
+                    if len(pm_contour.allsegs[i][0]) >= 9:
+                        temp_array = pm_contour.allsegs[i][0][0:]
+                        print("No segments with more than 11 points.  Using 9.")
+                        print("Using position " + str(i) + " from allsegs.")
+                        best_vals = True
+                        break
+
+        if best_vals is False:
+            for i in range(len(pm_contour.allsegs)):
+                if len(pm_contour.allsegs[i]) > 0:
+                    if len(pm_contour.allsegs[i][0]) >= 7:
+                        temp_array = pm_contour.allsegs[i][0][0:]
+                        print("No segments with more than 9 points.  Using 7.")
+                        print("Using position " + str(i) + " from allsegs.")
+                        best_vals = True
+                        break
         
+        if best_vals is False:
+            for i in range(len(pm_contour.allsegs)):
+                if len(pm_contour.allsegs[i]) > 0:
+                    if len(pm_contour.allsegs[i][0]) >= 4:
+                        temp_array = pm_contour.allsegs[i][0][0:]
+                        print("No segments with more than 7 points.  Using 4.")
+                        print("Using position " + str(i) + " from allsegs.")
+                        best_vals = True
+                        break
+
         print(np.shape(temp_array))
         x_test = temp_array[0:, 0]
         y_test = temp_array[0:, 1]
@@ -326,8 +320,11 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
             title="Estimated Origin of Pacemaker During " + curr_beat, 
             xlabel="Coordinates (μm)", ylabel="Coordinates (μm)")
         analysisGUI.circFitWindow.paramPlot.draw()
+        
     except TypeError:
         print("Issue with chosen allseg.  Select a new band.")
+    except IndexError:
+        print("Early allseg entries are empty.")
 
 
 # With bounds on R
