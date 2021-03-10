@@ -219,7 +219,7 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
 
 
 # Much appreciation to the author of this Stack Exchange post, whose code I
-# adapted for the purpose of the circle fitting.
+# adapted (with modifications) for the purpose of the circle fitting.
 # (https://stackoverflow.com/questions/44647239/
 # how-to-fit-a-circle-to-a-set-of-points-with-a-constrained-radius)
 def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
@@ -294,9 +294,9 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
 
         # Estimated h, k and initial radius Ri of circle for 200x30um spacing 
         # and electrode size, 120 electrode MEA w/ PM @ center
-        # x, y, R_pred, r_min, r_max
-        low_bounds = np.array([-10000, -10000, 150, 75, 150])
-        up_bounds = np.array([10000, 10000, 9500, 150, 9500])
+        # h, k, R_pred, r_min, r_max
+        low_bounds = np.array([-9500, -9500, 75, 75, 150])
+        up_bounds = np.array([9500, 9500, 9500, 150, 9500])
         estimates = [x_guess, y_guess, 1000, 100, 9500]
 
         circle_fit_pts = optimize.least_squares(circle_residual, 
@@ -326,16 +326,16 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         print("Early allseg entries are empty.")
 
 
-# With bounds on R
+# Calculate residuals for least_squares, with bounds on R
 def circle_residual(parameters, data_points):
-    h, k, Rp, r_min, r_max = parameters
+    h, k, R_pred, r_min, r_max = parameters
     # r = sqrt((x-h)^2 + (y-k)^2)
-    Ri= r_min + (r_max - r_min)*0.5*(1+np.tanh(Rp))
-    radius = [np.sqrt((x-h)**2 + (y-k)**2) for x,y in data_points]
+    Ri = r_min + (r_max - r_min) * 0.5 * (1+np.tanh(R_pred))
+    radius = [np.sqrt((x - h)**2 + (y - k)**2) for x, y in data_points]
     residual = np.array([(Ri - rad)**2 for rad in radius])
     return residual
 
 
-def gen_circle(phi, h, k, Rp, r_min, r_max):
-    r_limited = (r_min + (r_max - r_min)*0.5*(1 + np.tanh(r_max)))
-    return [h+r_limited*np.cos(phi),k+r_limited*np.sin(phi)]
+def gen_circle(phi, h, k, R_pred, r_min, r_max):
+    r_limited = (r_min + (r_max - r_min) * 0.5 * (1 + np.tanh(r_max)))
+    return [h + r_limited * np.cos(phi), k + r_limited * np.sin(phi)]
