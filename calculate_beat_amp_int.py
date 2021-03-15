@@ -89,7 +89,8 @@ def calculate_delta_amp(beat_amp_int):
         columns=['Electrode', 'X', 'Y']).mean(axis=0, skipna=True)
     mba_start_removed = mean_beat_amp.iloc[1:]
     mba_end_removed = mean_beat_amp.iloc[:-1]
-    beat_amp_int.delta_beat_amp = mba_start_removed.values - mba_end_removed.values
+    beat_amp_int.delta_beat_amp = ((mba_start_removed.values - 
+        mba_end_removed.values) / mba_end_removed.values) * 100
 
 
 def beat_amp_interval_graph(analysisGUI, electrode_config, beat_amp_int, 
@@ -152,7 +153,7 @@ pace_maker, local_act_time, input_param):
         title="Delta Beat Amp & Beat interval", 
         xlabel="Beat Pair")
     analysisGUI.ampIntWindow.paramPlot.axis2.set_ylabel(
-        "Voltage (μV)", color=color)
+        "Delta Beat Amp % Difference", color=color)
     analysisGUI.ampIntWindow.paramPlot.axis2.tick_params(
         axis='y', labelcolor=color)
 
