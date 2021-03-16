@@ -150,10 +150,10 @@ pace_maker, local_act_time, input_param):
         np.arange(1, (len(beat_amp_int.delta_beat_amp) +1)), 
         beat_amp_int.delta_beat_amp, color=color)
     analysisGUI.ampIntWindow.paramPlot.axis2.set(
-        title="Delta Beat Amp & Beat interval", 
+        title="ΔBeat Amp & Beat interval", 
         xlabel="Beat Pair")
     analysisGUI.ampIntWindow.paramPlot.axis2.set_ylabel(
-        "Delta Beat Amp % Difference", color=color)
+        "ΔBeat Amp (Percent Diff.)", color=color)
     analysisGUI.ampIntWindow.paramPlot.axis2.tick_params(
         axis='y', labelcolor=color)
 
