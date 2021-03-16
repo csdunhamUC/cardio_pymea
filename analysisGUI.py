@@ -334,6 +334,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
         raw_data.new_data_size = np.shape(raw_data.imported)
         print(raw_data.new_data_size[1])
         electrode_config.electrode_toggle(raw_data)
+        analysisGUI.elecCombobox.clear()
         analysisGUI.elecCombobox.addItems(electrode_config.electrode_names)
         analysisGUI.mainHeatmap.axis1.cla()
         analysisGUI.mainHeatmap.axis2.cla()
