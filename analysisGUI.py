@@ -19,7 +19,6 @@ from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import os
 import importlib
 import datetime
@@ -32,6 +31,7 @@ import main_heatmap
 import param_vs_distance_stats
 import psd_plotting
 import calculate_beat_amp_int
+import pca_plotting
 
 
 ################################################################################
@@ -374,12 +374,12 @@ def reload_module():
     importlib.reload(param_vs_distance_stats)
     importlib.reload(calculate_cv)
     importlib.reload(determine_beats)
-    importlib.reload(main_heatmap)
     # importlib.reload(calculate_lat)
     # importlib.reload(calculate_upstroke_vel)
     importlib.reload(psd_plotting)
     importlib.reload(calculate_pacemaker)
     importlib.reload(calculate_beat_amp_int)
+    importlib.reload(pca_plotting)
     print("Reloaded modules.")
 
 
@@ -559,6 +559,9 @@ class PlotBeatSelectWindows(QWidget):
         elif (hasattr(analysisGUI, "ampCheck") is True 
         and analysisGUI.ampCheck is True):
             self.paramPlot = GenericPlotCanvas(self, width=9, height=7, dpi=100)
+        elif (hasattr(analysisGUI, "pcaCheck") is True 
+        and analysisGUI.pcaCheck is True):
+            self.paramPlot = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
 
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
@@ -687,6 +690,12 @@ class AnalysisGUI(QMainWindow):
             lambda: [self.paramVsDistStatsWindow(cm_beats, pace_maker, 
                 upstroke_vel, local_act_time, conduction_vel, input_param, 
                 cm_stats)])
+        self.statMenu.addAction("Principal Component &Analysis (PCA)",
+            lambda: [self.pcaPlotWindow(cm_beats, beat_amp_int, pace_maker, local_act_time, 
+                heat_map, input_param, electrode_config),
+                pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, 
+                pace_maker, local_act_time, heat_map, input_param, 
+                electrode_config)])
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
@@ -825,7 +834,6 @@ class AnalysisGUI(QMainWindow):
             calculate_pacemaker.estmimate_pm_origin(self, pace_maker, 
             input_param)])
 
-
     def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):
         self.dvdtWindow = SoloHeatmapWindows()
         self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
@@ -928,6 +936,23 @@ class AnalysisGUI(QMainWindow):
         self.ampIntWindow.paramLabel.hide()
         self.ampIntWindow.paramSelect.hide()
         self.ampCheck = False
+
+    def pcaPlotWindow(self, cm_beats, beat_amp_int, pace_maker, local_act_time, 
+    heat_map, input_param, electrode_config):
+        self.pcaCheck = True
+        self.pcaWindow = PlotBeatSelectWindows(self)
+        self.pcaWindow.setWindowTitle("PCA Analysis")
+        self.pcaWindow.show()
+        self.pcaWindow.plotButton.clicked.connect(lambda: [
+            pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, pace_maker, 
+            local_act_time, heat_map, input_param, electrode_config)])
+        self.pcaWindow.paramSlider.hide()
+        self.pcaWindow.elecLabel.hide()
+        self.pcaWindow.elecSelect.hide()
+        self.pcaWindow.beatRangeLabel.hide()
+        self.pcaWindow.startBeat.hide()
+        self.pcaWindow.endBeat.hide()
+        self.pcaCheck = False
 
 
 def main():
