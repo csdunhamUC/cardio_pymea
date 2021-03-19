@@ -75,6 +75,15 @@ local_act_time, heat_map, input_param, electrode_config):
 
 def calculate_beat_interval(beat_amp_int, pace_maker):
     # Using pace_maker.param_dist_raw data, calculate the time between each beat.
+    raw_beat_time = pace_maker.param_dist_raw.dropna()
+    rbt_start_removed = raw_beat_time.iloc[0:, 1:]
+    rbt_end_removed = raw_beat_time.iloc[0:, :-1]
+    raw_beat_interval_array = rbt_start_removed.values - rbt_end_removed.values
+    beat_amp_int.raw_beat_interval = pd.DataFrame(
+        raw_beat_interval_array,
+        index = rbt_start_removed.index,
+        columns = rbt_end_removed.columns)
+
     mean_beat_time = pace_maker.param_dist_raw.mean(axis=0, skipna=True)
     mbt_start_removed = mean_beat_time.iloc[1:]
     mbt_end_removed = mean_beat_time.iloc[:-1]
@@ -85,6 +94,16 @@ def calculate_beat_interval(beat_amp_int, pace_maker):
 
 
 def calculate_delta_amp(beat_amp_int):
+    raw_beat_amp = beat_amp_int.beat_amp.drop(
+        columns=['Electrode', 'X', 'Y']).dropna()
+    rba_start_removed = raw_beat_amp.iloc[0:, 1:]
+    rba_end_removed = raw_beat_amp.iloc[0:, :-1]
+    raw_delta_beat_amp_array = rba_start_removed.values - rba_end_removed.values
+    beat_amp_int.raw_delta_beat_amp = pd.DataFrame(
+        raw_delta_beat_amp_array,
+        index = rba_start_removed.index,
+        columns = rba_end_removed.columns)
+    
     mean_beat_amp = beat_amp_int.beat_amp.drop(
         columns=['Electrode', 'X', 'Y']).mean(axis=0, skipna=True)
     mba_start_removed = mean_beat_amp.iloc[1:]
