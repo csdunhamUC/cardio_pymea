@@ -421,19 +421,26 @@ class PSDPlotCanvas(FigureCanvasQTAgg):
 
 # Classes for the actual GUI windows
 class SoloHeatmapWindows(QWidget):
-    def __init__(self):
+    def __init__(self, analysisGUI):
         super(SoloHeatmapWindows, self).__init__()
-        self.setupUI()
+        self.setupUI(analysisGUI)
 
-    def setupUI(self):
+    def setupUI(self, analysisGUI):
         layout = QGridLayout()
-        self.paramPlot = MinorHeatmapCanvas(self, width=7, height=6, dpi=100)
+        self.paramPlot = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
 
         layout.addWidget(self.paramPlot, 0, 0)
         layout.addWidget(self.paramSlider, 1, 0)
         layout.addWidget(paramToolbar, 2, 0)
+
+        if (hasattr(analysisGUI, "pcaCheck") is True 
+        and analysisGUI.pcaCheck is True):
+            self.plotButton = QPushButton("Plot")
+            self.plotButton.setFixedSize(70, 70)
+            layout.addWidget(self.plotButton, 1, 0)
+    
         self.setLayout(layout)
 
 
@@ -559,9 +566,6 @@ class PlotBeatSelectWindows(QWidget):
         elif (hasattr(analysisGUI, "ampCheck") is True 
         and analysisGUI.ampCheck is True):
             self.paramPlot = GenericPlotCanvas(self, width=9, height=7, dpi=100)
-        elif (hasattr(analysisGUI, "pcaCheck") is True 
-        and analysisGUI.pcaCheck is True):
-            self.paramPlot = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
 
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
@@ -814,7 +818,7 @@ class AnalysisGUI(QMainWindow):
             electrode_config)])
 
     def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
-        self.pmWindow = SoloHeatmapWindows()
+        self.pmWindow = SoloHeatmapWindows(self)
         self.pmWindow.setWindowTitle("Pacemaker Results")
         self.pmWindow.show()
         # Set slider value to maximum number of beats
@@ -825,7 +829,7 @@ class AnalysisGUI(QMainWindow):
             input_param)])
 
     def pmOriginWindow(self, cm_beats, pace_maker, heat_map, input_param):
-        self.circFitWindow = SoloHeatmapWindows()
+        self.circFitWindow = SoloHeatmapWindows(self)
         self.circFitWindow.setWindowTitle("Predicted PM Origin")
         self.circFitWindow.show()
         self.circFitWindow.paramSlider.setMaximum(
@@ -835,7 +839,7 @@ class AnalysisGUI(QMainWindow):
             input_param)])
 
     def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):
-        self.dvdtWindow = SoloHeatmapWindows()
+        self.dvdtWindow = SoloHeatmapWindows(self)
         self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
         self.dvdtWindow.show()
         # Set slider value to maximum number of beats
@@ -847,7 +851,7 @@ class AnalysisGUI(QMainWindow):
 
     def localActTimeWindow(self, cm_beats, local_act_time, heat_map, 
     input_param):
-        self.latWindow = SoloHeatmapWindows()
+        self.latWindow = SoloHeatmapWindows(self)
         self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
         self.latWindow.show()
         # Set slider value to maximum number of beats
@@ -859,7 +863,7 @@ class AnalysisGUI(QMainWindow):
 
     def condVelocityWindow(self, cm_beats, local_act_time, conduction_vel, 
     heat_map, input_param):
-        self.cvWindow = SoloHeatmapWindows()
+        self.cvWindow = SoloHeatmapWindows(self)
         self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
         self.cvWindow.show()
         # Set slider value to maximum number of beats
@@ -871,7 +875,7 @@ class AnalysisGUI(QMainWindow):
 
     def condVelVectorWindow(self, cm_beats, local_act_time, conduction_vel, 
     input_param):
-        self.cvVectWindow = SoloHeatmapWindows()
+        self.cvVectWindow = SoloHeatmapWindows(self)
         self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
         self.cvVectWindow.show()
         self.cvVectWindow.paramSlider.setMaximum(
@@ -940,18 +944,13 @@ class AnalysisGUI(QMainWindow):
     def pcaPlotWindow(self, cm_beats, beat_amp_int, pace_maker, local_act_time, 
     heat_map, input_param, electrode_config):
         self.pcaCheck = True
-        self.pcaWindow = PlotBeatSelectWindows(self)
+        self.pcaWindow = SoloHeatmapWindows(self)
         self.pcaWindow.setWindowTitle("PCA Analysis")
         self.pcaWindow.show()
         self.pcaWindow.plotButton.clicked.connect(lambda: [
             pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, pace_maker, 
             local_act_time, heat_map, input_param, electrode_config)])
         self.pcaWindow.paramSlider.hide()
-        self.pcaWindow.elecLabel.hide()
-        self.pcaWindow.elecSelect.hide()
-        self.pcaWindow.beatRangeLabel.hide()
-        self.pcaWindow.startBeat.hide()
-        self.pcaWindow.endBeat.hide()
         self.pcaCheck = False
 
 
