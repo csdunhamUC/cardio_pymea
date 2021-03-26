@@ -34,8 +34,8 @@ local_act_time, heat_map, input_param, electrode_config):
     interval_trans = beat_amp_int.raw_beat_interval.T
     amplitude_trans = beat_amp_int.raw_delta_beat_amp.T
 
-    interval_labels = ["Interval" for elec in interval_trans.index]
-    amp_labels = ["Amplitude" for elec in amplitude_trans.index]
+    interval_labels = ["Interval" for idx in interval_trans.index]
+    amp_labels = ["Amplitude" for idx in amplitude_trans.index]
     interval_trans["Label"] = interval_labels
     amplitude_trans["Label"] = amp_labels
 
@@ -73,7 +73,7 @@ local_act_time, heat_map, input_param, electrode_config):
         pca_execute.explained_variance_ratio_))
 
     targets = ["Interval", "Amplitude"]
-    colors = ["r", "b"]
+    colors = ["b", "r"]
     for target, color in zip(targets, colors):
         indices_to_keep = test_frame["Label"] == target
         analysisGUI.pcaWindow.paramPlot.axes.scatter(

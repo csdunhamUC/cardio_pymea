@@ -187,6 +187,8 @@ electrode_config):
         print("Plotting...")
     except AttributeError:
         print("No data found. Please import data (.txt or .csv converted MCD file) first.")
+    except ValueError:
+        print("Be sure to use numerical values for the start and end interval.")
 
 # Produces 4-subplot plot of peak finder data and graphs it.  Can be called via 
 # button. Will throw exception of data does not exist.
