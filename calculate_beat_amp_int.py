@@ -149,21 +149,28 @@ pace_maker, local_act_time, input_param):
         input_param.beat_amp_int_slider]
     
     # Heatmap for beat amplitude across all electrodes, per beat.
-    electrode_names = beat_amp_int.beat_amp.pivot(index='Y', 
-        columns='X', values='Electrode')
-    heatmap_pivot_table = beat_amp_int.beat_amp.pivot(index='Y', 
-        columns='X', values=curr_beat)
-    beat_amp_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
-        annot=electrode_names, fmt="", 
-        ax=analysisGUI.ampIntWindow.paramPlot.axis1, cbar=False)
-    mappable = beat_amp_temp.get_children()[0]
-    beat_amp_int.amp_cbar = analysisGUI.ampIntWindow.paramPlot.axis1.figure.colorbar(mappable, 
-        ax=analysisGUI.ampIntWindow.paramPlot.axis1)
-    beat_amp_int.amp_cbar.ax.set_title("μV", fontsize=10)
-    analysisGUI.ampIntWindow.paramPlot.axis1.set(
-        title="Beat Amplitude, " + str(curr_beat))
+    # electrode_names = beat_amp_int.beat_amp.pivot(index='Y', 
+    #     columns='X', values='Electrode')
+    # heatmap_pivot_table = beat_amp_int.beat_amp.pivot(index='Y', 
+    #     columns='X', values=curr_beat)
+    # beat_amp_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
+    #     annot=electrode_names, fmt="", 
+    #     ax=analysisGUI.ampIntWindow.paramPlot.axis1, cbar=False)
+    # mappable = beat_amp_temp.get_children()[0]
+    # beat_amp_int.amp_cbar = analysisGUI.ampIntWindow.paramPlot.axis1.figure.colorbar(mappable, 
+    #     ax=analysisGUI.ampIntWindow.paramPlot.axis1)
+    # beat_amp_int.amp_cbar.ax.set_title("μV", fontsize=10)
+    # analysisGUI.ampIntWindow.paramPlot.axis1.set(
+    #     title="Beat Amplitude, " + str(curr_beat))
 
-    # Plot delta beat amplitude across dataset.
+    analysisGUI.ampIntWindow.paramPlot.axis1.scatter(
+        np.arange(1, (len(beat_amp_int.delta_beat_amp) +1)), 
+        beat_amp_int.delta_beat_amp, color="tab:red")
+    analysisGUI.ampIntWindow.paramPlot.axis1.set(
+        title="ΔBeat Amp vs Beat Pair", 
+        xlabel="Beat Pair")
+
+    # Plot delta beat amplitude & beat interval across dataset.
     color = "tab:red"
     analysisGUI.ampIntWindow.paramPlot.axis2.scatter(
         np.arange(1, (len(beat_amp_int.delta_beat_amp) +1)), 
@@ -184,25 +191,20 @@ pace_maker, local_act_time, input_param):
     beat_amp_int.int_plot.set_ylabel("Beat Interval (ms)", color=color)
     beat_amp_int.int_plot.tick_params(axis='y', labelcolor=color)
 
-    # Plot beat intervals across dataset.
-    # beat_amp_int.axis2.scatter(np.arange(1, (len(beat_amp_int.beat_interval) +1)), 
-    #     beat_amp_int.beat_interval)
-    # beat_amp_int.axis2.set(title="Beat Interval", xlabel="Beat Pair", 
-    #     ylabel="Interval (ms)")
-    
-    # Statistical plot for beat amplitude vs distance, per beat.
-    # This plot isn't communicating much of value... need to consider something
-    # else.  Max time lag per beat, perhaps?
-    analysisGUI.ampIntWindow.paramPlot.axis3.scatter(np.arange(1, 
-        (len(pace_maker.param_dist_normalized_per_beat_max) +1)),
-        pace_maker.param_dist_normalized_per_beat_max)
-    # beat_amp_int.axis3.scatter(local_act_time.distance_from_min[curr_beat],
-    #     beat_amp_int.beat_amp[curr_beat])
+    # # Scatter plot of maximum time lag for each beat.
+    # analysisGUI.ampIntWindow.paramPlot.axis3.scatter(np.arange(1, 
+    #     (len(pace_maker.param_dist_normalized_per_beat_max) +1)),
+    #     pace_maker.param_dist_normalized_per_beat_max)
+    # analysisGUI.ampIntWindow.paramPlot.axis3.set(
+    #     title="Maximum Observed Time Lag vs Beat", 
+    #     xlabel="Beat", ylabel="Time Lag (ms)")
+
+    # Scatter plot of delta beat amp vs beat interval
+    analysisGUI.ampIntWindow.paramPlot.axis3.scatter(
+        beat_amp_int.beat_interval, beat_amp_int.delta_beat_amp)
     analysisGUI.ampIntWindow.paramPlot.axis3.set(
-        title="Maximum Observed Time Lag vs Beat", 
-        xlabel="Beat", ylabel="Time Lag (ms)")
-    # beat_amp_int.axis3.set(title="Beat Amplitude vs Distance", 
-    #     xlabel="Distance", ylabel="Beat Amplitude (μV)")
+        title="ΔBeat Amp (Percent Diff.) vs Beat Interval", 
+        xlabel="Interval (ms)", ylabel="ΔBeat Amp (Percent Diff.)")
 
     # Boxplot of beat amp.
     beats_selected = beat_amp_int.beat_amp.columns[
