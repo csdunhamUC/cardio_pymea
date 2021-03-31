@@ -39,53 +39,40 @@ local_act_time, heat_map, input_param, electrode_config):
     interval_trans["Label"] = interval_labels
     amplitude_trans["Label"] = amp_labels
 
-    test_frame = pd.concat([interval_trans, amplitude_trans], ignore_index=True)
+    # test_frame = pd.concat([interval_trans, amplitude_trans], ignore_index=True)
 
-    # pre_norm = np.array([beat_amp_int.beat_interval, 
-    #     beat_amp_int.delta_beat_amp]).T
+    pre_norm = np.array([beat_amp_int.beat_interval, 
+        beat_amp_int.delta_beat_amp]).T
 
-    # pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 
-    #     'Delta Beat Amp'])
+    pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 
+        'Delta Beat Amp'])
 
-    # norm_array = StandardScaler().fit_transform(pre_norm_df.values)
-    norm_array = StandardScaler().fit_transform(
-        test_frame.drop(columns=["Label"]).values)
+    pre_norm = np.array([beat_amp_int.beat_interval, beat_amp_int.delta_beat_amp]).T
+    # print(pace_maker.param_dist_normalized_per_beat_max.drop(
+    #     [pace_maker.final_dist_beat_count[-1]]))
 
-    norm_df = pd.DataFrame(norm_array)
-    norm_df["Label"] = test_frame["Label"].values
-    norm_df.columns = test_frame.columns
+    pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 'Delta Beat Amp'])
 
-    # norm_df = pd.DataFrame(norm_array, columns=["Normalized Beat Interval", 
-    #     "Normalized Delta Beat Amp"])
+    norm_array = StandardScaler().fit_transform(pre_norm_df.values)
+    norm_df = pd.DataFrame(norm_array, columns=["Normalized Beat Interval", "Normalized Delta Beat Amp"])
     print(np.mean(norm_df))
     print(np.std(norm_df))
-    print(norm_df.head())
-    print(norm_df.tail())
 
     pca_execute = PCA(n_components=2)
-    norm_without_label = norm_df.drop(columns=["Label"])
-    # pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_df), 
-    #     columns=["Principal Component 1", "Principal Component 2"])
-    pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_without_label), 
+
+    pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_df), 
         columns=["Principal Component 1", "Principal Component 2"])
 
     print("Explained variation per principal component: {}".format(
         pca_execute.explained_variance_ratio_))
 
-    targets = ["Interval", "Amplitude"]
-    colors = ["b", "r"]
-    for target, color in zip(targets, colors):
-        indices_to_keep = test_frame["Label"] == target
-        analysisGUI.pcaWindow.paramPlot.axes.scatter(
-            pcaAmpInt.loc[indices_to_keep, "Principal Component 1"], 
-            pcaAmpInt.loc[indices_to_keep, "Principal Component 2"],
-            c = color)
-    
-    analysisGUI.pcaWindow.paramPlot.axes.legend(targets)
+    analysisGUI.pcaWindow.paramPlot.axes.scatter(
+        pcaAmpInt.loc[:, "Principal Component 1"], 
+        pcaAmpInt.loc[:, "Principal Component 2"])
     analysisGUI.pcaWindow.paramPlot.axes.set(
         title="Principal Component Analysis of Beat Interval and ΔBeat Amp",
         xlabel="Principal Component 1", ylabel="Principal Component 2")
-
+    
     analysisGUI.pcaWindow.paramPlot.draw()
 
 
@@ -94,30 +81,50 @@ local_act_time, heat_map, input_param, electrode_config):
     print("Plotting placeholder.")
 
 # Previous version.
-    # pre_norm = np.array([beat_amp_int.beat_interval, beat_amp_int.delta_beat_amp]).T
-    # # print(pace_maker.param_dist_normalized_per_beat_max.drop(
-    # #     [pace_maker.final_dist_beat_count[-1]]))
-
-    # pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 'Delta Beat Amp'])
-
-    # norm_array = StandardScaler().fit_transform(pre_norm_df.values)
-    # norm_df = pd.DataFrame(norm_array, columns=["Normalized Beat Interval", "Normalized Delta Beat Amp"])
-    # print(np.mean(norm_df))
-    # print(np.std(norm_df))
-
-    # pca_execute = PCA(n_components=2)
-
-    # pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_df), 
-    #     columns=["Principal Component 1", "Principal Component 2"])
-
-    # print("Explained variation per principal component: {}".format(
-    #     pca_execute.explained_variance_ratio_))
-
-    # analysisGUI.pcaWindow.paramPlot.axes.scatter(
-    #     pcaAmpInt.loc[:, "Principal Component 1"], 
-    #     pcaAmpInt.loc[:, "Principal Component 2"])
-    # analysisGUI.pcaWindow.paramPlot.axes.set(
-    #     title="Principal Component Analysis of Beat Interval and ΔBeat Amp",
-    #     xlabel="Principal Component 1", ylabel="Principal Component 2")
 
     # analysisGUI.pcaWindow.paramPlot.draw()
+
+
+# # test_frame = pd.concat([interval_trans, amplitude_trans], ignore_index=True)
+
+#     # pre_norm = np.array([beat_amp_int.beat_interval, 
+#     #     beat_amp_int.delta_beat_amp]).T
+
+#     # pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 
+#     #     'Delta Beat Amp'])
+
+#     # norm_array = StandardScaler().fit_transform(pre_norm_df.values)
+#     norm_array = StandardScaler().fit_transform(
+#         test_frame.drop(columns=["Label"]).values)
+
+#     norm_df = pd.DataFrame(norm_array)
+#     norm_df["Label"] = test_frame["Label"].values
+#     norm_df.columns = test_frame.columns
+
+#     # norm_df = pd.DataFrame(norm_array, columns=["Normalized Beat Interval", 
+#     #     "Normalized Delta Beat Amp"])
+#     print(np.mean(norm_df))
+#     print(np.std(norm_df))
+#     print(norm_df.head())
+#     print(norm_df.tail())
+
+#     pca_execute = PCA(n_components=2)
+#     norm_without_label = norm_df.drop(columns=["Label"])
+#     # pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_df), 
+#     #     columns=["Principal Component 1", "Principal Component 2"])
+#     pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_without_label), 
+#         columns=["Principal Component 1", "Principal Component 2"])
+
+#     print("Explained variation per principal component: {}".format(
+#         pca_execute.explained_variance_ratio_))
+
+#     targets = ["Interval", "Amplitude"]
+#     colors = ["b", "r"]
+#     for target, color in zip(targets, colors):
+#         indices_to_keep = test_frame["Label"] == target
+#         analysisGUI.pcaWindow.paramPlot.axes.scatter(
+#             pcaAmpInt.loc[indices_to_keep, "Principal Component 1"], 
+#             pcaAmpInt.loc[indices_to_keep, "Principal Component 2"],
+#             c = color)
+
+#     analysisGUI.pcaWindow.paramPlot.axes.legend(targets)
