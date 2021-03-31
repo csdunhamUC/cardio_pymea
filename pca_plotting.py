@@ -80,11 +80,7 @@ def pca_plot(analysisGUI, cm_beats, beat_amp_int, pace_maker,
 local_act_time, heat_map, input_param, electrode_config):
     print("Plotting placeholder.")
 
-# Previous version.
-
-    # analysisGUI.pcaWindow.paramPlot.draw()
-
-
+# Previous version w/ labeling.
 # # test_frame = pd.concat([interval_trans, amplitude_trans], ignore_index=True)
 
 #     # pre_norm = np.array([beat_amp_int.beat_interval, 
