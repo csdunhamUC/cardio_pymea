@@ -348,6 +348,63 @@ def data_import(analysisGUI, raw_data, electrode_config):
         print()
 
 
+# Save DataFrame in Excel Spreadsheet 
+# written by Madelynn E. Mackenize (MEM), undergrad, UCLA class of 2022
+# create different sheet for each calculated parameter: PM, LAT, dv/dt, CV, Amp, Int, Stats
+# dataframe of PM data: pace_maker.param_dist_normalized
+# Modifications to original code by CSD.
+def export_excel(analysisGUI, pace_maker, local_act_time, upstroke_vel, 
+conduction_vel, beat_amp_int, cm_beats, cm_stats):
+    print("Saving processed data...")
+
+    file_name = analysisGUI.fileName.text()
+    file_name = file_name.replace(".txt", "")
+    file_path = "/home/csdunham/Documents/TempExcel"
+
+    with pd.ExcelWriter('{path}/{name}.xlsx'.format(path=file_path, name=file_name)) as writer:
+    # with pd.ExcelWriter('%s.xlsx' % file_name) as writer:
+        pace_maker.param_dist_normalized.to_excel(writer, 
+            sheet_name='Pacemaker (Normalized)')
+        pace_maker.param_dist_raw.to_excel(writer, 
+            sheet_name='Pacemaker (Raw)')
+        # pace_maker.param_width_normalized.to_excel(writer, sheet_name='PM_Param_Width_Normalized')
+        # pace_maker.param_thresh_normalized.to_excel(writer, sheet_name='PM_Param_Thresh_Normalized')
+        local_act_time.param_dist_normalized.to_excel(writer, 
+            sheet_name='LAT Normalized')
+        local_act_time.distance_from_min.to_excel(writer, 
+            sheet_name='LAT Distance')
+        upstroke_vel.param_dist_normalized.to_excel(writer, 
+            sheet_name='Upstroke Velocity')
+        conduction_vel.param_dist_raw.to_excel(writer, 
+            sheet_name='Conduction Velocity')
+        conduction_vel.vector_mag.to_excel(writer, 
+            sheet_name='CV Vector Magnitude')
+        conduction_vel.vector_x_comp.to_excel(writer, 
+            sheet_name='CV Vector X Comp')
+        conduction_vel.vector_y_comp.to_excel(writer, 
+            sheet_name='CV Vector Y Comp')
+        beat_amp_int.beat_amp.to_excel(writer, 
+            sheet_name='Beat Amplitude') 
+        beat_amp_int.delta_beat_amp.to_excel(writer, 
+            sheet_name='Delta Beat Amplitude')
+        beat_amp_int.beat_interval.to_excel(writer, 
+            sheet_name='Beat Interval')
+        # cm_beats.dist_beats.to_excel(writer, sheet_name='Beat Distance')
+        # cm_beats.prom_beats.to_excel(writer, sheet_name='Prom_Beats')
+        # cm_beats.width_beats.to_excel(writer, sheet_name='Beat Width')
+        # cm_beats.thresh_beats.to_excel(writer, sheet_name='Beat Thresh')
+        cm_stats.pace_maker_filtered_data.to_excel(writer, 
+            sheet_name='PM Stats')
+        cm_stats.local_act_time_filtered_data.to_excel(writer, 
+            sheet_name='LAT Stats')
+        cm_stats.upstroke_vel_filtered_data.to_excel(writer, 
+            sheet_name='Upstroke Velocity Stats')
+        cm_stats.conduction_vel_filtered_data.to_excel(writer, 
+            sheet_name='CV Stats')
+    
+    print("Data saved in path: {}".format(file_path))
+
+
 def print_something():
     print("Something.")
 
@@ -603,7 +660,9 @@ class AnalysisGUI(QMainWindow):
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction("&Import", lambda: data_import(self, 
             raw_data, electrode_config))
-        self.fileMenu.addAction("&Save Processed Data")
+        self.fileMenu.addAction("&Save Processed Data",
+            lambda: export_excel(self, pace_maker, local_act_time, upstroke_vel, 
+                conduction_vel, beat_amp_int, cm_beats, cm_stats))
         self.fileMenu.addAction("&Print (debug)", print_something)
         self.fileMenu.addAction("&Exit", self.close)
         
