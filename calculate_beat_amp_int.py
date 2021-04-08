@@ -89,6 +89,8 @@ def calculate_beat_interval(beat_amp_int, pace_maker):
     mbt_end_removed = mean_beat_time.iloc[:-1]
     beat_amp_int.beat_interval = mbt_start_removed.values - mbt_end_removed.values
     beat_amp_int.mean_beat_int = np.nanmean(beat_amp_int.beat_interval)
+    beat_amp_int.beat_interval = pd.Series(beat_amp_int.beat_interval,
+        index=rbt_end_removed.columns)
     print("Mean beat interval: " + str(beat_amp_int.mean_beat_int))
     # Calculation needs to take into account input_param.sample_frequency
 
@@ -110,6 +112,8 @@ def calculate_delta_amp(beat_amp_int):
     mba_end_removed = mean_beat_amp.iloc[:-1]
     beat_amp_int.delta_beat_amp = ((mba_start_removed.values - 
         mba_end_removed.values) / mba_end_removed.values) * 100
+    beat_amp_int.delta_beat_amp = pd.Series(beat_amp_int.delta_beat_amp,
+        index=rba_end_removed.columns)
 
 
 def beat_amp_interval_graph(analysisGUI, electrode_config, beat_amp_int, 
