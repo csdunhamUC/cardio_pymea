@@ -367,7 +367,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
         file_name = file_name.replace(".txt", "")
         file_path = "/home/csdunham/Documents/TempExcel"
 
-        with pd.ExcelWriter('{path}/{name}.xlsx'.format(path=file_path, name=file_name)) as writer:
+        with pd.ExcelWriter('{path}/{name}.xlsx'.format(
+            path=file_path, name=file_name)) as writer:
         # with pd.ExcelWriter('%s.xlsx' % file_name) as writer:
             pace_maker.param_dist_normalized.to_excel(writer, 
                 sheet_name='Pacemaker (Normalized)')
