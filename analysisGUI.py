@@ -358,6 +358,11 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
     try:
         print("Saving processed data...")
 
+        # For save file dialog box to enter custom name and file save location.
+        # saveFile = QFileDialog.getSaveFileName(analysisGUI, "Save File", 
+        #     analysisGUI.file_path, "Excel file (*.xlsx)")
+        # save_filepath, save_filename = os.path.split(saveFile[0])
+        
         file_name = analysisGUI.fileName.text()
         file_name = file_name.replace(".txt", "")
         file_path = "/home/csdunham/Documents/TempExcel"
@@ -409,6 +414,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
     except AttributeError:
         print("Parameters missing.  Please be sure to complete calculations \
             (e.g. statistics)")
+    except ValueError:
+        print("Operation cancelled.")
 
 def print_something():
     print("Something.")
