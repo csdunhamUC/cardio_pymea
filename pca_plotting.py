@@ -2,8 +2,7 @@
 # 3/18/2021
 # Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
 # Original work
-
-# PCA module for cardiomyocyte-MEA analysis
+# PCA module for cardiomyocyte MEA analysis
 
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -16,16 +15,6 @@ import pandas as pd
 def pca_data_prep(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
     analysisGUI.pcaWindow.paramPlot.axes.cla()
-    
-    # Variables of note:
-    # beat_amp_int.beat_amp (goes up to # of beats + elec label/coords)
-    # beat_amp_int.beat_interval (row vector, goes up to # of beats - 1)
-    # beat_amp_int.delta_beat_amp (row vector, goes up to # of beats - 1)
-    # beat_amp_int.raw_beat_interval
-    # beat_amp_int.raw_delta_beat_amp
-    # pace_maker.param_dist_normalized_per_beat_max (row vector, goes up to # of beats)
-    # pace_maker.param_dist_normalized (goes up to # of beats + elec label/coords)
-    # analysisGUI.pcaWindow.paramPlot.axes, and paramPlot.fig
 
     # Maximum time lag with end beat removed, done so in order to match dimensions with
     # beat interval and delta beat amplitude.
