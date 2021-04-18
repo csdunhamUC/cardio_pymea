@@ -81,7 +81,7 @@ electrode_config):
         analysisGUI.beatsWindow.paramSlider.setMaximum(
             len(cm_beats.y_axis.columns) - 1)
 
-        # Establish "strucs" as dataframes for subsequent operations.
+        # Establish "fields" as dataframes for subsequent operations.
         cm_beats.dist_beats = pd.DataFrame()
         cm_beats.prom_beats = pd.DataFrame()
         cm_beats.width_beats = pd.DataFrame()
@@ -185,6 +185,7 @@ electrode_config):
         end_time = time.process_time()
         print(end_time - start_time)
         print("Plotting...")
+        graph_beats(analysisGUI, cm_beats, input_param, electrode_config)
     except AttributeError:
         print("No data found. Please import data (.txt or .csv converted MCD file) first.")
     except ValueError:

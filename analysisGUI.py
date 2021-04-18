@@ -514,21 +514,109 @@ class SoloHeatmapWindows(QWidget):
         self.setLayout(layout)
 
 
-class GeneralPlotWindows(QWidget):
+class BeatSignalPlotWindow(QWidget):
     def __init__(self):
-        super(GeneralPlotWindows, self).__init__()
+        super(BeatSignalPlotWindow, self).__init__()
         self.setupUI()
 
     def setupUI(self):
-        layout = QGridLayout()
+        # Establish grid layout.
+        mainLayout = QGridLayout()
+        paramLayout = QGridLayout()
+        plotLayout = QGridLayout()
+
+        # Set up container widgets
+        paramWidget = QWidget()
+        paramWidget.setLayout(paramLayout)
+        paramWidget.setFixedWidth(500)
+        plotWidget = QWidget()
+        plotWidget.setLayout(plotLayout)
+
+        # Plot button
+        self.plotButton = QPushButton("Find Beats")
+        self.plotButton.setFixedSize(70, 70)
+
+        # Filter selection widgets.
+        self.filterType = QLabel("Signal Filter\n(Butterworth)")
+        self.filterTypeEdit = QComboBox()
+        self.filterTypeEdit.setFixedWidth(100)
+        self.filterTypeEdit.addItem("No filter")
+        self.filterTypeEdit.addItem("Low-pass Only")
+        self.filterTypeEdit.addItem("High-pass Only")
+        self.filterTypeEdit.addItem("Low & High")
+
+        # Filter parameters widgets.
+        self.butterOrderLabel = QLabel("Butterworth\nOrder")
+        self.butterOrderEdit = QLineEdit()
+        self.butterOrderEdit.setText("4")
+        self.butterOrderEdit.setFixedWidth(70)
+        self.lowPassFreqLabel = QLabel("Low-pass\nFrequency (Hz)")
+        self.lowPassFreqEdit = QLineEdit()
+        self.lowPassFreqEdit.setText("30")
+        self.lowPassFreqEdit.setFixedWidth(70)
+        self.highPassFreqLabel = QLabel("High-pass\nFrequency (Hz)")
+        self.highPassFreqEdit = QLineEdit()
+        self.highPassFreqEdit.setText("0.5")
+        self.highPassFreqEdit.setFixedWidth(70)
+
+        paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
+        paramLayout.addWidget(self.filterType, 0, 1)
+        paramLayout.addWidget(self.filterTypeEdit, 1, 1)
+        paramLayout.addWidget(self.butterOrderLabel, 0, 2)
+        paramLayout.addWidget(self.butterOrderEdit, 1, 2)
+        paramLayout.addWidget(self.lowPassFreqLabel, 0, 3)
+        paramLayout.addWidget(self.lowPassFreqEdit, 1, 3)
+        paramLayout.addWidget(self.highPassFreqLabel, 0, 4)
+        paramLayout.addWidget(self.highPassFreqEdit, 1, 4)
+        self.butterOrderLabel.hide()
+        self.butterOrderEdit.hide()
+        self.lowPassFreqLabel.hide()
+        self.lowPassFreqEdit.hide()
+        self.highPassFreqLabel.hide()
+        self.highPassFreqEdit.hide()
+        self.filterTypeEdit.activated.connect(self.check_filter)
+
         self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
 
-        layout.addWidget(self.paramPlot, 0, 0)
-        layout.addWidget(self.paramSlider, 1, 0)
-        layout.addWidget(paramToolbar, 2, 0)
-        self.setLayout(layout)
+        plotLayout.addWidget(self.paramPlot, 0, 0)
+        plotLayout.addWidget(self.paramSlider, 1, 0)
+        plotLayout.addWidget(paramToolbar, 2, 0)
+
+        mainLayout.addWidget(paramWidget, 0, 0)
+        mainLayout.addWidget(plotWidget, 1, 0)
+        self.setLayout(mainLayout)
+    
+    def check_filter(self):
+        if self.filterTypeEdit.currentText() == "No filter":
+            self.butterOrderLabel.hide()
+            self.butterOrderEdit.hide()
+            self.lowPassFreqLabel.hide()
+            self.lowPassFreqEdit.hide()
+            self.highPassFreqLabel.hide()
+            self.highPassFreqEdit.hide()
+        elif self.filterTypeEdit.currentText() == "Low-pass Only":
+            self.butterOrderLabel.show()
+            self.butterOrderEdit.show()
+            self.lowPassFreqLabel.show()
+            self.lowPassFreqEdit.show()
+            self.highPassFreqLabel.hide()
+            self.highPassFreqEdit.hide()
+        elif self.filterTypeEdit.currentText() == "High-pass Only":
+            self.butterOrderLabel.show()
+            self.butterOrderEdit.show()
+            self.lowPassFreqLabel.hide()
+            self.lowPassFreqEdit.hide()
+            self.highPassFreqLabel.show()
+            self.highPassFreqEdit.show()
+        elif self.filterTypeEdit.currentText() == "Low & High":
+            self.butterOrderLabel.show()
+            self.butterOrderEdit.show()
+            self.lowPassFreqLabel.show()
+            self.lowPassFreqEdit.show()
+            self.highPassFreqLabel.show()
+            self.highPassFreqEdit.show()
 
 
 # Used for parameter vs distance statistics window.
@@ -682,11 +770,7 @@ class AnalysisGUI(QMainWindow):
         # Calculation Menu
         self.calcMenu = self.menuBar().addMenu("&Calculations")
         self.calcMenu.addAction("&Find Beats (Use First!)", 
-            lambda: [self.determineBeatsWindow(cm_beats, input_param, 
-                electrode_config),
-                determine_beats.determine_beats(self, raw_data, cm_beats, 
-                input_param, electrode_config),
-                determine_beats.graph_beats(self, cm_beats, input_param, 
+            lambda: [self.determineBeatsWindow(raw_data, cm_beats, input_param, 
                 electrode_config)])
         self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)",
             lambda: [calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
@@ -786,12 +870,12 @@ class AnalysisGUI(QMainWindow):
         paramLayout = QGridLayout()
         plotLayout = QGridLayout()
 
-        # Parameters, linked to paramLayout widget
+        # Parameters, linked to paramLayout widget.
         self.paramWidget = QWidget()
         self.plotWidget = QWidget()
         self.paramWidget.setLayout(paramLayout)
         self.plotWidget.setLayout(plotLayout)
-
+        # Parameter entry widgets & labels.
         self.pkHeightLab = QLabel("Min Peak" + "\n" + "Height")
         self.pkHeightEdit = QLineEdit()
         self.pkHeightEdit.setFixedWidth(70)
@@ -822,7 +906,8 @@ class AnalysisGUI(QMainWindow):
         self.pkThreshEdit.setText("50")
         paramLayout.addWidget(self.pkThresh, 0, 4)
         paramLayout.addWidget(self.pkThreshEdit, 1, 4)
-        self.sampleFreq = QLabel("Sample" + "\n" + "Frequency (Hz)")
+        # Frequency selection widget.
+        self.sampleFreq = QLabel("Sample\nFrequency (Hz)")
         self.sampleFreqEdit = QComboBox()
         self.sampleFreqEdit.setFixedWidth(100)
         self.sampleFreqEdit.addItem("1000")
@@ -880,14 +965,18 @@ class AnalysisGUI(QMainWindow):
         mainLayout.addWidget(self.plotWidget, 1, 0)
         self.mainWidget.setLayout(mainLayout)
     
-    def determineBeatsWindow(self, cm_beats, input_param, electrode_config):
-        self.beatsWindow = GeneralPlotWindows()
+    def determineBeatsWindow(self, raw_data, cm_beats, input_param, 
+    electrode_config):
+        self.beatsWindow = BeatSignalPlotWindow()
         self.beatsWindow.setWindowTitle("Beat Finder Results")
         # self.beatsWindow.paramPlot.axis1.plot([1,2,3,4,5],[10,20,30,40,50])
         self.beatsWindow.show()
         self.beatsWindow.paramSlider.valueChanged.connect(lambda: [
             determine_beats.graph_beats(self, cm_beats, input_param, 
             electrode_config)])
+        self.beatsWindow.plotButton.clicked.connect(lambda: [
+            determine_beats.determine_beats(self, raw_data, cm_beats, 
+            input_param, electrode_config)])
 
     def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
         self.pmWindow = SoloHeatmapWindows(self)
