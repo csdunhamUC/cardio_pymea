@@ -76,10 +76,6 @@ electrode_config):
                 1:]
                 cm_beats.y_axis.reset_index(drop=True, inplace=True)
 
-        print(cm_beats.y_axis.head(10))
-        print(type(cm_beats.y_axis))
-        print()
-
         # Checks for whether Butterworth filter is selected.  If so, runs the
         # appropriate operations for the given selection.  Needs to filter per
         # column in cm_beats.y_axis
@@ -88,7 +84,8 @@ electrode_config):
         
         elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Low-pass Only":
             bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
-            low_cutoff_freq = float(analysisGUI.beatsWindow.lowPassFreqEdit.text())
+            low_cutoff_freq = float(
+                analysisGUI.beatsWindow.lowPassFreqEdit.text())
             print("Low-pass filter. Order = {}, Low Cutoff Freq. = {}".format(
                 bworth_ord, low_cutoff_freq))
 
@@ -102,7 +99,8 @@ electrode_config):
         
         elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "High-pass Only":
             bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
-            high_cutoff_freq = float(analysisGUI.beatsWindow.highPassFreqEdit.text())
+            high_cutoff_freq = float(
+                analysisGUI.beatsWindow.highPassFreqEdit.text())
             print("High-pass filter. Order = {}, High Cutoff Freq = {}".format(
                 bworth_ord, high_cutoff_freq))
 
@@ -116,8 +114,10 @@ electrode_config):
         
         elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Bandpass":
             bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
-            low_cutoff_freq = float(analysisGUI.beatsWindow.lowPassFreqEdit.text())
-            high_cutoff_freq = float(analysisGUI.beatsWindow.highPassFreqEdit.text())
+            low_cutoff_freq = float(
+                analysisGUI.beatsWindow.lowPassFreqEdit.text())
+            high_cutoff_freq = float(
+                analysisGUI.beatsWindow.highPassFreqEdit.text())
             print("Bandpass filter. Order = {}, Low cutoff = {}, High cutoff = {}".format(
                 bworth_ord, low_cutoff_freq, high_cutoff_freq))
             

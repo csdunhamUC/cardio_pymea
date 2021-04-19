@@ -533,7 +533,7 @@ class BeatSignalPlotWindow(QWidget):
         plotWidget.setLayout(plotLayout)
 
         # Plot button
-        self.plotButton = QPushButton("Find Beats")
+        self.plotButton = QPushButton("Find\nBeats")
         self.plotButton.setFixedSize(70, 70)
 
         # Filter selection widgets.
