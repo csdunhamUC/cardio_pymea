@@ -7,6 +7,8 @@ import time
 import pandas as pd
 import numpy as np
 from scipy.signal import find_peaks
+from scipy.signal import butter
+from scipy.signal import sosfilt
 from scipy import stats
 
 
@@ -73,6 +75,59 @@ electrode_config):
                 cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
                 1:]
                 cm_beats.y_axis.reset_index(drop=True, inplace=True)
+
+        print(cm_beats.y_axis.head(10))
+        print(type(cm_beats.y_axis))
+        print()
+
+        # Checks for whether Butterworth filter is selected.  If so, runs the
+        # appropriate operations for the given selection.  Needs to filter per
+        # column in cm_beats.y_axis
+        if analysisGUI.beatsWindow.filterTypeEdit.currentText() == "No filter":
+            print("No filter.")
+        
+        elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Low-pass Only":
+            bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
+            low_cutoff_freq = float(analysisGUI.beatsWindow.lowPassFreqEdit.text())
+            print("Low-pass filter. Order = {}, Low Cutoff Freq. = {}".format(
+                bworth_ord, low_cutoff_freq))
+
+            sos = butter(bworth_ord, low_cutoff_freq, btype='low', 
+                output='sos', fs=input_param.sample_frequency)
+            filtered_low = np.zeros(
+                (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
+            for col, column in enumerate(cm_beats.y_axis.columns):
+                filtered_low[:, col] = sosfilt(sos, cm_beats.y_axis[column])
+            cm_beats.y_axis = pd.DataFrame(filtered_low)
+        
+        elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "High-pass Only":
+            bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
+            high_cutoff_freq = float(analysisGUI.beatsWindow.highPassFreqEdit.text())
+            print("High-pass filter. Order = {}, High Cutoff Freq = {}".format(
+                bworth_ord, high_cutoff_freq))
+
+            sos = butter(bworth_ord, high_cutoff_freq, btype='high', 
+                output='sos', fs=input_param.sample_frequency)
+            filtered_high = np.zeros(
+                (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
+            for col, column in enumerate(cm_beats.y_axis.columns):
+                filtered_high[:, col] = sosfilt(sos, cm_beats.y_axis[column])
+            cm_beats.y_axis = pd.DataFrame(filtered_high)
+        
+        elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Bandpass":
+            bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
+            low_cutoff_freq = float(analysisGUI.beatsWindow.lowPassFreqEdit.text())
+            high_cutoff_freq = float(analysisGUI.beatsWindow.highPassFreqEdit.text())
+            print("Bandpass filter. Order = {}, Low cutoff = {}, High cutoff = {}".format(
+                bworth_ord, low_cutoff_freq, high_cutoff_freq))
+            
+            sos_bp = butter(bworth_ord, [low_cutoff_freq, high_cutoff_freq], 
+                btype='bandpass', output='sos', fs = input_param.sample_frequency)
+            filtered_bp = np.zeros(
+                (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
+            for col, column in enumerate(cm_beats.y_axis.columns):
+                filtered_bp[:, col] = sosfilt(sos_bp, cm_beats.y_axis[column])
+            cm_beats.y_axis = pd.DataFrame(filtered_bp)
 
         # print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
         print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)))

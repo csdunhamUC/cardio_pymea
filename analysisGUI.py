@@ -543,7 +543,7 @@ class BeatSignalPlotWindow(QWidget):
         self.filterTypeEdit.addItem("No filter")
         self.filterTypeEdit.addItem("Low-pass Only")
         self.filterTypeEdit.addItem("High-pass Only")
-        self.filterTypeEdit.addItem("Low & High")
+        self.filterTypeEdit.addItem("Bandpass")
 
         # Filter parameters widgets.
         self.butterOrderLabel = QLabel("Butterworth\nOrder")
@@ -610,7 +610,7 @@ class BeatSignalPlotWindow(QWidget):
             self.lowPassFreqEdit.hide()
             self.highPassFreqLabel.show()
             self.highPassFreqEdit.show()
-        elif self.filterTypeEdit.currentText() == "Low & High":
+        elif self.filterTypeEdit.currentText() == "Bandpass":
             self.butterOrderLabel.show()
             self.butterOrderEdit.show()
             self.lowPassFreqLabel.show()
