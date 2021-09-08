@@ -32,6 +32,7 @@ import param_vs_distance_stats
 import psd_plotting
 import calculate_beat_amp_int
 import pca_plotting
+import detect_transloc
 
 
 ################################################################################
@@ -450,6 +451,7 @@ def reload_module():
     importlib.reload(calculate_pacemaker)
     importlib.reload(calculate_beat_amp_int)
     importlib.reload(pca_plotting)
+    importlib.reload(detect_transloc)
     print("Reloaded modules.")
 
 
@@ -859,6 +861,8 @@ class AnalysisGUI(QMainWindow):
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
+        self.toolsMenu.addAction("&Detect translocations", 
+            lambda: [detect_transloc.pm_translocations(self, pace_maker, electrode_config)])
         # Advanced Tools Menu (ML, etc); To be filled later
         self.advToolsMenu = self.menuBar().addMenu("Advanced T&ools")
 
