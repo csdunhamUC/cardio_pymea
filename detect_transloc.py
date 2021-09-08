@@ -1,3 +1,15 @@
+# Christopher S. Dunham
+# 9/7/2021
+# Gimzewski Laboratory
+# University of California, Los Angeles
+# Original work
+
+# Module for calculating pacemaker translocations
+# Uses an algorithm to determine pacemaker electrode (if multiple for a given
+# beat), track changes in pacemaker electrode across beats and, if the change in
+# electrode location exceeds some threshold distance, marks it as an event,
+# recording the length (in beats) the electrode was in that location. Then the
+# process continues with the new electrode.
 from typing import List
 import numpy as np
 from pandas.core.frame import DataFrame
@@ -5,7 +17,6 @@ from pandas.core.frame import DataFrame
 def pm_translocations(analysisGUI, pace_maker, electrode_config):
     electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
         columns='X', values='Electrode')
-    # print(electrode_names)
 
     min_pm = pace_maker.param_dist_normalized.drop(
         columns=["Electrode", "X", "Y"]).min(axis=1)
@@ -16,8 +27,6 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
     elecs_only = pace_maker.param_dist_normalized.loc[pm_elecs].drop(
         columns=pace_maker.param_dist_normalized.columns[3:])
     pm_only_all_beats = pace_maker.param_dist_normalized.loc[pm_elecs]
-
-    print(pm_only_all_beats)
 
     # "Size" of event, or length in beats the pacemaker is at some electrode
     event_length = 0
@@ -30,23 +39,29 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
     
     # Algorithm begins.
     """
-    Pseudocode
-    What needs to be done for this algorithm to be successful:
-
-    Identify PM electrode.
-    Monitor PM electrode through each beat
-    Stop when PM electrode is no longer the PM electrode
-        Check the other electrodes
-            Find distance between previous pacemaker and new pacemaker
-            Does the distance exceed the threshold?
-            If yes:
-                Mark this as an event
-                Record the number of beats previous pacemaker was THE pacemaker
-                Select new PM
-                Continue (or change) search with the new PM
-            If no:
-                Continue search for an event
+    Pseudocode below:
     
+    Identify PM electrode
+        Check whether multiple PMs in given beat
+            If yes:
+                Calculate distance between
+                If distance < threshold, pick one electrode and proceed
+                If distance > threshold, terminate process
+                *** The above step can use further refinement ***
+            If no:
+                Continue
+    Monitor PM electrode through each beat
+    Stop when PM electrode changes
+        Compare to the new PM electrode
+            Calculate distance between previous pacemaker and new pacemaker
+            Does the distance exceed the threshold?
+                If yes:
+                    Mark this as an event
+                    Record the number of beats previous electrode was THE pacemaker
+                    Continue search for next event
+                If no:
+                    Consider electrode change meaningless
+                    Continue search for an event
     """
     for num, beat in enumerate(pm_only_all_beats.columns[3:]):
         current_pm_idx = np.where(pm_only_all_beats[beat] == 0)
@@ -75,11 +90,10 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
             # Check whether the current pacemaker electrode is the same
             # electrode as in the previous beat
             if (num != 0):
-                # print(num)
                 if (pm_electrode[num] != pm_electrode[num-1]):
                     old_elec = pm_electrode[num-1]
                     new_elec = pm_electrode[num]
-                    print(f"Electrode changed from {old_elec} to {new_elec}.")
+                    # print(f"Electrode changed from {old_elec} to {new_elec}.")
 
                     pm_old_new = [old_elec, new_elec]
 
@@ -108,11 +122,10 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
             # Check whether the current pacemaker electrode is the same
             # electrode as in the previous beat
             if (num != 0):
-                # print(num)
                 if (pm_electrode[num] != pm_electrode[num-1]):
                     old_elec = pm_electrode[num-1]
                     new_elec = pm_electrode[num]
-                    print(f"Electrode changed from {old_elec} to {new_elec}.")
+                    # print(f"Electrode changed from {old_elec} to {new_elec}.")
 
                     pm_old_new = [old_elec, new_elec]
 
@@ -132,18 +145,24 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
                     event_length += 1
             else:
                 event_length += 1
+    # Uncomment line below if you want to include the last count, which
+    # is unlikely to accurately represent an event.
+    # event_length_list.append(event_length)
 
-        
-        # current_pm = pm_only_all_beats.loc[pm_only_all_beats[beat] == 0]
-        # print(current_pm)
-    event_length_list.append(event_length)
-    print(pm_electrode)
-    print(event_length_list)
+    # Remove the first count from event list. Keeping it may introduce an 
+    # artifact to the data, as we do not know when the translocation began
+    # prior to recording.
+    event_length_list.pop(0)
+
+    # Store event list.
+    pace_maker.transloc_events = event_length_list
+
+    # Print event list to terminal.
+    print("Event lengths:\n" + str(pace_maker.transloc_events))
 
 
 def distance_calc(pacemaker_only_df: DataFrame, pacemaker_elec: List, 
 thresh: int, calc_mode=""):
-    distances = []
 
     if calc_mode == "multi_min":
         temp_dists = []
