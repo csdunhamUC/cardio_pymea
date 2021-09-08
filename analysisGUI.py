@@ -175,7 +175,8 @@ class CheckableComboBox(QComboBox):
 
         # Compute elided text (with "...")
         metrics = QFontMetrics(self.lineEdit().font())
-        elidedText = metrics.elidedText(text, Qt.ElideRight, self.lineEdit().width())
+        elidedText = metrics.elidedText(text, Qt.ElideRight, 
+            self.lineEdit().width())
         self.lineEdit().setText(elidedText)
 
     def addItem(self, text, data=None):
@@ -351,7 +352,8 @@ def data_import(analysisGUI, raw_data, electrode_config):
 
 # Save DataFrame in Excel Spreadsheet 
 # written by Madelynn E. Mackenize (MEM), undergrad, UCLA class of 2022
-# create different sheet for each calculated parameter: PM, LAT, dv/dt, CV, Amp, Int, Stats
+# create different sheet for each calculated parameter: 
+# PM, LAT, dv/dt, CV, Amp, Int, Stats
 # dataframe of PM data: pace_maker.param_dist_normalized
 # Modifications to original code by CSD.
 def export_excel(analysisGUI, pace_maker, local_act_time, upstroke_vel, 
@@ -377,8 +379,12 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
                 sheet_name='Pacemaker (Raw)')
             pace_maker.param_dist_normalized_per_beat_max.to_excel(writer, 
                 sheet_name="Per Beat Max Time Lag")
-            # pace_maker.param_width_normalized.to_excel(writer, sheet_name='PM_Param_Width_Normalized')
-            # pace_maker.param_thresh_normalized.to_excel(writer, sheet_name='PM_Param_Thresh_Normalized')
+            pace_maker.transloc_events.to_excel(writer,
+                sheet_name="Translocation Events", index=False)
+            # pace_maker.param_width_normalized.to_excel(writer, 
+                # sheet_name='PM_Param_Width_Normalized')
+            # pace_maker.param_thresh_normalized.to_excel(writer, 
+                # sheet_name='PM_Param_Thresh_Normalized')
             local_act_time.param_dist_normalized.to_excel(writer, 
                 sheet_name='LAT Normalized')
             local_act_time.distance_from_min.to_excel(writer, 
@@ -418,6 +424,7 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
             (e.g. statistics)")
     except ValueError:
         print("Operation cancelled.")
+
 
 def print_something():
     print("Something.")
@@ -740,18 +747,18 @@ class PlotBeatSelectWindows(QWidget):
 
 # Primary GUI class.
 class AnalysisGUI(QMainWindow):
-    def __init__(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
+    def __init__(self, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
     cm_stats, electrode_config, psd_data, beat_amp_int, parent=None):
         super().__init__(parent)
         # Function call to establish GUI widgets
-        self.setup_UI(x_var, y_var, raw_data, cm_beats, pace_maker, 
+        self.setup_UI(raw_data, cm_beats, pace_maker, 
             upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
             cm_stats, electrode_config, psd_data, beat_amp_int,)
         # Initial file path
         self.file_path = "/"
 
-    def setup_UI(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
+    def setup_UI(self, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
     cm_stats, electrode_config, psd_data, beat_amp_int):
         self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
@@ -853,8 +860,8 @@ class AnalysisGUI(QMainWindow):
                 upstroke_vel, local_act_time, conduction_vel, input_param, 
                 cm_stats)])
         self.statMenu.addAction("Principal Component &Analysis (PCA)",
-            lambda: [self.pcaPlotWindow(cm_beats, beat_amp_int, pace_maker, local_act_time, 
-                heat_map, input_param, electrode_config),
+            lambda: [self.pcaPlotWindow(cm_beats, beat_amp_int, pace_maker, 
+                local_act_time, heat_map, input_param, electrode_config),
                 pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, 
                 pace_maker, local_act_time, heat_map, input_param, 
                 electrode_config)])
@@ -862,7 +869,8 @@ class AnalysisGUI(QMainWindow):
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
         self.toolsMenu.addAction("&Detect translocations", 
-            lambda: [detect_transloc.pm_translocations(self, pace_maker, electrode_config)])
+            lambda: [detect_transloc.pm_translocations(
+                self, pace_maker, electrode_config)])
         # Advanced Tools Menu (ML, etc); To be filled later
         self.advToolsMenu = self.menuBar().addMenu("Advanced T&ools")
 
@@ -953,7 +961,6 @@ class AnalysisGUI(QMainWindow):
         self.mainHeatmap = MainHeatmapCanvas(self, width=10, height=8, dpi=100)
         # (row, column, rowspan, colspan)
         plotLayout.addWidget(self.mainHeatmap, 2, 0, 1, 2)
-        self.mainHeatmap.axis1.plot(x_var, y_var)
 
         self.mainSlider = QSlider(Qt.Horizontal)
         plotLayout.addWidget(self.mainSlider, 3, 0)
@@ -1136,10 +1143,7 @@ def main():
     app = QApplication([])
     app.setStyle("Fusion")
 
-    x_var = [0,1,2,3,4,8]
-    y_var = [10,20,30,40,50,60]
-
-    analysisGUI = AnalysisGUI(x_var, y_var, raw_data, cm_beats, pace_maker, 
+    analysisGUI = AnalysisGUI(raw_data, cm_beats, pace_maker, 
         upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
         cm_stats, electrode_config, psd_data, beat_amp_int)
     analysisGUI.show()

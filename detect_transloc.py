@@ -12,12 +12,10 @@
 # process continues with the new electrode.
 from typing import List
 import numpy as np
+import pandas as pd
 from pandas.core.frame import DataFrame
 
 def pm_translocations(analysisGUI, pace_maker, electrode_config):
-    electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
-        columns='X', values='Electrode')
-
     min_pm = pace_maker.param_dist_normalized.drop(
         columns=["Electrode", "X", "Y"]).min(axis=1)
     min_elecs_idx = np.where(min_pm == 0)[0]
@@ -40,7 +38,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
     # Algorithm begins.
     """
     Pseudocode below:
-    
+
     Identify PM electrode
         Check whether multiple PMs in given beat
             If yes:
@@ -155,7 +153,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
     event_length_list.pop(0)
 
     # Store event list.
-    pace_maker.transloc_events = event_length_list
+    pace_maker.transloc_events = pd.Series(event_length_list)
 
     # Print event list to terminal.
     print("Event lengths:\n" + str(pace_maker.transloc_events))
