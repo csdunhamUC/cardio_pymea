@@ -14,7 +14,7 @@ import seaborn as sns
 from scipy import optimize
 from matplotlib import pyplot as plt
 
-# Comment out init() if using Pycharm on Windows.
+# Comment out init() if using Python on Windows.
 init()
 
 # Function that calculates the pacemaker (time lag).  Performs this calculation for all electrodes, and filters
