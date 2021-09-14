@@ -236,7 +236,7 @@ pacemaker_elec: List, thresh: int, calc_mode=""):
             # print(f"Furthest PM-to-max time lag: {temp_dists2}")
             # print(pacemaker_only_df.loc[pacemaker_elec])
             print(f"{Fore.LIGHTRED_EX}ALERT: pacemakers in {current_beat}" +
-                f" are far apart.{Style.RESET_ALL}")
+                f" are far apart. Choosing {min_pm}.{Style.RESET_ALL}")
             return min_pm
 
     if calc_mode == "new_min":
