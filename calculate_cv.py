@@ -126,6 +126,9 @@ local_act_time, heat_map, input_param, electrode_config):
         print(end_time - start_time)
     except AttributeError:
         print("Please calculate local activation time first.")
+    except TypeError:
+        print("Insufficient electrode count. Must have more than 6 electrodes.")
+        return
 
 
 # Function for fitting if using lmfit.
