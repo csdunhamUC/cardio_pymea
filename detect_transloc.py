@@ -64,10 +64,10 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
         Identify PM electrode
             Check whether multiple PMs in given beat
                 If yes:
-                    Calculate distance between
+                    Calculate distance between electrodes
                     If distance < threshold, pick one electrode and proceed
-                    If distance > threshold, terminate process
-                    *** The above step can use further refinement ***
+                    If distance > threshold, pick PM electrode furthest from max
+                        pacemaker time lag value
                 If no:
                     Continue
         Monitor PM electrode through each beat

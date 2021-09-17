@@ -88,9 +88,9 @@ def calculate_pacemaker(analysisGUI, cm_beats, pace_maker, heat_map, input_param
             int(cm_beats.beat_count_dist_mode[0]) - 1)
 
         # Find the number of excluded electrodes (removed for noise, etc)
-        excluded_elec = np.count_nonzero(pace_maker.param_dist_normalized.count() == 0)
-        print("{}Excluded electrodes: {} {}".format(Fore.YELLOW, excluded_elec,
-            Style.RESET_ALL))
+        pace_maker.excluded_elec = np.count_nonzero(pace_maker.param_dist_normalized.count() == 0)
+        print("{}Excluded electrodes: {} {}".format(
+            Fore.YELLOW, pace_maker.excluded_elec, Style.RESET_ALL))
 
         # Assigns column headers (names) using the naming convention provided in the electrode_config class.
         pace_maker.param_dist_normalized.columns = electrode_config.electrode_names
