@@ -28,7 +28,6 @@ electrode_config):
             delattr(cm_beats, 'width_beats')
             delattr(cm_beats, 'thresh_beats')
 
-        # Needs fixing.
         # input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
         input_param.min_peak_dist = float(analysisGUI.pkDistEdit.text())
         input_param.min_peak_height = float(analysisGUI.pkHeightEdit.text())
