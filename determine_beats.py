@@ -14,7 +14,7 @@ from scipy import stats
 
 # Finds peaks based on given input parameters.
 def determine_beats(analysisGUI, raw_data, cm_beats, input_param, 
-electrode_config):
+electrode_config, batch_data):
     try:
         print("Finding beats...\n")
         start_time = time.process_time()
@@ -28,13 +28,15 @@ electrode_config):
             delattr(cm_beats, 'width_beats')
             delattr(cm_beats, 'thresh_beats')
 
-        # input_param.elec_choice = int(analysisGUI.elec_to_plot_val.get()) - 1
-        input_param.min_peak_dist = float(analysisGUI.pkDistEdit.text())
-        input_param.min_peak_height = float(analysisGUI.pkHeightEdit.text())
-        input_param.parameter_prominence = float(analysisGUI.pkPromEdit.text())
-        input_param.parameter_width = float(analysisGUI.pkWidthEdit.text())
-        input_param.parameter_thresh = float(analysisGUI.pkThreshEdit.text())
-        input_param.sample_frequency = float(analysisGUI.sampleFreqEdit.currentText())
+        # Check whether batch analysis is being performed.
+        # If not (i.e. normal mode/single file), pull parameters from GUI
+        if batch_data.batch_config == False:
+            input_param.min_peak_dist = float(analysisGUI.pkDistEdit.text())
+            input_param.min_peak_height = float(analysisGUI.pkHeightEdit.text())
+            input_param.parameter_prominence = float(analysisGUI.pkPromEdit.text())
+            input_param.parameter_width = float(analysisGUI.pkWidthEdit.text())
+            input_param.parameter_thresh = float(analysisGUI.pkThreshEdit.text())
+            input_param.sample_frequency = float(analysisGUI.sampleFreqEdit.currentText())
 
         # file_length = # of rows / sample_freq --> # of seconds in data set 
         # multiply by 60s in 1 min --> number of minutes in data set (rounded)

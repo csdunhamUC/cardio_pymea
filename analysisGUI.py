@@ -85,6 +85,10 @@ class BeatAmpIntData:
     pass
 
 
+class BatchData:
+    pass
+
+
 # Custom widget class for checkable, multi-select combo box.
 # From Stack Exchange: 
 # https://gis.stackexchange.com/questions/350148/qcombobox-multiple-selection-pyqt5
@@ -749,18 +753,19 @@ class PlotBeatSelectWindows(QWidget):
 class AnalysisGUI(QMainWindow):
     def __init__(self, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-    cm_stats, electrode_config, psd_data, beat_amp_int, parent=None):
+    cm_stats, electrode_config, psd_data, beat_amp_int, batch_data, 
+    parent=None):
         super().__init__(parent)
         # Function call to establish GUI widgets
         self.setup_UI(raw_data, cm_beats, pace_maker, 
             upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-            cm_stats, electrode_config, psd_data, beat_amp_int,)
+            cm_stats, electrode_config, psd_data, beat_amp_int, batch_data)
         # Initial file path
         self.file_path = "/"
 
     def setup_UI(self, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-    cm_stats, electrode_config, psd_data, beat_amp_int):
+    cm_stats, electrode_config, psd_data, beat_amp_int, batch_data):
         self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -780,7 +785,7 @@ class AnalysisGUI(QMainWindow):
         self.calcMenu = self.menuBar().addMenu("&Calculations")
         self.calcMenu.addAction("&Find Beats (Use First!)", 
             lambda: [self.determineBeatsWindow(raw_data, cm_beats, input_param, 
-                electrode_config)])
+                electrode_config, batch_data)])
         self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)",
             lambda: [calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
                 pace_maker, heat_map, input_param, electrode_config),
@@ -977,7 +982,7 @@ class AnalysisGUI(QMainWindow):
         self.mainWidget.setLayout(mainLayout)
     
     def determineBeatsWindow(self, raw_data, cm_beats, input_param, 
-    electrode_config):
+    electrode_config, batch_data):
         self.beatsWindow = BeatSignalPlotWindow()
         self.beatsWindow.setWindowTitle("Beat Finder Results")
         # self.beatsWindow.paramPlot.axis1.plot([1,2,3,4,5],[10,20,30,40,50])
@@ -987,7 +992,7 @@ class AnalysisGUI(QMainWindow):
             electrode_config)])
         self.beatsWindow.plotButton.clicked.connect(lambda: [
             determine_beats.determine_beats(self, raw_data, cm_beats, 
-            input_param, electrode_config)])
+            input_param, electrode_config, batch_data)])
 
     def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
         self.pmWindow = SoloHeatmapWindows(self)
@@ -1139,13 +1144,15 @@ def main():
     psd_data = PSDData()
     electrode_config = ElectrodeConfig(raw_data)
     beat_amp_int = BeatAmpIntData()
-    
+    batch_data = BatchData()
+    batch_data.batch_config = False
+
     app = QApplication([])
     app.setStyle("Fusion")
 
     analysisGUI = AnalysisGUI(raw_data, cm_beats, pace_maker, 
         upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-        cm_stats, electrode_config, psd_data, beat_amp_int)
+        cm_stats, electrode_config, psd_data, beat_amp_int, batch_data)
     analysisGUI.show()
     sys.exit(app.exec_())
 
