@@ -196,7 +196,7 @@ electrode_config, batch_data):
 
         # Assign electrode labels to cm_beats.y_axis columns
         cm_beats.y_axis.columns = electrode_config.electrode_names
-        
+
         # Manually silence selected electrodes if toggle silence is checked.
         if batch_data.batch_config == False:
             if analysisGUI.toggleSilence.isChecked() == True:
@@ -204,6 +204,14 @@ electrode_config, batch_data):
                 for elec in silencedElecs:
                     cm_beats.y_axis.loc[:, elec] = 0
                 print("Silenced electrodes: " + str(silencedElecs))
+
+        elif batch_data.batch_config == True:
+            if input_param.toggle_silence == True:
+                silencedElecs = input_param.silenced_elecs
+                for elec in silencedElecs:
+                    cm_beats.y_axis.loc[:, elec] = 0
+                print("Batch processing. Silenced electrodes: " 
+                    + str(silencedElecs))
 
         # For loop for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
