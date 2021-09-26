@@ -159,66 +159,77 @@ class ElectrodeConfig:
                 [i[1] for i in self.mea_60_coordinates.values()])
 
 
-def import_batch_file(my_GUI, batch_data, electrode_config, raw_data, 
-cm_beats, input_param):
+def import_batch_file(analysisGUI, raw_data, batch_data, electrode_config, 
+cm_beats, input_param, pace_maker, heat_map, local_act_time, upstroke_vel,
+conduction_vel, beat_amp_int):
     # Set batch_config status to true
     batch_data.batch_config = True
     # Open dialog to select file (*.xlsx)
     batch_filename_and_path = QFileDialog.getOpenFileName(
-        my_GUI, "Select Batch File", "/home", "Excel files (*.xlsx)")
+        analysisGUI, "Select Batch File", "/home", "Excel files (*.xlsx)")
     # Get directory, file name
     batch_dir, batch_name = os.path.split(batch_filename_and_path[0])
     # Load data from file (*.xlsx) into dataframe
     batch_df = pd.read_excel(batch_filename_and_path[0])
-    print(batch_df)
-    print(batch_df.columns)
 
+    print(f"Processing batch: {batch_name}")
 
-    for (file_dir, file_name, pk_height, pk_dist, samp_freq, tog_trunc, 
-    trunc_start, trunc_end, tog_silence, silenced_elecs) in zip(
-    batch_df["file_dir"][0:1], batch_df["file_name"][0:1], 
-    batch_df["min_pk_height"][0:1], batch_df["min_pk_dist"][0:1], 
-    batch_df["sample_frequency"][0:1], batch_df["toggle_trunc"][0:1], 
-    batch_df["trunc_start"][0:1], batch_df["trunc_end"][0:1], 
-    batch_df["toggle_silence"][0:1], batch_df["silenced_electrodes"][0:1]):
+    batch_data.batch_translocs = []
+
+    total_files = len(batch_df["file_name"].values)
+
+    for num, (file_dir, file_name, pk_height, pk_dist, samp_freq, tog_trunc, 
+    trunc_start, trunc_end, tog_silence, silenced_elecs) in enumerate(zip(
+    batch_df["file_dir"][2:4], batch_df["file_name"][2:4], 
+    batch_df["min_pk_height"][2:4], batch_df["min_pk_dist"][2:4], 
+    batch_df["sample_frequency"][2:4], batch_df["toggle_trunc"][2:4], 
+    batch_df["trunc_start"][2:4], batch_df["trunc_end"][2:4], 
+    batch_df["toggle_silence"][2:4], batch_df["silenced_electrodes"][2:4])):
+        print("")
+        print(f"Analyzing file {num+1} of {total_files}: {file_name}.")
+        print("")
         file_path = "/".join([file_dir, file_name])
-        print(file_path)
         raw_data.imported = pd.read_csv(
             file_path, sep="\s+", lineterminator="\n", skiprows=3,header=0, 
             encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
-        # print(temp_data)
-        # print(temp_data[temp_data.columns[:-1]])
         # temp_data = pd.read_csv(
             # file_path, sep="\s+\t", lineterminator="\n", skiprows=[0, 1, 3],
             # header=None, nrows=1, encoding='iso-8859-15', 
             # skipinitialspace=True)
+       
         raw_data.new_data_size = np.shape(raw_data.imported)
         electrode_config.electrode_toggle(raw_data)
         input_param.min_peak_dist = pk_dist
         input_param.min_peak_height = pk_height
-        input_param.parameter_prominence = 100
-        input_param.parameter_width = 3
-        input_param.parameter_thresh = 50
+        input_param.parameter_prominence = 100 # Defaults from GUI
+        input_param.parameter_width = 3 # Defaults from GUI
+        input_param.parameter_thresh = 50 # Defaults from GUI
         input_param.sample_frequency = samp_freq
-        print(input_param.sample_frequency)
         # # Perform batch calculations
-        # determine_beats.determine_beats(my_GUI, raw_data, cm_beats, 
-        #     input_param, electrode_config)])
-        # calculate_pacemaker.calculate_pacemaker(my_GUI, cm_beats, 
-        #     pace_maker, heat_map, input_param, electrode_config)
-        # calculate_lat.calculate_lat(my_GUI, cm_beats, local_act_time,
-        #     heat_map, input_param, electrode_config)
-        # calculate_upstroke_vel.calculate_upstroke_vel(my_GUI, cm_beats, 
-        #     upstroke_vel, heat_map, input_param, electrode_config)
-        # calculate_cv.calculate_conduction_velocity(my_GUI, cm_beats, 
-        #     conduction_vel, local_act_time, heat_map, input_param, 
-        #     electrode_config)
-        # calculate_beat_amp_int.calculate_beat_amp(my_GUI, cm_beats, 
-        #     beat_amp_int, pace_maker, local_act_time, heat_map, input_param, 
-        #     electrode_config)
-        # detect_transloc.pm_translocations(my_GUI, pace_maker, electrode_config)
+        determine_beats.determine_beats(analysisGUI, raw_data, cm_beats, 
+            input_param, electrode_config, batch_data)
+        calculate_pacemaker.calculate_pacemaker(analysisGUI, cm_beats, 
+            pace_maker, heat_map, input_param, electrode_config)
+        calculate_lat.calculate_lat(analysisGUI, cm_beats, local_act_time,
+            heat_map, input_param, electrode_config)
+        calculate_upstroke_vel.calculate_upstroke_vel(analysisGUI, cm_beats, 
+            upstroke_vel, heat_map, input_param, electrode_config)
+        calculate_cv.calculate_conduction_velocity(analysisGUI, cm_beats, 
+            conduction_vel, local_act_time, heat_map, input_param, 
+            electrode_config)
+        calculate_beat_amp_int.calculate_beat_amp(analysisGUI, cm_beats, 
+            beat_amp_int, pace_maker, local_act_time, heat_map, input_param, 
+            electrode_config)
+        detect_transloc.pm_translocations(analysisGUI, pace_maker, electrode_config)
     
+        temp_translocs = pace_maker.transloc_events
+        batch_data.batch_translocs.append(temp_translocs)
+
+    # Print number of translocations found in files contained in batch
+    print("Translocations in batch: \n" + f"{batch_data.batch_translocs}")
     # Batch processing end.
+    print("Batch processing complete.")
+    # Reset batch_config flag to False to allow for single-file analysis
     batch_data.batch_config = False
 
 
@@ -261,4 +272,4 @@ def main():
     my_GUI.show()
     sys.exit(app.exec_())
 
-main()
+# main()

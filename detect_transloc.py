@@ -49,10 +49,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
         # Store event lengths in list for however many events there are.
         event_length_list = []
         # Threshold distance in micrometers (microns)
-        if len(electrode_config.electrode_names) == 120:
-            thresh = 800
-        elif len(electrode_config.electrode_names) == 60:
-            thresh = 400
+        thresh = 500 # More than 2 electrodes away for 200x30 scheme
         print(f"Using threshold: {thresh} microns.")
         # List to store pacemaker electrodes for checking against previous beat
         pm_electrode = []
@@ -184,7 +181,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
         event_length_list.pop(0)
 
         # Store event list.
-        pace_maker.transloc_events = pd.Series(event_length_list)
+        pace_maker.transloc_events = event_length_list
 
         # Print event list to terminal.
         print("Event lengths:\n" + str(event_length_list))

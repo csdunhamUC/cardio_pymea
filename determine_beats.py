@@ -80,62 +80,64 @@ electrode_config, batch_data):
         # Checks for whether Butterworth filter is selected.  If so, runs the
         # appropriate operations for the given selection.  Needs to filter per
         # column in cm_beats.y_axis
-        if analysisGUI.beatsWindow.filterTypeEdit.currentText() == "No filter":
-            print("No filter.")
-        
-        elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Low-pass Only":
-            bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
-            low_cutoff_freq = float(
-                analysisGUI.beatsWindow.lowPassFreqEdit.text())
-            print("Low-pass filter. Order = {}, Low Cutoff Freq. = {}".format(
-                bworth_ord, low_cutoff_freq))
+        if batch_data.batch_config == False:
+            if analysisGUI.beatsWindow.filterTypeEdit.currentText() == "No filter":
+                print("No filter.")
 
-            sos = butter(bworth_ord, low_cutoff_freq, btype='low', 
-                output='sos', fs=input_param.sample_frequency)
-            filtered_low = np.zeros(
-                (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
-            for col, column in enumerate(cm_beats.y_axis.columns):
-                filtered_low[:, col] = sosfilt(sos, cm_beats.y_axis[column])
-            cm_beats.y_axis = pd.DataFrame(filtered_low)
-        
-        elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "High-pass Only":
-            bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
-            high_cutoff_freq = float(
-                analysisGUI.beatsWindow.highPassFreqEdit.text())
-            print("High-pass filter. Order = {}, High Cutoff Freq = {}".format(
-                bworth_ord, high_cutoff_freq))
+            elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Low-pass Only":
+                bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
+                low_cutoff_freq = float(
+                    analysisGUI.beatsWindow.lowPassFreqEdit.text())
+                print("Low-pass filter. Order = {}, Low Cutoff Freq. = {}".format(
+                    bworth_ord, low_cutoff_freq))
 
-            sos = butter(bworth_ord, high_cutoff_freq, btype='high', 
-                output='sos', fs=input_param.sample_frequency)
-            filtered_high = np.zeros(
-                (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
-            for col, column in enumerate(cm_beats.y_axis.columns):
-                filtered_high[:, col] = sosfilt(sos, cm_beats.y_axis[column])
-            cm_beats.y_axis = pd.DataFrame(filtered_high)
-        
-        elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Bandpass":
-            bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
-            low_cutoff_freq = float(
-                analysisGUI.beatsWindow.lowPassFreqEdit.text())
-            high_cutoff_freq = float(
-                analysisGUI.beatsWindow.highPassFreqEdit.text())
-            print("Bandpass filter. Order = {}, Low cutoff = {}, High cutoff = {}".format(
-                bworth_ord, low_cutoff_freq, high_cutoff_freq))
+                sos = butter(bworth_ord, low_cutoff_freq, btype='low', 
+                    output='sos', fs=input_param.sample_frequency)
+                filtered_low = np.zeros(
+                    (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
+                for col, column in enumerate(cm_beats.y_axis.columns):
+                    filtered_low[:, col] = sosfilt(sos, cm_beats.y_axis[column])
+                cm_beats.y_axis = pd.DataFrame(filtered_low)
             
-            sos_bp = butter(bworth_ord, [low_cutoff_freq, high_cutoff_freq], 
-                btype='bandpass', output='sos', fs = input_param.sample_frequency)
-            filtered_bp = np.zeros(
-                (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
-            for col, column in enumerate(cm_beats.y_axis.columns):
-                filtered_bp[:, col] = sosfilt(sos_bp, cm_beats.y_axis[column])
-            cm_beats.y_axis = pd.DataFrame(filtered_bp)
+            elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "High-pass Only":
+                bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
+                high_cutoff_freq = float(
+                    analysisGUI.beatsWindow.highPassFreqEdit.text())
+                print("High-pass filter. Order = {}, High Cutoff Freq = {}".format(
+                    bworth_ord, high_cutoff_freq))
+
+                sos = butter(bworth_ord, high_cutoff_freq, btype='high', 
+                    output='sos', fs=input_param.sample_frequency)
+                filtered_high = np.zeros(
+                    (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
+                for col, column in enumerate(cm_beats.y_axis.columns):
+                    filtered_high[:, col] = sosfilt(sos, cm_beats.y_axis[column])
+                cm_beats.y_axis = pd.DataFrame(filtered_high)
+            
+            elif analysisGUI.beatsWindow.filterTypeEdit.currentText() == "Bandpass":
+                bworth_ord = int(analysisGUI.beatsWindow.butterOrderEdit.text())
+                low_cutoff_freq = float(
+                    analysisGUI.beatsWindow.lowPassFreqEdit.text())
+                high_cutoff_freq = float(
+                    analysisGUI.beatsWindow.highPassFreqEdit.text())
+                print("Bandpass filter. Order = {}, Low cutoff = {}, High cutoff = {}".format(
+                    bworth_ord, low_cutoff_freq, high_cutoff_freq))
+                
+                sos_bp = butter(bworth_ord, [low_cutoff_freq, high_cutoff_freq], 
+                    btype='bandpass', output='sos', fs = input_param.sample_frequency)
+                filtered_bp = np.zeros(
+                    (len(cm_beats.y_axis.index), len(cm_beats.y_axis.columns)))
+                for col, column in enumerate(cm_beats.y_axis.columns):
+                    filtered_bp[:, col] = sosfilt(sos_bp, cm_beats.y_axis[column])
+                cm_beats.y_axis = pd.DataFrame(filtered_bp)
 
         # print("Y-axis data type is:: " + str(type(cm_beats.y_axis)) + "\n")
         print("Number of columns in cm_beats.y_axis: " + str(len(cm_beats.y_axis.columns)))
         print("Number of rows in cm_beats.y_axis: " + str(len(cm_beats.y_axis)) + "\n")
 
-        analysisGUI.beatsWindow.paramSlider.setMaximum(
-            len(cm_beats.y_axis.columns) - 1)
+        if batch_data.batch_config == False:
+            analysisGUI.beatsWindow.paramSlider.setMaximum(
+                len(cm_beats.y_axis.columns) - 1)
 
         # Establish "fields" as dataframes for subsequent operations.
         cm_beats.dist_beats = pd.DataFrame()
@@ -154,11 +156,12 @@ electrode_config, batch_data):
         cm_beats.y_axis.columns = electrode_config.electrode_names
         
         # Manually silence selected electrodes if toggle silence is checked.
-        if analysisGUI.toggleSilence.isChecked() == True:
-            silencedElecs = analysisGUI.elecCombobox.currentData()
-            for elec in silencedElecs:
-                cm_beats.y_axis.loc[:, elec] = 0
-            print("Silenced electrodes: " + str(silencedElecs))
+        if batch_data.batch_config == False:
+            if analysisGUI.toggleSilence.isChecked() == True:
+                silencedElecs = analysisGUI.elecCombobox.currentData()
+                for elec in silencedElecs:
+                    cm_beats.y_axis.loc[:, elec] = 0
+                print("Silenced electrodes: " + str(silencedElecs))
 
         # For loop for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
@@ -193,40 +196,51 @@ electrode_config, batch_data):
             cm_beats.thresh_beats = pd.concat([cm_beats.thresh_beats, 
                 thresh_beats], axis='columns')
 
-        # Data designation to ensure NaN values are properly handled by subsequent calculations.
+        # Data designation to ensure NaN values are properly handled by 
+        # subsequent calculations.
         cm_beats.dist_beats.astype('float64')
         cm_beats.prom_beats.astype('float64')
         cm_beats.width_beats.astype('float64')
         cm_beats.thresh_beats.astype('float64')
 
-        # Generate beat counts for the different peakfinder methods by finding the length of each electrode (column).
+        # Generate beat counts for the different peakfinder methods by finding 
+        # the length of each electrode (column).
         cm_beats.beat_count_dist = np.zeros(len(cm_beats.dist_beats.columns))
         for column in range(len(cm_beats.dist_beats.columns)):
-            cm_beats.beat_count_dist[column] = len(cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
+            cm_beats.beat_count_dist[column] = len(
+                cm_beats.dist_beats.iloc[0:, column].dropna(axis='index'))
 
         cm_beats.beat_count_prom = np.zeros(len(cm_beats.prom_beats.columns))
         for column in range(len(cm_beats.prom_beats.columns)):
-            cm_beats.beat_count_prom[column] = len(cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
+            cm_beats.beat_count_prom[column] = len(
+                cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
 
         cm_beats.beat_count_width = np.zeros(len(cm_beats.width_beats.columns))
         for column in range(len(cm_beats.width_beats.columns)):
-            cm_beats.beat_count_width[column] = len(cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
+            cm_beats.beat_count_width[column] = len(
+                cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
 
         cm_beats.beat_count_thresh = np.zeros(len(cm_beats.thresh_beats.columns))
         for column in range(len(cm_beats.thresh_beats.columns)):
-            cm_beats.beat_count_thresh[column] = len(cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
+            cm_beats.beat_count_thresh[column] = len(
+                cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
 
-        # Finds the mode of beats across the dataset for each peakfinder parameter set.
+        # Finds the mode of beats across the dataset for each peakfinder 
+        # parameter set.
         cm_beats.beat_count_dist_mode = stats.mode(cm_beats.beat_count_dist)
         cm_beats.beat_count_prom_mode = stats.mode(cm_beats.beat_count_prom)
         cm_beats.beat_count_width_mode = stats.mode(cm_beats.beat_count_width)
         cm_beats.beat_count_thresh_mode = stats.mode(cm_beats.beat_count_thresh)
 
         # Prints the output from the preceding operations.
-        print("Mode of beats using distance parameter: " + str(cm_beats.beat_count_dist_mode[0]))
-        print("Mode of beats using prominence parameter: " + str(cm_beats.beat_count_prom_mode[0]))
-        print("Mode of beats using width parameter: " + str(cm_beats.beat_count_width_mode[0]))
-        print("Mode of beats using threshold parameter: " + str(cm_beats.beat_count_thresh_mode[0]) + "\n")
+        print("Mode of beats using distance parameter: " + str(
+            cm_beats.beat_count_dist_mode[0]))
+        print("Mode of beats using prominence parameter: " + str(
+            cm_beats.beat_count_prom_mode[0]))
+        print("Mode of beats using width parameter: " + str(
+            cm_beats.beat_count_width_mode[0]))
+        print("Mode of beats using threshold parameter: " + str(
+            cm_beats.beat_count_thresh_mode[0]) + "\n")
 
         dist_beats_size = np.shape(cm_beats.dist_beats)
         print("Shape of cm_beats.dist_beats: " + str(dist_beats_size))
@@ -235,13 +249,15 @@ electrode_config, batch_data):
         width_beats_size = np.shape(cm_beats.width_beats)
         print("Shape of cm_beats.width_beats: " + str(width_beats_size))
         thresh_beats_size = np.shape(cm_beats.thresh_beats)
-        print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + ".\n")
+        print("Shape of cm_beats.thresh_beats: " + str(thresh_beats_size) + 
+            ".\n")
 
         print("Finished.")
         end_time = time.process_time()
         print(end_time - start_time)
-        print("Plotting...")
-        graph_beats(analysisGUI, cm_beats, input_param, electrode_config)
+        if batch_data.batch_config == False:
+            print("Plotting...")
+            graph_beats(analysisGUI, cm_beats, input_param, electrode_config)
     except AttributeError:
         print("No data found. Please import data (.txt or .csv converted MCD file) first.")
     except ValueError:

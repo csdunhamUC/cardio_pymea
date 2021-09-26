@@ -33,7 +33,7 @@ import psd_plotting
 import calculate_beat_amp_int
 import pca_plotting
 import detect_transloc
-
+import batch_analysis
 
 ################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and 
@@ -775,6 +775,11 @@ class AnalysisGUI(QMainWindow):
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction("&Import", lambda: data_import(self, 
             raw_data, electrode_config))
+        self.fileMenu.addAction("&Batch", lambda: [
+            batch_analysis.import_batch_file(self, raw_data, batch_data, 
+                electrode_config, cm_beats, input_param, pace_maker, 
+                heat_map, local_act_time, upstroke_vel, conduction_vel,
+                beat_amp_int)])
         self.fileMenu.addAction("&Save Processed Data",
             lambda: export_excel(self, pace_maker, local_act_time, upstroke_vel, 
                 conduction_vel, beat_amp_int, cm_beats, cm_stats))
