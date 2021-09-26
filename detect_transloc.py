@@ -188,7 +188,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
         deinit()
     except IndexError:
         print("No events.")
-        pace_maker.transloc_events = None
+        pace_maker.transloc_events = [None]
 
 
 def distance_calc(max_df: DataFrame, pacemaker_only_df: DataFrame, 
