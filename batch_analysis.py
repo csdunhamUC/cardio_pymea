@@ -180,11 +180,11 @@ conduction_vel, beat_amp_int):
 
     for num, (file_dir, file_name, pk_height, pk_dist, samp_freq, tog_trunc, 
     trunc_start, trunc_end, tog_silence, silenced_elecs) in enumerate(zip(
-    batch_df["file_dir"][2:4], batch_df["file_name"][2:4], 
-    batch_df["min_pk_height"][2:4], batch_df["min_pk_dist"][2:4], 
-    batch_df["sample_frequency"][2:4], batch_df["toggle_trunc"][2:4], 
-    batch_df["trunc_start"][2:4], batch_df["trunc_end"][2:4], 
-    batch_df["toggle_silence"][2:4], batch_df["silenced_electrodes"][2:4])):
+    batch_df["file_dir"][0:4], batch_df["file_name"][0:4], 
+    batch_df["min_pk_height"][0:4], batch_df["min_pk_dist"][0:4], 
+    batch_df["sample_frequency"][0:4], batch_df["toggle_trunc"][0:4], 
+    batch_df["trunc_start"][0:4], batch_df["trunc_end"][0:4], 
+    batch_df["toggle_silence"][0:4], batch_df["silenced_electrodes"][0:4])):
         print("")
         print(f"Analyzing file {num+1} of {total_files}: {file_name}.")
         print("")
@@ -197,6 +197,8 @@ conduction_vel, beat_amp_int):
             # header=None, nrows=1, encoding='iso-8859-15', 
             # skipinitialspace=True)
        
+        print(f"Silence toggled?: {tog_silence}")
+
         raw_data.new_data_size = np.shape(raw_data.imported)
         electrode_config.electrode_toggle(raw_data)
         input_param.min_peak_dist = pk_dist
