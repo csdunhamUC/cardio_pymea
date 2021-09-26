@@ -34,6 +34,7 @@ import calculate_beat_amp_int
 import pca_plotting
 import detect_transloc
 import batch_analysis
+import calculate_fpd
 
 ################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and 
@@ -66,6 +67,10 @@ class LocalATData:
 
 
 class CondVelData:
+    pass
+
+
+class FieldPotDurationData:
     pass
 
 
@@ -457,6 +462,7 @@ def reload_module():
     importlib.reload(calculate_beat_amp_int)
     importlib.reload(pca_plotting)
     importlib.reload(detect_transloc)
+    importlib.reload(calculate_fpd)
     print("Reloaded modules.")
 
 
@@ -748,18 +754,19 @@ class AnalysisGUI(QMainWindow):
     def __init__(self, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
     cm_stats, electrode_config, psd_data, beat_amp_int, batch_data, 
-    parent=None):
+    field_potential, parent=None):
         super().__init__(parent)
         # Function call to establish GUI widgets
-        self.setup_UI(raw_data, cm_beats, pace_maker, 
-            upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-            cm_stats, electrode_config, psd_data, beat_amp_int, batch_data)
+        self.setup_UI(raw_data, cm_beats, pace_maker, upstroke_vel, 
+            local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
+            electrode_config, psd_data, beat_amp_int, batch_data,
+            field_potential)
         # Initial file path
         self.file_path = "/"
 
-    def setup_UI(self, raw_data, cm_beats, pace_maker, 
-    upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-    cm_stats, electrode_config, psd_data, beat_amp_int, batch_data):
+    def setup_UI(self, raw_data, cm_beats, pace_maker, upstroke_vel, 
+    local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
+    electrode_config, psd_data, beat_amp_int, batch_data, field_potential):
         self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
@@ -830,6 +837,11 @@ class AnalysisGUI(QMainWindow):
                 electrode_config),
                 calculate_cv.graph_conduction_vel(self, heat_map, 
                 local_act_time, conduction_vel, input_param)])
+        self.calcMenu.addAction("Calculate Field Potential &Duration",
+            lambda: [self.fieldPotDurWindow(cm_beats, field_potential, 
+                heat_map, input_param),
+                calculate_fpd.find_T_wave(self, cm_beats, field_potential, 
+                heat_map, input_param)])
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("Special &Plots")
@@ -1060,6 +1072,18 @@ class AnalysisGUI(QMainWindow):
             calculate_cv.cv_quiver_plot(self, input_param, local_act_time, 
             conduction_vel)])
 
+    def fieldPotDurWindow(self, cm_beats, field_potential, heat_map, 
+    input_param):
+        self.fpdWindow = SoloHeatmapWindows(self)
+        self.fpdWindow.setWindowTitle("Field Potential Duration")
+        self.fpdWindow.show()
+        # Set slider value to maximum number of beats
+        # self.fpdWindow.paramSlider.setMaximum(
+        #     int(cm_beats.beat_count_dist_mode[0]) - 1)
+        # self.fpdWindow.paramSlider.valueChanged.connect(lambda: [
+        #     calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
+        #     input_param)])
+
     def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):
         self.pvdWindow = ParamStatWindows()
@@ -1137,6 +1161,7 @@ def main():
     upstroke_vel = UpstrokeVelData()
     local_act_time = LocalATData()
     conduction_vel = CondVelData()
+    field_potential = FieldPotDurationData()
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
     cm_stats = StatisticsData()
@@ -1149,9 +1174,9 @@ def main():
     app = QApplication([])
     app.setStyle("Fusion")
 
-    analysisGUI = AnalysisGUI(raw_data, cm_beats, pace_maker, 
-        upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-        cm_stats, electrode_config, psd_data, beat_amp_int, batch_data)
+    analysisGUI = AnalysisGUI(raw_data, cm_beats, pace_maker, upstroke_vel, 
+        local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
+        electrode_config, psd_data, beat_amp_int, batch_data, field_potential)
     analysisGUI.show()
     sys.exit(app.exec_())
 
