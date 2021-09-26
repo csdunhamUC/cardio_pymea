@@ -314,16 +314,10 @@ def data_import(analysisGUI, raw_data, electrode_config):
         if hasattr(raw_data, 'imported') is True:
             print("Raw data is not empty; clearing before reading file.")
             delattr(raw_data, 'imported')
-            # delattr(raw_data, 'names')
 
         # print("Importing data...")
         print("Import data began at: ", 
             datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
-
-        # Import electrodes for column headers from file.
-        # raw_data.names = pd.read_csv(data_filename_and_path[0], sep="\s+\t", 
-        #     lineterminator='\n', skiprows=[0, 1, 3], header=None, nrows=1, 
-        #     encoding='iso-8859-15', skipinitialspace=True, engine='python')
 
         # Import data from file.
         raw_data.imported = pd.read_csv(data_filename_and_path[0], sep='\s+', 

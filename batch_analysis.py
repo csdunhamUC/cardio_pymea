@@ -180,11 +180,11 @@ conduction_vel, beat_amp_int):
 
     for num, (file_dir, file_name, pk_height, pk_dist, samp_freq, tog_trunc, 
     trunc_start, trunc_end, tog_silence, silenced_elecs) in enumerate(zip(
-    batch_df["file_dir"][0:4], batch_df["file_name"][0:4], 
-    batch_df["min_pk_height"][0:4], batch_df["min_pk_dist"][0:4], 
-    batch_df["sample_frequency"][0:4], batch_df["toggle_trunc"][0:4], 
-    batch_df["trunc_start"][0:4], batch_df["trunc_end"][0:4], 
-    batch_df["toggle_silence"][0:4], batch_df["silenced_electrodes"][0:4])):
+    batch_df["file_dir"][0:8], batch_df["file_name"][0:8], 
+    batch_df["min_pk_height"][0:8], batch_df["min_pk_dist"][0:8], 
+    batch_df["sample_frequency"][0:8], batch_df["toggle_trunc"][0:8], 
+    batch_df["trunc_start"][0:8], batch_df["trunc_end"][0:8], 
+    batch_df["toggle_silence"][0:8], batch_df["silenced_electrodes"][0:8])):
         print("")
         print(f"Analyzing file {num+1} of {total_files}: {file_name}.")
         print("")
@@ -207,6 +207,14 @@ conduction_vel, beat_amp_int):
         input_param.parameter_width = 3 # Defaults from GUI
         input_param.parameter_thresh = 50 # Defaults from GUI
         input_param.sample_frequency = samp_freq
+        # Assign truncation inputs
+        input_param.toggle_trunc = tog_trunc
+        input_param.trunc_start = trunc_start
+        input_param.trunc_end = trunc_end
+        # Assign silenced electrode inputs
+        input_param.toggle_silence = tog_silence
+        input_param.silenced_elecs = silenced_elecs
+
         # # Perform batch calculations
         determine_beats.determine_beats(analysisGUI, raw_data, cm_beats, 
             input_param, electrode_config, batch_data)

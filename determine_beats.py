@@ -45,38 +45,80 @@ electrode_config, batch_data):
 
         analysisGUI.fileLength.setText(str(round(file_length, 2)) + " minutes")
 
-        if analysisGUI.truncCheckbox.isChecked() == False:
-            print("Calculating using full data set.")
-            cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
-            # y_axis indexing ends at column -1, or second to last column, to 
-            # remove the columns containing only \r
-            if '\r' in raw_data.imported.columns:
-                cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
-            else:
-                cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
-        elif analysisGUI.truncCheckbox.isChecked() == True:
-            trunc_start = float(analysisGUI.truncStartEdit.text())
-            trunc_end = float(analysisGUI.truncEndEdit.text())
-            print("Truncating between {} and {} minutes.".format(
-                trunc_start, trunc_end))
-            
-            start_milsec = int(trunc_start * 60 * input_param.sample_frequency)
-            end_milsec = int(trunc_end * 60 * input_param.sample_frequency)
-            print("Start (ms) = {}, End (ms) = {}".format(
-                start_milsec, end_milsec))
-            cm_beats.x_axis = (raw_data.imported.iloc[start_milsec:end_milsec, 0].values 
-            - raw_data.imported.iloc[start_milsec:end_milsec, 0].min().min())
-            # y_axis indexing ends at column -1, or second to last column, to 
-            # remove the columns containing only \r
-            if '\r' in raw_data.imported.columns:
-                cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
-                1:-1]
-                cm_beats.y_axis.reset_index(drop=True, inplace=True)
-            else:
-                cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
-                1:]
-                cm_beats.y_axis.reset_index(drop=True, inplace=True)
+        # Check if using batch processing.
+        # If not, get truncation status & endpoints from GUI
+        if batch_data.batch_config == False:
+            if analysisGUI.truncCheckbox.isChecked() == False:
+                print("Calculating using full data set.")
+                cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
+                # y_axis indexing ends at column -1, or second to last column, to 
+                # remove the columns containing only \r
+                if '\r' in raw_data.imported.columns:
+                    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
+                else:
+                    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
+            elif analysisGUI.truncCheckbox.isChecked() == True:
+                trunc_start = float(analysisGUI.truncStartEdit.text())
+                trunc_end = float(analysisGUI.truncEndEdit.text())
+                print("Truncating between {} and {} minutes.".format(
+                    trunc_start, trunc_end))
+                
+                start_milsec = int(trunc_start * 60 * input_param.sample_frequency)
+                end_milsec = int(trunc_end * 60 * input_param.sample_frequency)
+                print("Start (ms) = {}, End (ms) = {}".format(
+                    start_milsec, end_milsec))
+                cm_beats.x_axis = (
+                    raw_data.imported.iloc[start_milsec:end_milsec, 0].values 
+                    - raw_data.imported.iloc[
+                        start_milsec:end_milsec, 0].min().min())
+                # y_axis indexing ends at column -1, or second to last column, to 
+                # remove the columns containing only \r
+                if '\r' in raw_data.imported.columns:
+                    cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
+                    1:-1]
+                    cm_beats.y_axis.reset_index(drop=True, inplace=True)
+                else:
+                    cm_beats.y_axis = raw_data.imported.iloc[start_milsec:end_milsec, 
+                    1:]
+                    cm_beats.y_axis.reset_index(drop=True, inplace=True)
+        
+        # If using batch, use batch file values for trunc status & endpoints
+        elif batch_data.batch_config == True:
+            if input_param.toggle_trunc == False:
+                print("Batch processing. Calculating using full data set.")
+                cm_beats.x_axis = raw_data.imported.iloc[0:, 0]
+                # y_axis indexing ends at column -1, or second to last column, to 
+                # remove the columns containing only \r
+                if '\r' in raw_data.imported.columns:
+                    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:-1]
+                else:
+                    cm_beats.y_axis = raw_data.imported.iloc[0:, 1:]
 
+            elif input_param.toggle_trunc == True:
+                trunc_start = float(input_param.trunc_start)
+                trunc_end = float(input_param.trunc_end)
+                print("Batch processing. " + 
+                    "Truncating between {} and {} minutes.".format(
+                    trunc_start, trunc_end))
+                
+                start_milsec = int(trunc_start * 60 * input_param.sample_frequency)
+                end_milsec = int(trunc_end * 60 * input_param.sample_frequency)
+                print("Start (ms) = {}, End (ms) = {}".format(
+                    start_milsec, end_milsec))
+                cm_beats.x_axis = (
+                    raw_data.imported.iloc[start_milsec:end_milsec, 0].values 
+                    - raw_data.imported.iloc[
+                        start_milsec:end_milsec, 0].min().min())
+                # y_axis indexing ends at column -1, or second to last column, to 
+                # remove the columns containing only \r
+                if '\r' in raw_data.imported.columns:
+                    cm_beats.y_axis = raw_data.imported.iloc[
+                        start_milsec:end_milsec, 1:-1]
+                    cm_beats.y_axis.reset_index(drop=True, inplace=True)
+                else:
+                    cm_beats.y_axis = raw_data.imported.iloc[
+                        start_milsec:end_milsec, 1:]
+            
         # Checks for whether Butterworth filter is selected.  If so, runs the
         # appropriate operations for the given selection.  Needs to filter per
         # column in cm_beats.y_axis
