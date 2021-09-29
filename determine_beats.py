@@ -278,7 +278,7 @@ electrode_config, batch_data):
             # useless at this stage; data are not robust enough.
             neg_dist_beats = pd.Series(find_peaks(
                 cm_beats.neg_y_axis.iloc[0:, column], 
-                height=80,
+                height=25,
                 distance=400)[0], 
                 name=column+1)
             cm_beats.negative_dist_beats = pd.concat(
