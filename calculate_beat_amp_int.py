@@ -26,16 +26,20 @@ local_act_time, heat_map, input_param, electrode_config):
         print("Calculating beat amplitude and interval.")
 
         # Find indices of electrodes with NaN values.
-        nan_electrodes_idx = np.where(pace_maker.param_dist_raw['Beat 1'].isna())[0]
+        nan_electrodes_idx = np.where(
+            pace_maker.param_dist_raw['Beat 1'].isna())[0]
         # Remove electrodes with NaN values
-        x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
-        y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
+        x_elec = np.delete(
+            electrode_config.electrode_coords_x, nan_electrodes_idx)
+        y_elec = np.delete(
+            electrode_config.electrode_coords_y, nan_electrodes_idx)
         # Generate 2xN matrix, where N = number of non-NaN electrodes, 
         # of elec. coords.
         elec_nan_removed = np.array([x_elec, y_elec])
             
         # Generate new list with the electrode names with NaN values removed.
-        elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
+        elec_to_remove = [
+            electrode_config.electrode_names[i] for i in nan_electrodes_idx]
         elec_removed_names = [
             i for i in electrode_config.electrode_names if i not in elec_to_remove]
 
@@ -54,6 +58,10 @@ local_act_time, heat_map, input_param, electrode_config):
         beat_amp_int.beat_amp.columns = elec_removed_names
         beat_amp_int.beat_amp.index = pace_maker.param_dist_raw.columns
 
+        print(pace_maker.param_dist_raw)
+        print(pace_maker.param_negative_dist_raw)
+        print(cm_beats.negative_dist_beats.transpose())
+
         # Fill in the void of omitted electrodes with NaN values.
         missing_elec_fill = [np.nan] * int(cm_beats.beat_count_dist_mode[0])
         for missing in nan_electrodes_idx:
@@ -62,9 +70,12 @@ local_act_time, heat_map, input_param, electrode_config):
                 missing_elec_fill)
 
         beat_amp_int.beat_amp = beat_amp_int.beat_amp.T
-        beat_amp_int.beat_amp.insert(0, 'Electrode', electrode_config.electrode_names)
-        beat_amp_int.beat_amp.insert(1, 'X', electrode_config.electrode_coords_x)
-        beat_amp_int.beat_amp.insert(2, 'Y', electrode_config.electrode_coords_y)
+        beat_amp_int.beat_amp.insert(
+            0, 'Electrode', electrode_config.electrode_names)
+        beat_amp_int.beat_amp.insert(
+            1, 'X', electrode_config.electrode_coords_x)
+        beat_amp_int.beat_amp.insert(
+            2, 'Y', electrode_config.electrode_coords_y)
         
         calculate_beat_interval(beat_amp_int, pace_maker)
         calculate_delta_amp(beat_amp_int)
@@ -216,7 +227,8 @@ pace_maker, local_act_time, input_param):
     analysisGUI.ampIntWindow.paramPlot.axis4.boxplot(
         beat_amp_int.beat_amp[beats_selected].dropna(),
         vert=True, patch_artist=True)
-    analysisGUI.ampIntWindow.paramPlot.axis4.set(title="Beat Amplitude Boxplot", 
+    analysisGUI.ampIntWindow.paramPlot.axis4.set(
+        title="Beat Amplitude Boxplot", 
         ylabel="Amplitude (μV)")
     analysisGUI.ampIntWindow.paramPlot.axis4.set_xticklabels(
         labels=beats_selected, rotation = 45)

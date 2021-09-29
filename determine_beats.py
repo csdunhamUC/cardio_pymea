@@ -251,6 +251,9 @@ electrode_config, batch_data):
                 print("Batch processing. Silenced electrodes: " 
                     + str(silencedElecs))
 
+        # Negative version of beat data, to find full beat amplitude.
+        cm_beats.neg_y_axis = -1 * cm_beats.y_axis
+
         # For loop for finding beats (peaks) in each channel (electrode).  
         # Suitable for any given MCD-converted file in which only one MEA is 
         # recorded (i.e. works for a single 120 or 60 electrode MEA).
@@ -266,13 +269,20 @@ electrode_config, batch_data):
                 [cm_beats.dist_beats, dist_beats], 
                 axis='columns')
 
+            # Applying a different standard for negative beat detection.
+            # In many MEA samples, the negative peaks can be largely lost.
+            # Using a fairly generous parameter set here may help.
+            # 9/28/21: Updating the previous comment, unable to find
+            # a consistent, fair parameter set for this purpose.
+            # Leaving in the code for negative peaks, but it's functionally
+            # useless at this stage; data are not robust enough.
             neg_dist_beats = pd.Series(find_peaks(
-                -1*cm_beats.y_axis.iloc[0:, column], 
-                height=input_param.min_peak_height,
-                distance=input_param.min_peak_dist)[0], 
+                cm_beats.neg_y_axis.iloc[0:, column], 
+                height=80,
+                distance=400)[0], 
                 name=column+1)
             cm_beats.negative_dist_beats = pd.concat(
-                [cm_beats.negative_dist_beats, dist_beats], 
+                [cm_beats.negative_dist_beats, neg_dist_beats], 
                 axis='columns')
 
 
