@@ -6,7 +6,8 @@
 # James K. Gimzewski
 # Organization:
 # University of California, Los Angeles
-# Department of Chemistry and Chemistry
+# Department of Chemistry and Biochemistry
+# Original work by CSD.
 
 import time
 import pandas as pd
