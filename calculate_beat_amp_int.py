@@ -9,7 +9,7 @@ import numpy as np
 import scipy as sp
 import seaborn as sns
 from scipy.optimize import curve_fit
-
+from numba import njit
 
 # Obtain beat amplitudes using indices from pace_maker.raw data, values from
 # cm_beats.y_axis, store in variable beat_amp_int
@@ -43,6 +43,29 @@ local_act_time, heat_map, input_param, electrode_config):
         elec_removed_names = [
             i for i in electrode_config.electrode_names if i not in elec_to_remove]
 
+        print(pace_maker.param_dist_raw)
+        print(np.where(pace_maker.param_dist_raw["Beat 1"].isna() == True))
+
+        # Format data for reconciling negative beat amplitude maxima.
+        avg_raw = pace_maker.param_dist_raw.mean()
+        raw_neg_amps = cm_beats.negative_dist_beats.transpose()
+        avg_raw_labels = avg_raw.index.to_numpy(dtype=np.str_)
+        avg_raw_values = avg_raw.values
+        neg_amps_values = raw_neg_amps.values
+        num_beats = len(avg_raw_labels)
+
+        # Direct data to Numba-powered function to reconcile beat indices
+        # and find the true indices associated with beat minima, for every
+        # beat and every electrode.
+        neg_amps_matrix = determine_negative_amps(
+            num_beats, avg_raw_values, neg_amps_values)
+
+        neg_amps_df = pd.DataFrame(
+            data=neg_amps_matrix, 
+            index=electrode_config.electrode_names, 
+            columns=avg_raw_labels)
+        print(neg_amps_df)
+
         amps_array = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
             int(len(elec_nan_removed[0]))))
         temp_amps = np.zeros(int(len(elec_nan_removed[0])))
@@ -57,10 +80,6 @@ local_act_time, heat_map, input_param, electrode_config):
         beat_amp_int.beat_amp = pd.DataFrame(amps_array)
         beat_amp_int.beat_amp.columns = elec_removed_names
         beat_amp_int.beat_amp.index = pace_maker.param_dist_raw.columns
-
-        print(pace_maker.param_dist_raw)
-        print(pace_maker.param_negative_dist_raw)
-        print(cm_beats.negative_dist_beats.transpose())
 
         # Fill in the void of omitted electrodes with NaN values.
         missing_elec_fill = [np.nan] * int(cm_beats.beat_count_dist_mode[0])
@@ -104,6 +123,26 @@ def calculate_beat_interval(beat_amp_int, pace_maker):
         index=rbt_end_removed.columns)
     print("Mean beat interval: " + str(beat_amp_int.mean_beat_int))
     # Calculation needs to take into account input_param.sample_frequency
+
+
+@njit
+def determine_negative_amps(num_beats, avg_raw_values, neg_amps_values):
+    print("Debug point 1")
+    neg_amps_shape = np.shape(neg_amps_values)
+    real_neg_amps = np.zeros((neg_amps_shape[0], num_beats), dtype=np.float64)
+
+    for beat in range(num_beats):
+        for row in range(neg_amps_shape[0]):
+            for column in range(neg_amps_shape[1]):
+                if (
+                neg_amps_values[row, column] < (avg_raw_values[beat] + 50)) and ( 
+                neg_amps_values[row, column] > (avg_raw_values[beat] - 50)):
+                    real_neg_amps[row, beat] = neg_amps_values[row, column]
+                    break
+                else:
+                    continue
+    
+    return real_neg_amps
 
 
 def calculate_delta_amp(beat_amp_int):

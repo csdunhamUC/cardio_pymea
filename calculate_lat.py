@@ -11,7 +11,8 @@ import seaborn as sns
 
 
 # Calculates local activation time (LAT)
-def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, electrode_config):
+def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param,
+electrode_config):
     try:
         if hasattr(local_act_time, 'param_dist_raw') is True:
             print("Clearing old LAT data before running new calculation...")
@@ -30,7 +31,8 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
         sample_frequency = input_param.sample_frequency
 
         for electrode in range(num_of_electrodes):
-            per_electrode_mode_of_beats[electrode] = len(cm_beats.dist_beats.iloc[0:, electrode].dropna())
+            per_electrode_mode_of_beats[electrode] = len(
+                cm_beats.dist_beats.iloc[0:, electrode].dropna())
 
         # Run LAT calculations through numba using approp. function, store in
         # local_at.
@@ -43,7 +45,8 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
             local_act_time.final_dist_beat_count.append('Beat ' + str(beat + 1))
 
         # Consolidate raw data into local_act_time.
-        local_act_time.param_dist_raw = pd.DataFrame(local_at, index=local_act_time.final_dist_beat_count).T
+        local_act_time.param_dist_raw = pd.DataFrame(local_at, 
+            index=local_act_time.final_dist_beat_count).T
         
         # Normalize LAT.
         if 1000 / input_param.sample_frequency == 1.0:
@@ -62,13 +65,19 @@ def calculate_lat(analysisGUI, cm_beats, local_act_time, heat_map, input_param, 
 
         # Assign row labels (electrodes), insert electrode names & coords.
         local_act_time.param_dist_raw.index = electrode_config.electrode_names
-        local_act_time.param_dist_raw.insert(0, 'Electrode', electrode_config.electrode_names)
-        local_act_time.param_dist_raw.insert(1, 'X', electrode_config.electrode_coords_x)
-        local_act_time.param_dist_raw.insert(2, 'Y', electrode_config.electrode_coords_y)
+        local_act_time.param_dist_raw.insert(0, 'Electrode', 
+            electrode_config.electrode_names)
+        local_act_time.param_dist_raw.insert(1, 'X', 
+            electrode_config.electrode_coords_x)
+        local_act_time.param_dist_raw.insert(2, 'Y', 
+            electrode_config.electrode_coords_y)
         local_act_time.param_dist_normalized.index = electrode_config.electrode_names
-        local_act_time.param_dist_normalized.insert(0, 'Electrode', electrode_config.electrode_names)
-        local_act_time.param_dist_normalized.insert(1, 'X', electrode_config.electrode_coords_x)
-        local_act_time.param_dist_normalized.insert(2, 'Y', electrode_config.electrode_coords_y)
+        local_act_time.param_dist_normalized.insert(0, 'Electrode', 
+            electrode_config.electrode_names)
+        local_act_time.param_dist_normalized.insert(1, 'X', 
+            electrode_config.electrode_coords_x)
+        local_act_time.param_dist_normalized.insert(2, 'Y', 
+            electrode_config.electrode_coords_y)
 
         # Assign name to resulting dataframe.
         local_act_time.param_dist_normalized.name = 'Local Activation Time'
@@ -106,7 +115,8 @@ per_electrode_mode_of_beats, sample_frequency):
         for beat in range(mode_of_beats):
             for electrode in range(num_of_electrodes):
                 if mode_of_beats == per_electrode_mode_of_beats[electrode]:
-                    x_values[0, 0] = cm_beats_dist_beats_as_array[beat, electrode]
+                    x_values[0, 0] = cm_beats_dist_beats_as_array[beat, 
+                        electrode]
                     x_values[1, 0] = x_values[0, 0] + 1
                     y_values[0, 0] = cm_beats_y_axis_as_array[
                         int(x_values[0, 0]), electrode]
@@ -132,7 +142,8 @@ per_electrode_mode_of_beats, sample_frequency):
                     temp_index[electrode] = [np.nan] * end_point
                     temp_slope[electrode] = [np.nan] * end_point
                 
-                temp_local_at[electrode] = temp_index[electrode, np.argmin(temp_slope[electrode])]
+                temp_local_at[electrode] = temp_index[electrode, 
+                    np.argmin(temp_slope[electrode])]
             
             local_at[beat] = temp_local_at
     
@@ -145,7 +156,8 @@ per_electrode_mode_of_beats, sample_frequency):
         for beat in range(mode_of_beats):
             for electrode in range(num_of_electrodes):
                 if mode_of_beats == per_electrode_mode_of_beats[electrode]:
-                    x_values[0, 0] = cm_beats_dist_beats_as_array[beat, electrode]
+                    x_values[0, 0] = cm_beats_dist_beats_as_array[beat, 
+                        electrode]
                     x_values[1, 0] = x_values[0, 0] + 1
                     y_values[0, 0] = cm_beats_y_axis_as_array[
                         int(x_values[0, 0]), electrode]
@@ -170,7 +182,8 @@ per_electrode_mode_of_beats, sample_frequency):
                 else:
                     temp_index[electrode] = [np.nan] * end_point
                     temp_slope[electrode] = [np.nan] * end_point
-                temp_local_at[electrode] = temp_index[electrode, np.argmin(temp_slope[electrode])]
+                temp_local_at[electrode] = temp_index[
+                    electrode, np.argmin(temp_slope[electrode])]
             
             local_at[beat] = temp_local_at
 
@@ -190,12 +203,16 @@ def calculate_distances(local_act_time, electrode_config):
 
     for num, beat in enumerate(local_act_time.final_dist_beat_count):
         min_beat_location = local_act_time.param_dist_normalized[[beat]].idxmin()
-        min_coords = np.array([local_act_time.param_dist_normalized.loc[min_beat_location[0], 'X'],
-                              local_act_time.param_dist_normalized.loc[min_beat_location[0], 'Y']])
-        calc_dist_from_min[num] = ((local_act_time.param_dist_normalized[['X', 'Y']] - min_coords).pow(2).sum(1).pow(0.5))
+        min_coords = np.array(
+            [local_act_time.param_dist_normalized.loc[min_beat_location[0], 'X'],
+            local_act_time.param_dist_normalized.loc[min_beat_location[0], 'Y']])
+        calc_dist_from_min[num] = (
+            (local_act_time.param_dist_normalized[['X', 'Y']] - 
+                min_coords).pow(2).sum(1).pow(0.5))
 
-    local_act_time.distance_from_min = pd.DataFrame(calc_dist_from_min, index=local_act_time.final_dist_beat_count,
-                                                    columns=electrode_config.electrode_names).T
+    local_act_time.distance_from_min = pd.DataFrame(
+        calc_dist_from_min, index=local_act_time.final_dist_beat_count,
+        columns=electrode_config.electrode_names).T
 
     print("Done.")
     end_time = time.process_time()
@@ -211,22 +228,27 @@ def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
         analysisGUI.latWindow.paramPlot.axes.cla()
         input_param.lat_solo_beat_choice = analysisGUI.latWindow.paramSlider.value()
 
-        electrode_names_3 = local_act_time.param_dist_normalized.pivot(index='Y', 
-            columns='X', values='Electrode')
+        electrode_names_3 = local_act_time.param_dist_normalized.pivot(
+            index='Y', columns='X', values='Electrode')
         heatmap_pivot_table_3 = local_act_time.param_dist_normalized.pivot(
             index='Y', columns='X', 
-            values=local_act_time.final_dist_beat_count[input_param.lat_solo_beat_choice])
+            values=local_act_time.final_dist_beat_count[
+                input_param.lat_solo_beat_choice])
 
         lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", 
-            annot=electrode_names_3, fmt="", ax=analysisGUI.latWindow.paramPlot.axes, 
+            annot=electrode_names_3, fmt="", 
+            ax=analysisGUI.latWindow.paramPlot.axes, 
             vmax=local_act_time.param_dist_normalized_max, cbar=False)
         mappable_3 = lat_solo_temp.get_children()[0]
-        heat_map.lat_solo_cbar = analysisGUI.latWindow.paramPlot.axes.figure.colorbar(mappable_3, 
+        heat_map.lat_solo_cbar = analysisGUI.latWindow.paramPlot.axes.figure.colorbar(
+            mappable_3, 
             ax=analysisGUI.latWindow.paramPlot.axes)
         heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        analysisGUI.latWindow.paramPlot.axes.set(title="Local Activation Time, Beat " + 
-            str(input_param.lat_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+        analysisGUI.latWindow.paramPlot.axes.set(
+            title="Local Activation Time, Beat " + 
+            str(input_param.lat_solo_beat_choice+1), 
+            xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
         analysisGUI.latWindow.paramPlot.fig.tight_layout()
         analysisGUI.latWindow.paramPlot.draw()
