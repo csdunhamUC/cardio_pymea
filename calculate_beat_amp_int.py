@@ -43,9 +43,6 @@ local_act_time, heat_map, input_param, electrode_config):
         elec_removed_names = [
             i for i in electrode_config.electrode_names if i not in elec_to_remove]
 
-        print(pace_maker.param_dist_raw)
-        print(np.where(pace_maker.param_dist_raw["Beat 1"].isna() == True))
-
         # Format data for reconciling negative beat amplitude maxima.
         avg_raw = pace_maker.param_dist_raw.mean()
         raw_neg_amps = cm_beats.negative_dist_beats.transpose()
@@ -64,23 +61,37 @@ local_act_time, heat_map, input_param, electrode_config):
             data=neg_amps_matrix, 
             index=electrode_config.electrode_names, 
             columns=avg_raw_labels)
-        print(neg_amps_df)
 
-        amps_array = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
+        pos_amps_array = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
             int(len(elec_nan_removed[0]))))
-        temp_amps = np.zeros(int(len(elec_nan_removed[0])))
+        temp_pos_amps = np.zeros(int(len(elec_nan_removed[0])))
+
+        neg_amps_array = np.zeros((int(cm_beats.beat_count_dist_mode[0]), 
+            int(len(elec_nan_removed[0]))))
+        temp_neg_amps = np.zeros(int(len(elec_nan_removed[0])))
 
         for num, beat in enumerate(pace_maker.param_dist_raw):
             for num2, elec in enumerate(elec_removed_names):
                 temp_idx = int(pace_maker.param_dist_raw.loc[elec, beat])
-                temp_amps[num2] = cm_beats.y_axis.loc[temp_idx, elec]
-            
-            amps_array[num] = temp_amps.T
+                temp_pos_amps[num2] = cm_beats.y_axis.loc[temp_idx, elec]
 
-        beat_amp_int.beat_amp = pd.DataFrame(amps_array)
+                temp_idx2 = int(neg_amps_df.loc[elec, beat])
+                temp_neg_amps[num2] = abs(cm_beats.y_axis.loc[temp_idx2, elec])
+            
+            pos_amps_array[num] = temp_pos_amps.T
+            neg_amps_array[num] = temp_neg_amps.T
+        
+        # Calculate full beat amplitude using positive and negative amps.
+        # Negative abs using the absolute value of the negative signal.
+        full_amp = pos_amps_array + neg_amps_array
+
+        print(pos_amps_array)
+        print(neg_amps_array)
+
+        beat_amp_int.beat_amp = pd.DataFrame(full_amp)
         beat_amp_int.beat_amp.columns = elec_removed_names
         beat_amp_int.beat_amp.index = pace_maker.param_dist_raw.columns
-
+        
         # Fill in the void of omitted electrodes with NaN values.
         missing_elec_fill = [np.nan] * int(cm_beats.beat_count_dist_mode[0])
         for missing in nan_electrodes_idx:
@@ -98,6 +109,7 @@ local_act_time, heat_map, input_param, electrode_config):
         
         calculate_beat_interval(beat_amp_int, pace_maker)
         calculate_delta_amp(beat_amp_int)
+
         print("Done.")
     except KeyError:
         print("Please find beats before performing other calculations.")
@@ -125,9 +137,10 @@ def calculate_beat_interval(beat_amp_int, pace_maker):
     # Calculation needs to take into account input_param.sample_frequency
 
 
+# Reconciles between detected beats in the positive amplitude and some of the 
+# possible misnomer beats in the negative amplitude. Uses numba for speed.
 @njit
 def determine_negative_amps(num_beats, avg_raw_values, neg_amps_values):
-    print("Debug point 1")
     neg_amps_shape = np.shape(neg_amps_values)
     real_neg_amps = np.zeros((neg_amps_shape[0], num_beats), dtype=np.float64)
 
