@@ -22,23 +22,22 @@ import scipy.stats as spstats
 
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
 input_param):
-    find_T_wave(cm_beats, field_potential, local_act_time, input_param)
-    # print(cm_beats.y_axis)
+    T_wave_indices = find_T_wave(cm_beats, field_potential, local_act_time, 
+        input_param)
+    print(T_wave_indices)
+
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
-    print(len(local_act_time.param_dist_raw.columns[3:]))
-    print("Done.")
-
     fpd_full_dict = {}
 
-    for beat in local_act_time.param_dist_raw.columns[3:10]:
+    for beat in local_act_time.param_dist_raw.columns[3:]:
         print(beat)
-        # print(local_act_time.param_dist_raw[beat])
+        print(local_act_time.param_dist_raw[beat])
         temp_dict = {}
-        for elec in local_act_time.param_dist_raw.index[0:5]:
+        for elec in local_act_time.param_dist_raw.index:
             print(elec)
             temp_idx = local_act_time.param_dist_raw.loc[elec, beat]
-            # print(temp_idx)
+            print(temp_idx)
             if np.isnan(temp_idx) == True:
                 temp_idx = None
             elif np.isnan(temp_idx) == False:
@@ -48,16 +47,44 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                 temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
                 temp_pos_T_wave = find_peaks(
                     temp_volt_trace, 
-                    height=25, 
-                    distance=120)
+                    height=20, 
+                    distance=100)
+                print(f"Positive T-wave: {temp_pos_T_wave}")
                 temp_neg_T_wave = find_peaks(
                     -1*temp_volt_trace,
-                    height=25,
-                    distance=120)
-                print(cm_beats.y_axis.loc[temp_idx:idx_end, elec])
-                print(temp_pos_T_wave) 
-                print(temp_neg_T_wave)
+                    height=20,
+                    distance=100)
+                print(f"Negative T-wave: {temp_neg_T_wave}")
 
+                # Electrode 9 (E10) has a very weak T-wave
+                # Need to think of a good method to detect such T-waves.
+                max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
+                max_pos_T_idx = np.where(
+                    temp_volt_trace == max_pos_T_wave)[0]
+                real_pos_T_idx = temp_volt_trace.index[max_pos_T_idx].values[0]
+                print(max_pos_T_wave)
+                print(max_pos_T_idx)
+                print(real_pos_T_idx)
+
+                max_neg_T_wave = max(temp_neg_T_wave[1]["peak_heights"])
+                max_neg_T_idx = np.where(
+                    temp_volt_trace == -1*max_neg_T_wave)[0]
+                real_neg_T_idx = temp_volt_trace.index[max_neg_T_idx].values[0]
+                print(max_neg_T_wave)
+                print(max_neg_T_idx)
+                print(real_neg_T_idx)
+
+                if max_pos_T_wave > max_neg_T_wave:
+                    temp_dict[elec] = real_pos_T_idx
+                elif max_pos_T_wave < max_neg_T_wave:
+                    temp_dict[elec] = real_neg_T_idx
+        
+        if any(temp_dict.keys()) == False:
+            continue
+        else:
+            fpd_full_dict[beat] = temp_dict
+
+    return fpd_full_dict
 
 def calc_trapezium(cm_beats, x_i, x_m, x_r, y_i, y_m, y_r):
     # x_m, x_r, y_m, y_r are immobile points
