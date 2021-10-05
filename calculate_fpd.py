@@ -12,18 +12,80 @@
 import time
 import pandas as pd
 import numpy as np
+import seaborn as sns
 
 from scipy.signal import find_peaks
 from scipy.signal import butter
 from scipy.signal import sosfilt
-from scipy import stats
-import seaborn as sns
+import scipy.stats as spstats
 
-def find_T_wave(analysisGUI, cm_beats, field_potential, heat_map, input_param):
-    # Step 1: Apply bandpass filter to raw data.
-    # Defaults: Order = 4, Low-Pass Freq = 30Hz, High-Pass Freq = 0.5Hz
-    cm_beats.bp_filt_y = bandpass_filter(cm_beats, input_param)
+
+def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
+input_param):
+    find_T_wave(cm_beats, field_potential, local_act_time, input_param)
+    # print(cm_beats.y_axis)
+
+def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
+    print(len(local_act_time.param_dist_raw.columns[3:]))
     print("Done.")
+
+    fpd_full_dict = {}
+
+    for beat in local_act_time.param_dist_raw.columns[3:10]:
+        print(beat)
+        # print(local_act_time.param_dist_raw[beat])
+        temp_dict = {}
+        for elec in local_act_time.param_dist_raw.index[0:5]:
+            print(elec)
+            temp_idx = local_act_time.param_dist_raw.loc[elec, beat]
+            # print(temp_idx)
+            if np.isnan(temp_idx) == True:
+                temp_idx = None
+            elif np.isnan(temp_idx) == False:
+                print(temp_idx)
+                temp_idx = int(temp_idx) + 50
+                idx_end = temp_idx + 400
+                temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
+                temp_pos_T_wave = find_peaks(
+                    temp_volt_trace, 
+                    height=25, 
+                    distance=120)
+                temp_neg_T_wave = find_peaks(
+                    -1*temp_volt_trace,
+                    height=25,
+                    distance=120)
+                print(cm_beats.y_axis.loc[temp_idx:idx_end, elec])
+                print(temp_pos_T_wave) 
+                print(temp_neg_T_wave)
+
+
+def calc_trapezium(cm_beats, x_i, x_m, x_r, y_i, y_m, y_r):
+    # x_m, x_r, y_m, y_r are immobile points
+    # Variable pairs: (x_m, y_m), (x_r, y_m), (x_r, y_i), (x_i, y_i)
+    # T_end corresponds to (x_i, y_i) where Area, A, is maximum.
+
+    # x_m, y_m = coordinate of location of largest absolute first derivative
+    # inside the T-wave, after the last peak in the T-wave.
+    # This means we will want to perform peak detection within a given window
+    
+    # x_r, y_r = coordinate of location somewhere after T_end, with a first
+    # derivative value somewhere near zero. Exact location is unimportant;
+    # what is important is that this point must be after T_end!
+
+    A_trap = 0.5 * (y_m - y_i) * (2*x_r - x_i - x_m)
+    return A_trap
+
+
+# Find x_m, y_m by first locating either the positive or negative T-wave peak
+# Determine whether T-wave is positive or negative
+def calc_Xm_Ym(cm_beats, input_param):
+    
+    return (x_m, y_m)
+
+
+def calc_Xr_Yr(cm_beats, x_m, y_m):
+
+    return (x_r, y_r)
 
 
 def graph_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
@@ -57,8 +119,8 @@ def graph_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
     analysisGUI.fpdWindow.paramPlot.fig.tight_layout()
     analysisGUI.fpdWindow.paramPlot.draw()
 
-def bandpass_filter(cm_beats, input_param, bworth_ord=4, low_cutoff_freq=30, 
-high_cutoff_freq=0.5):
+def bandpass_filter(cm_beats, input_param, bworth_ord=4, low_cutoff_freq=0.5, 
+high_cutoff_freq=30):
     
     print("Using bandpass filter.\n" + 
        f"Order = {bworth_ord}\n" +

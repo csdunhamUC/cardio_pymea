@@ -840,8 +840,8 @@ class AnalysisGUI(QMainWindow):
         self.calcMenu.addAction("Calculate Field Potential &Duration",
             lambda: [self.fieldPotDurWindow(cm_beats, field_potential, 
                 heat_map, input_param),
-                calculate_fpd.find_T_wave(self, cm_beats, field_potential, 
-                heat_map, input_param)])
+                calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
+                local_act_time, heat_map, input_param)])
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("Special &Plots")
