@@ -195,7 +195,7 @@ electrode_config, batch_data):
                 
                 sos_bp = butter(
                     bworth_ord, 
-                    [low_cutoff_freq, high_cutoff_freq], 
+                    [high_cutoff_freq, low_cutoff_freq], 
                     btype='bandpass', 
                     output='sos',
                     fs = input_param.sample_frequency)

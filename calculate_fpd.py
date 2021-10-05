@@ -17,15 +17,45 @@ from scipy.signal import find_peaks
 from scipy.signal import butter
 from scipy.signal import sosfilt
 from scipy import stats
+import seaborn as sns
 
 def find_T_wave(analysisGUI, cm_beats, field_potential, heat_map, input_param):
     # Step 1: Apply bandpass filter to raw data.
     # Defaults: Order = 4, Low-Pass Freq = 30Hz, High-Pass Freq = 0.5Hz
     cm_beats.bp_filt_y = bandpass_filter(cm_beats, input_param)
-    
-    print(cm_beats.bp_filt_y)
-    print(cm_beats.bp_filt_y.dropna())
+    print("Done.")
 
+
+def graph_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
+    
+    if hasattr(heat_map, 'fpd_solo_cbar') is True:
+        heat_map.fpd_solo_cbar.remove()
+        delattr(heat_map, 'fpd_solo_cbar')
+
+    analysisGUI.fpdWindow.paramPlot.axes.cla()
+    selected_beat = analysisGUI.fpdWindow.paramSlider.value()
+
+    electrode_names = to_plot.bp_filt_y.pivot(index='Y', columns='X',
+        values='Electrode')
+    heatmap_pivot_table = to_plot.bp_filt_y.pivot(index='Y', columns='X',
+        values=field_potential.final_beat_count[selected_beat])
+
+    fpd_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet",
+        annot=electrode_names, fmt="",
+        ax=analysisGUI.fpdWindow.paramPlot.axes, vmin=0,
+        vmax=field_potential.fpd_max, cbar=False)
+    mappable = fpd_solo_temp.get_children()[0]
+    heat_map.fpd_solo_cbar = (
+        analysisGUI.fpdWindow.paramPlot.axes.figure.colorbar(mappable, 
+            ax=analysisGUI.fpdWindow.paramPlot.axes))
+    heat_map.fpd_solo_cbar.ax.set_title("FPD (ms)", fontsize=10)
+
+    analysisGUI.fpdWindow.paramPlot.axes.set(
+        title=f"Field Potential Duration, Beat {selected_beat+1}",
+        xlabel="X coordinate (μm)",
+        ylabel="Y coordinate (μm)")
+    analysisGUI.fpdWindow.paramPlot.fig.tight_layout()
+    analysisGUI.fpdWindow.paramPlot.draw()
 
 def bandpass_filter(cm_beats, input_param, bworth_ord=4, low_cutoff_freq=30, 
 high_cutoff_freq=0.5):

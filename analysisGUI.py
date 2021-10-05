@@ -1078,8 +1078,8 @@ class AnalysisGUI(QMainWindow):
         self.fpdWindow.setWindowTitle("Field Potential Duration")
         self.fpdWindow.show()
         # Set slider value to maximum number of beats
-        # self.fpdWindow.paramSlider.setMaximum(
-        #     int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.fpdWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
         # self.fpdWindow.paramSlider.valueChanged.connect(lambda: [
         #     calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
         #     input_param)])
