@@ -46,10 +46,11 @@ electrode_config, batch_data):
 
         # file_length = # of rows / sample_freq --> # of seconds in data set 
         # multiply by 60s in 1 min --> number of minutes in data set (rounded)
-        file_length = ((len(raw_data.imported.index) / 
+        analysisGUI.file_length = ((len(raw_data.imported.index) / 
             input_param.sample_frequency) / 60)
 
-        analysisGUI.fileLength.setText(str(round(file_length, 2)) + " minutes")
+        analysisGUI.fileLength.setText(
+            str(round(analysisGUI.file_length, 2)) + " minutes")
 
         # Check if using batch processing.
         # If not, get truncation status & endpoints from GUI

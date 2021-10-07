@@ -886,7 +886,7 @@ class AnalysisGUI(QMainWindow):
         self.toolsMenu = self.menuBar().addMenu("&Tools")
         self.toolsMenu.addAction("&Detect translocations", 
             lambda: [detect_transloc.pm_translocations(
-                self, pace_maker, electrode_config)])
+                self, pace_maker, electrode_config, beat_amp_int)])
         # Advanced Tools Menu (ML, etc); To be filled later
         self.advToolsMenu = self.menuBar().addMenu("Advanced T&ools")
 

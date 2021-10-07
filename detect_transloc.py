@@ -18,11 +18,12 @@ from colorama import Fore
 from colorama import Style
 from colorama import init
 from colorama import deinit
+from math import ceil
 
 # Comment out init() if using Python on Windows.
 init()
 
-def pm_translocations(analysisGUI, pace_maker, electrode_config):
+def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
     try:
         min_pm = pace_maker.param_dist_normalized.drop(
             columns=["Electrode", "X", "Y"]).min(axis=1)
@@ -180,11 +181,24 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config):
         # prior to recording.
         event_length_list.pop(0)
 
+        file_length = analysisGUI.file_length
+        num_beats = len(pace_maker.final_dist_beat_count)
+        beat_rate = num_beats / file_length
+        print(beat_rate)
+
+        # Division by 60 to convert seconds to minutes.
+        mean_beat_int = beat_amp_int.mean_beat_int / 60
+        print(f"Mean beat int: {mean_beat_int}")
+        # Normalize event size by total number of beats.
+        norm_event_length = [
+            ceil((event / mean_beat_int)) for event in event_length_list]
+
         # Store event list.
-        pace_maker.transloc_events = event_length_list
+        pace_maker.transloc_events = norm_event_length
 
         # Print event list to terminal.
         print("Event lengths:\n" + str(event_length_list))
+        print("Normalized event lengths:\n" + str(norm_event_length))
         deinit()
     except IndexError:
         print("No events.")
