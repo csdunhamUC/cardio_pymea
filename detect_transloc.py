@@ -184,25 +184,21 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
         file_length = analysisGUI.file_length
         num_beats = len(pace_maker.final_dist_beat_count)
         beat_rate = num_beats / file_length
-        print(beat_rate)
-
-        # Division by 60 to convert seconds to minutes.
-        mean_beat_int = beat_amp_int.mean_beat_int / 60
-        print(f"Mean beat int: {mean_beat_int}")
-        # Normalize event size by total number of beats.
-        norm_event_length = [
-            ceil((event / mean_beat_int)) for event in event_length_list]
 
         # Store event list.
-        pace_maker.transloc_events = norm_event_length
+        pace_maker.transloc_events = event_length_list
+
+        # Store number of beats.
+        pace_maker.number_beats = num_beats
 
         # Print event list to terminal.
         print("Event lengths:\n" + str(event_length_list))
-        print("Normalized event lengths:\n" + str(norm_event_length))
+        # print("Normalized event lengths:\n" + str(norm_event_length))
         deinit()
     except IndexError:
         print("No events.")
         pace_maker.transloc_events = [None]
+        pace_maker.number_beats = None
 
 
 def distance_calc(max_df: DataFrame, pacemaker_only_df: DataFrame, 

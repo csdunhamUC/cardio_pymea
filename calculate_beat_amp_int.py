@@ -85,9 +85,6 @@ local_act_time, heat_map, input_param, electrode_config):
         # Negative abs using the absolute value of the negative signal.
         full_amp = pos_amps_array + neg_amps_array
 
-        print(pos_amps_array)
-        print(neg_amps_array)
-
         beat_amp_int.beat_amp = pd.DataFrame(full_amp)
         beat_amp_int.beat_amp.columns = elec_removed_names
         beat_amp_int.beat_amp.index = pace_maker.param_dist_raw.columns

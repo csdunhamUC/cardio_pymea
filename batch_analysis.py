@@ -45,7 +45,11 @@ conduction_vel, beat_amp_int):
 
     print(f"Processing batch: {batch_name}")
 
+    # Store pacemaker translocation events for datasets in batch
     batch_data.batch_translocs = []
+    
+    # Store dataset beat count for datasets in batch
+    batch_data.batch_beat_counts = []
 
     total_files = len(batch_df["file_name"].values)
 
@@ -112,15 +116,24 @@ conduction_vel, beat_amp_int):
         calculate_beat_amp_int.calculate_beat_amp(analysisGUI, cm_beats, 
             beat_amp_int, pace_maker, local_act_time, heat_map, input_param, 
             electrode_config)
-        detect_transloc.pm_translocations(analysisGUI, pace_maker, electrode_config)
+        detect_transloc.pm_translocations(analysisGUI, pace_maker, 
+            electrode_config, beat_amp_int)
     
+        # Populate list with translocations of each data set.
         temp_translocs = pace_maker.transloc_events
         for event in temp_translocs:
             batch_data.batch_translocs.append(event)
+        
+        # Populate list with beat count of each data set.
+        batch_data.batch_beat_counts.append(pace_maker.number_beats)
+        
 
     # Print number of translocations found in files contained in batch
     print("Translocations in batch: \n" + f"{batch_data.batch_translocs}")
+    # Print list of beat counts.
+    print("Beat counts in batch: \n" + f"{batch_data.batch_beat_counts}")
     # Batch processing end.
     print("Batch processing complete.")
     # Reset batch_config flag to False to allow for single-file analysis
     batch_data.batch_config = False
+
