@@ -51,6 +51,9 @@ conduction_vel, beat_amp_int):
     # Store dataset beat count for datasets in batch
     batch_data.batch_beat_counts = []
 
+    # Store dataset beat counts, translocations as dictionary
+    batch_data.beat_event_dict = {}
+
     total_files = len(batch_df["file_name"].values)
 
     for num, (file_dir, file_name, pk_height, pk_dist, samp_freq, tog_trunc, 
@@ -126,12 +129,19 @@ conduction_vel, beat_amp_int):
         
         # Populate list with beat count of each data set.
         batch_data.batch_beat_counts.append(pace_maker.number_beats)
-        
+
+        # Dictionary to store number of beats, events for normalization
+        if pace_maker.number_beats is not None:
+            dict_key = f"Key_{num+1}_{pace_maker.number_beats}"
+            batch_data.beat_event_dict[dict_key] = temp_translocs
+
 
     # Print number of translocations found in files contained in batch
     print("Translocations in batch: \n" + f"{batch_data.batch_translocs}")
     # Print list of beat counts.
     print("Beat counts in batch: \n" + f"{batch_data.batch_beat_counts}")
+    # Print dictionary.
+    print("Dictionary: \n" + f"{batch_data.beat_event_dict}")
     # Batch processing end.
     print("Batch processing complete.")
     # Reset batch_config flag to False to allow for single-file analysis

@@ -34,6 +34,7 @@ import calculate_beat_amp_int
 import pca_plotting
 import detect_transloc
 import batch_analysis
+import powerlaw_analysis
 import calculate_fpd
 
 ################################################################################
@@ -502,6 +503,16 @@ class PSDPlotCanvas(FigureCanvasQTAgg):
         super(PSDPlotCanvas, self).__init__(self.fig)
 
 
+class PowerlawCanvas (FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=7, height=7, dpi=100):
+        self.fig=plt.Figure(figsize=(width, height), dpi=dpi)
+        self.axis1 = self.fig.add_subplot(1,2,1)
+        self.axis1.set_title("Distribution Comparison")
+        self.axis2 = self.fig.add_subplot(1,2,2)
+        self.axis2.set_title("Truncated Distribution Comparison")
+        super(PowerlawCanvas, self).__init__(self.fig)
+
+
 # Classes for the actual GUI windows
 class SoloHeatmapWindows(QWidget):
     def __init__(self, analysisGUI):
@@ -749,6 +760,40 @@ class PlotBeatSelectWindows(QWidget):
         self.setLayout(mainLayout)
 
 
+class PowerlawWindow(QWidget):
+    def __init__(self, analysisGUI):
+        super(PowerlawWindow, self).__init__()
+        self.setupUI(analysisGUI)
+    
+    def setupUI(self, analysisGUI):
+        mainLayout = QGridLayout()
+        plotLayout = QGridLayout()
+        rpvalueLayout = QGridLayout()
+
+        plotWidget = QWidget()
+        plotWidget.setLayout(plotLayout)
+        rpvalueWidget = QWidget()
+        rpvalueWidget.setFixedSize(225, 700)
+        rpvalueWidget.setLayout(rpvalueLayout)
+
+        self.powerlawPlot = PowerlawCanvas(self, width=8, height=7, dpi=100)
+        plotLayout.addWidget(self.powerlawPlot, 0, 0)
+        
+        statTextFont = QFont()
+        statTextFont.setBold(True)
+        self.statsLabel = QLabel("R/p Values")
+        self.statsLabel.setFont(statTextFont)
+        rpvalueLayout.addWidget(self.statsLabel, 0, 0)
+        self.statsPrintout = QPlainTextEdit("To be populated")
+        self.statsPrintout.setFixedHeight(650)
+        self.statsPrintout.setReadOnly(True)
+        rpvalueLayout.addWidget(self.statsPrintout, 1, 0)
+
+        mainLayout.addWidget(plotWidget, 1, 0)
+        mainLayout.addWidget(rpvalueWidget, 0, 1, 2, 1)
+        self.setLayout(mainLayout)
+
+
 # Primary GUI class.
 class AnalysisGUI(QMainWindow):
     def __init__(self, raw_data, cm_beats, pace_maker, 
@@ -842,6 +887,15 @@ class AnalysisGUI(QMainWindow):
                 heat_map, input_param),
                 calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
                 local_act_time, heat_map, input_param)])
+        self.calcMenu.addAction("&Power Law Distribution Comparison", 
+            lambda: [self.powerlaw_window(), 
+                powerlaw_analysis.pl_histogram_plotting(self, 
+                    pace_maker), 
+                powerlaw_analysis.pl_truncated_histogram_plotting(self, 
+                    pace_maker), 
+                powerlaw_analysis.likelihood_and_significance(self, 
+                    pace_maker)])
+
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("Special &Plots")
@@ -1152,6 +1206,12 @@ class AnalysisGUI(QMainWindow):
             local_act_time, heat_map, input_param, electrode_config)])
         self.pcaWindow.paramSlider.hide()
         self.pcaCheck = False
+
+    def powerlaw_window(self):
+        self.plWindow = PowerlawWindow(self)
+        self.plWindow.setWindowTitle(
+            "Powerlaw Distribution Comparison")
+        self.plWindow.show()
 
 
 def main():
