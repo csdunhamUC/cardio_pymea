@@ -816,7 +816,9 @@ class AnalysisGUI(QMainWindow):
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
 
+        #######################################################################
         # Menu options.
+        #######################################################################
         # File Menu
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction("&Import", lambda: data_import(self, 
@@ -831,7 +833,8 @@ class AnalysisGUI(QMainWindow):
                 conduction_vel, beat_amp_int, cm_beats, cm_stats))
         self.fileMenu.addAction("&Print (debug)", print_something)
         self.fileMenu.addAction("&Exit", self.close)
-        
+       
+
         # Calculation Menu
         self.calcMenu = self.menuBar().addMenu("&Calculations")
         self.calcMenu.addAction("&Find Beats (Use First!)", 
@@ -887,15 +890,7 @@ class AnalysisGUI(QMainWindow):
                 heat_map, input_param),
                 calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
                 local_act_time, heat_map, input_param)])
-        self.calcMenu.addAction("&Power Law Distribution Comparison", 
-            lambda: [self.powerlaw_window(), 
-                powerlaw_analysis.pl_histogram_plotting(self, 
-                    pace_maker), 
-                powerlaw_analysis.pl_truncated_histogram_plotting(self, 
-                    pace_maker), 
-                powerlaw_analysis.likelihood_and_significance(self, 
-                    pace_maker)])
-
+       
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("Special &Plots")
@@ -935,6 +930,15 @@ class AnalysisGUI(QMainWindow):
                 pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, 
                 pace_maker, local_act_time, heat_map, input_param, 
                 electrode_config)])
+        self.statMenu.addAction("&Power Law Distribution Comparison", 
+            lambda: [self.powerlaw_window(), 
+                powerlaw_analysis.pl_histogram_plotting(self, 
+                    pace_maker, batch_data), 
+                powerlaw_analysis.pl_truncated_histogram_plotting(self, 
+                    pace_maker, batch_data), 
+                powerlaw_analysis.likelihood_and_significance(self, 
+                    pace_maker, batch_data)])
+
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")

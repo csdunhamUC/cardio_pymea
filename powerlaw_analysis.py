@@ -16,9 +16,16 @@ import powerlaw as pl
 import detect_transloc
 
 
-def pl_histogram_plotting(analysisGUI, pace_maker): 
+def pl_histogram_plotting(analysisGUI, pace_maker, batch_data): 
 
-    size_event = pace_maker.transloc_events
+    # Check whether using translocation data from individual dataset or batch.
+    if hasattr(pace_maker, "transloc_events"):
+        size_event = pace_maker.transloc_events
+        print("Using dataset translocations.")
+    elif hasattr(batch_data, "batch_translocs"):
+        size_event = batch_data.batch_translocs
+        print("Using batch translocations.")
+    
     sorted_size_event = sorted(size_event)
     
     #Model Distributions for Comparison
@@ -94,8 +101,16 @@ def pl_histogram_plotting(analysisGUI, pace_maker):
     analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
     analysisGUI.plWindow.powerlawPlot.draw()
 
-def pl_truncated_histogram_plotting(analysisGUI, pace_maker): 
-    size_event = pace_maker.transloc_events
+def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data): 
+
+     # Check whether using translocation data from individual dataset or batch.
+    if hasattr(pace_maker, "transloc_events"):
+        size_event = pace_maker.transloc_events
+        print("Using dataset translocations.")
+    elif hasattr(batch_data, "batch_translocs"):
+        size_event = batch_data.batch_translocs
+        print("Using batch translocations.")
+
     sorted_size_event = sorted(size_event)
     
     #Removing data below x_min
@@ -176,8 +191,16 @@ def pl_truncated_histogram_plotting(analysisGUI, pace_maker):
     analysisGUI.plWindow.powerlawPlot.draw()
 
 #R/p analysis
-def likelihood_and_significance(analysisGUI, pace_maker):
-    size_event = pace_maker.transloc_events
+def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
+    
+    # Check whether using translocation data from individual dataset or batch.
+    if hasattr(pace_maker, "transloc_events"):
+        size_event = pace_maker.transloc_events
+        print("Using dataset translocations.")
+    elif hasattr(batch_data, "batch_translocs"):
+        size_event = batch_data.batch_translocs
+        print("Using batch translocations.")
+    
     sorted_size_event = sorted(size_event)
 
     #Fitting Power Law to Data

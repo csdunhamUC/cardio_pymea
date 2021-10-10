@@ -134,7 +134,13 @@ conduction_vel, beat_amp_int):
         if pace_maker.number_beats is not None:
             dict_key = f"Key_{num+1}_{pace_maker.number_beats}"
             batch_data.beat_event_dict[dict_key] = temp_translocs
+        
+    # Remove existent transloc_events attribute from pace_maker
+    del pace_maker.transloc_events
 
+    # Remove 'None' entries.
+    batch_data.batch_translocs = [
+        event for event in batch_data.batch_translocs if event != None]
 
     # Print number of translocations found in files contained in batch
     print("Translocations in batch: \n" + f"{batch_data.batch_translocs}")
