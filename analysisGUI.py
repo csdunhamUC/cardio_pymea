@@ -464,6 +464,7 @@ def reload_module():
     importlib.reload(pca_plotting)
     importlib.reload(detect_transloc)
     importlib.reload(calculate_fpd)
+    importlib.reload(powerlaw_analysis)
     print("Reloaded modules.")
 
 
@@ -507,9 +508,7 @@ class PowerlawCanvas (FigureCanvasQTAgg):
     def __init__(self, parent=None, width=7, height=7, dpi=100):
         self.fig=plt.Figure(figsize=(width, height), dpi=dpi)
         self.axis1 = self.fig.add_subplot(1,2,1)
-        self.axis1.set_title("Distribution Comparison")
         self.axis2 = self.fig.add_subplot(1,2,2)
-        self.axis2.set_title("Truncated Distribution Comparison")
         super(PowerlawCanvas, self).__init__(self.fig)
 
 
@@ -776,8 +775,10 @@ class PowerlawWindow(QWidget):
         rpvalueWidget.setFixedSize(225, 700)
         rpvalueWidget.setLayout(rpvalueLayout)
 
-        self.powerlawPlot = PowerlawCanvas(self, width=8, height=7, dpi=100)
+        self.powerlawPlot = PowerlawCanvas(self, width=11, height=6, dpi=120)
+        plToolbar = NavigationToolbar2QT(self.powerlawPlot, self)
         plotLayout.addWidget(self.powerlawPlot, 0, 0)
+        plotLayout.addWidget(plToolbar, 1, 0)
         
         statTextFont = QFont()
         statTextFont.setBold(True)
