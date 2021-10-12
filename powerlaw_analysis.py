@@ -207,16 +207,20 @@ def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
         sorted_size_event = sorted(size_event)
 
         #Fitting Power Law to Data
-        PL_results = pl.Fit(sorted_size_event)
+        PL_results = pl.Fit(
+            sorted_size_event, 
+            discrete=True)
 
         #Comparing Distributions
         R_ln, p_ln = PL_results.distribution_compare(
-            'power_law', 'lognormal')
+            'power_law', 'lognormal',
+            normalized_ratio=True)
         R_exp, p_exp = PL_results.distribution_compare(
             'power_law', 'exponential', 
-            normalized_ratio = True)
+            normalized_ratio=True)
         R_weib, p_weib = PL_results.distribution_compare(
-            'power_law', 'stretched_exponential')
+            'power_law', 'stretched_exponential',
+            normalized_ratio=True)
 
         #Result Text for R/p Readout
         if p_ln <= 0.05:
@@ -225,7 +229,7 @@ def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
             elif R_ln < 0:
                 ln_results = "NO, Log normal is more likely than a power law distribution"
         else:
-            ln_results = "Cannot reject the null that power law and log normal distributions are equally likely."
+            ln_results = "Sign of R is not statistically significant."
 
         if p_exp <= 0.05:
             if R_exp >= 0:
@@ -233,7 +237,7 @@ def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
             elif R_exp < 0:
                 exp_results = "NO, Exponential is more likely than a power law distribution"
         else:
-            exp_results = "Cannot reject the null that power law and exponential distributions are equally likely."
+            exp_results = "Sign of R is not statistically significant."
 
         if p_weib <= 0.05:
             if R_weib >= 0:
@@ -241,26 +245,26 @@ def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
             elif R_weib < 0:
                 weib_results = "NO, Weibull is more likely than a power law distribution"
         else:
-            weib_results = "Cannot reject the null that power law and Weibull distributions are equally likely."
+            weib_results = "Sign of R is not statistically significant."
 
         #R/p readout
         complete_rp_readout = [
-            "Power Law vs Log Normal Stats:" + "\n",
+            "Power Law vs Log Normal:" + "\n",
             " - R value = {}".format(R_ln) + "\n",
             " - p value = {}".format(p_ln) + "\n" + "\n",
             "Results: {}".format(ln_results) + "\n" + "\n" + "\n",
-            "Power Law vs Exponential Stats:" + "\n",
+            "Power Law vs Exponential:" + "\n",
             " - R value = {}".format(R_exp) + "\n",
             " - p value = {}".format(p_exp) + "\n" + "\n",
             "Results: {}".format(exp_results) + "\n" + "\n" + "\n",
-            "Power Law vs Stretched Exponential Stats:" + "\n",
+            "Power Law vs Stretched Exponential:" + "\n",
             " - R value = {}".format(R_weib) + "\n",
             " - p value = {}".format(p_weib) + "\n" + "\n",
             "Results: {}".format(weib_results) + "\n" + "\n" + "\n" + "\n",
             "Parameters:" + "\n",
-            "R is the loglikelihood ratio between the two distributions tested." + "\n",
+            "R is the log likelihood ratio between the two distributions tested." + "\n",
             "A positive R value indicates a power law distribution is a more likely fit for the distribution" + "\n" + "\n",
-            "P-value: if below 0.05, we can reject the null hypothesis that both distributions are equally likely."
+            "P-value: if below 0.05, we can conclude the sign of R is significant."
         ]
 
         #Display Readout 
