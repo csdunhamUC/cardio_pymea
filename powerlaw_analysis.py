@@ -116,7 +116,7 @@ def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data):
         sorted_size_event = sorted(size_event)
         
         #Removing data below x_min
-        PL_results = pl.Fit(sorted_size_event)
+        PL_results = pl.Fit(sorted_size_event, discrete=True)
         truncated_sorted_size_event = [
             x for x in sorted_size_event if x >= PL_results.power_law.xmin]
         
@@ -146,8 +146,8 @@ def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data):
         #Plotting Distributions
         analysisGUI.plWindow.powerlawPlot.axis2.cla()
 
-        PL_results = pl.Fit(sorted_size_event)
         x_min = PL_results.power_law.xmin
+        print(f"x_min: {x_min}")
 
         nbins = 50
         length = len(sorted_size_event)
@@ -312,9 +312,9 @@ def normalize_batch(batch_dict: dict) -> list:
     scaled_events_flat = [
         event for sublist in scaled_events for event in sublist]
 
-    print("Removing values above 300")
+    # print("Removing values above 300")
 
-    scaled_events_flat = [event for event in scaled_events_flat if event < 300]
+    # scaled_events_flat = [event for event in scaled_events_flat if event < 300]
 
     return scaled_events_flat
 
