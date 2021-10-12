@@ -772,7 +772,7 @@ class PowerlawWindow(QWidget):
         plotWidget = QWidget()
         plotWidget.setLayout(plotLayout)
         rpvalueWidget = QWidget()
-        rpvalueWidget.setFixedSize(225, 700)
+        rpvalueWidget.setFixedSize(760, 250)
         rpvalueWidget.setLayout(rpvalueLayout)
 
         self.powerlawPlot = PowerlawCanvas(self, width=11, height=6, dpi=120)
@@ -780,18 +780,14 @@ class PowerlawWindow(QWidget):
         plotLayout.addWidget(self.powerlawPlot, 0, 0)
         plotLayout.addWidget(plToolbar, 1, 0)
         
-        statTextFont = QFont()
-        statTextFont.setBold(True)
-        self.statsLabel = QLabel("R/p Values")
-        self.statsLabel.setFont(statTextFont)
-        rpvalueLayout.addWidget(self.statsLabel, 0, 0)
-        self.statsPrintout = QPlainTextEdit("To be populated")
-        self.statsPrintout.setFixedHeight(650)
+        self.statsPrintout = QPlainTextEdit(
+            "powerlaw distribution_compare prinout (awaiting results)")
+        self.statsPrintout.setFixedWidth(750)
         self.statsPrintout.setReadOnly(True)
         rpvalueLayout.addWidget(self.statsPrintout, 1, 0)
 
-        mainLayout.addWidget(plotWidget, 1, 0)
-        mainLayout.addWidget(rpvalueWidget, 0, 1, 2, 1)
+        mainLayout.addWidget(plotWidget, 0, 0)
+        mainLayout.addWidget(rpvalueWidget, 1, 0, 1, 1)
         self.setLayout(mainLayout)
 
 
