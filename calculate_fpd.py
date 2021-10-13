@@ -25,60 +25,81 @@ input_param):
     T_wave_indices = find_T_wave(cm_beats, field_potential, local_act_time, 
         input_param)
     print(T_wave_indices)
+    print(local_act_time.param_dist_raw)
 
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
     fpd_full_dict = {}
 
     for beat in local_act_time.param_dist_raw.columns[3:]:
-        print(beat)
-        print(local_act_time.param_dist_raw[beat])
+        # print(beat)
+        # print(local_act_time.param_dist_raw[beat])
         temp_dict = {}
         for elec in local_act_time.param_dist_raw.index:
-            print(elec)
+            # print(elec)
             temp_idx = local_act_time.param_dist_raw.loc[elec, beat]
-            print(temp_idx)
+            # print(temp_idx)
             if np.isnan(temp_idx) == True:
                 temp_idx = None
             elif np.isnan(temp_idx) == False:
-                print(temp_idx)
-                temp_idx = int(temp_idx) + 50
+                # print(temp_idx)
+                temp_idx = int(temp_idx) + 60
                 idx_end = temp_idx + 400
                 temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
                 temp_pos_T_wave = find_peaks(
                     temp_volt_trace, 
-                    height=20, 
+                    height=15,
+                    width=5,
+                    rel_height=0.5,
                     distance=100)
-                print(f"Positive T-wave: {temp_pos_T_wave}")
+                # print(f"Positive T-wave: {temp_pos_T_wave}")
                 temp_neg_T_wave = find_peaks(
                     -1*temp_volt_trace,
-                    height=20,
+                    height=15,
+                    width=5,
+                    rel_height=0.5,
                     distance=100)
-                print(f"Negative T-wave: {temp_neg_T_wave}")
+                # print(f"Negative T-wave: {temp_neg_T_wave}")
 
+                check_pos = np.any(temp_pos_T_wave[0])
                 # Electrode 9 (E10) has a very weak T-wave
-                # Need to think of a good method to detect such T-waves.
-                max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
-                max_pos_T_idx = np.where(
-                    temp_volt_trace == max_pos_T_wave)[0]
-                real_pos_T_idx = temp_volt_trace.index[max_pos_T_idx].values[0]
-                print(max_pos_T_wave)
-                print(max_pos_T_idx)
-                print(real_pos_T_idx)
+                if check_pos == True:
+                    max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
+                    max_pos_T_idx = np.where(
+                        temp_volt_trace == max_pos_T_wave)[0]
+                    real_pos_T_idx = temp_volt_trace.index[
+                        max_pos_T_idx].values[0]
+                    # print(max_pos_T_wave)
+                    # print(max_pos_T_idx)
+                    # print(real_pos_T_idx)
+                else:
+                    max_pos_T_wave = None
 
-                max_neg_T_wave = max(temp_neg_T_wave[1]["peak_heights"])
-                max_neg_T_idx = np.where(
-                    temp_volt_trace == -1*max_neg_T_wave)[0]
-                real_neg_T_idx = temp_volt_trace.index[max_neg_T_idx].values[0]
-                print(max_neg_T_wave)
-                print(max_neg_T_idx)
-                print(real_neg_T_idx)
+                check_neg = np.any(temp_neg_T_wave[0])
+                # print(f"Array: {temp_neg_T_wave[0]}")
+                # print(f"Value of check_neg: {check_neg}")
+                if check_neg == True:
+                    max_neg_T_wave = max(temp_neg_T_wave[1]["peak_heights"])
+                    max_neg_T_idx = np.where(
+                        temp_volt_trace == -1*max_neg_T_wave)[0]
+                    real_neg_T_idx = temp_volt_trace.index[
+                        max_neg_T_idx].values[0]
+                    # print(max_neg_T_wave)
+                    # print(max_neg_T_idx)
+                    # print(real_neg_T_idx)
+                else:
+                    max_neg_T_wave = None
 
-                if max_pos_T_wave > max_neg_T_wave:
+                if check_pos and check_neg == True:
+                    if max_pos_T_wave > max_neg_T_wave:
+                        temp_dict[elec] = real_pos_T_idx
+                    elif max_pos_T_wave < max_neg_T_wave:
+                        temp_dict[elec] = real_neg_T_idx
+                elif check_pos == True and check_neg == False:
                     temp_dict[elec] = real_pos_T_idx
-                elif max_pos_T_wave < max_neg_T_wave:
+                elif check_neg == True and check_pos == False:
                     temp_dict[elec] = real_neg_T_idx
-        
+
         if any(temp_dict.keys()) == False:
             continue
         else:
