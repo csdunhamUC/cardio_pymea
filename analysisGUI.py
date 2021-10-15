@@ -759,6 +759,28 @@ class PlotBeatSelectWindows(QWidget):
         self.setLayout(mainLayout)
 
 
+class FPDWindow(QWidget):
+    def __init__(self, analysisGUI):
+        super(FPDWindow, self).__init__()
+        self.setupUI(analysisGUI)
+
+    def setupUI(self, analysisGUI):
+        layout = QGridLayout()
+        self.paramPlot1 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
+        self.paramPlot2 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
+        self.paramSlider1a = QSlider(Qt.Horizontal)
+        self.paramSlider1b = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot1, self)
+
+        layout.addWidget(self.paramPlot1, 0, 0)
+        layout.addWidget(self.paramPlot2, 0, 1)
+        layout.addWidget(self.paramSlider1a, 1, 0)
+        layout.addWidget(self.paramSlider1b, 2, 0)
+        layout.addWidget(paramToolbar, 3, 0)
+    
+        self.setLayout(layout)
+
+
 class PowerlawWindow(QWidget):
     def __init__(self, analysisGUI):
         super(PowerlawWindow, self).__init__()
@@ -1129,15 +1151,18 @@ class AnalysisGUI(QMainWindow):
 
     def fieldPotDurWindow(self, cm_beats, field_potential, heat_map, 
     input_param):
-        self.fpdWindow = SoloHeatmapWindows(self)
+        self.fpdWindow = FPDWindow(self)
         self.fpdWindow.setWindowTitle("Field Potential Duration")
         self.fpdWindow.show()
         # Set slider value to maximum number of beats
-        self.fpdWindow.paramSlider.setMaximum(
+        self.fpdWindow.paramSlider1a.setMaximum(
             int(cm_beats.beat_count_dist_mode[0]) - 1)
-        # self.fpdWindow.paramSlider.valueChanged.connect(lambda: [
-        #     calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
-        #     input_param)])
+        self.fpdWindow.paramSlider1b.setMaximum(
+                len(cm_beats.y_axis.columns))
+        # self.fpdWindow.paramSlider1a.valueChanged.connect(lambda: [])
+        self.fpdWindow.paramSlider1b.valueChanged.connect(lambda: [
+            calculate_fpd.graph_T_wave(self, cm_beats, field_potential, 
+            input_param)])
 
     def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):

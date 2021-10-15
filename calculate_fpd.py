@@ -22,11 +22,14 @@ import scipy.stats as spstats
 
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
 input_param):
-    T_wave_indices = find_T_wave(cm_beats, field_potential, local_act_time, 
-        input_param)
-    print(T_wave_indices)
+    field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
+        local_act_time, input_param)
+    print(field_potential.T_wave_indices)
     print(local_act_time.param_dist_raw)
-
+    print(field_potential.T_wave_indices.columns)
+    print(field_potential.T_wave_indices.index)
+    graph_T_wave(analysisGUI, cm_beats, field_potential, input_param)
+    # field_potential.T_wave_indices.to_excel("Twave_output.xlsx")
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
     fpd_full_dict = {}
@@ -105,7 +108,7 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
         else:
             fpd_full_dict[beat] = temp_dict
 
-    return fpd_full_dict
+    return pd.DataFrame(fpd_full_dict)
 
 def calc_trapezium(cm_beats, x_i, x_m, x_r, y_i, y_m, y_r):
     # x_m, x_r, y_m, y_r are immobile points
@@ -136,7 +139,64 @@ def calc_Xr_Yr(cm_beats, x_m, y_m):
     return (x_r, y_r)
 
 
-def graph_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
+# Function that graphs T-wave data on left-side plot (paramPlot1)
+# (Soon) designed to plot on a per-beat, per-electrode basis using two sliders.
+# Top slider: choose beat.  Bottom slider: choose electrode.
+def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
+    beat_choice = analysisGUI.fpdWindow.paramSlider1a.value()
+    elec_choice = analysisGUI.fpdWindow.paramSlider1b.value()
+    
+    all_beats = field_potential.T_wave_indices.columns
+    all_elecs = field_potential.T_wave_indices.index
+    
+    curr_elec = all_elecs[elec_choice]
+    curr_beat = all_beats[beat_choice]
+    
+    analysisGUI.fpdWindow.paramPlot1.axes.cla()
+
+    print(f"Generating graph for electrode {curr_elec}.")
+    
+    analysisGUI.fpdWindow.paramPlot1.fig.suptitle(
+        f"From FPD plot, full signal of {curr_elec}")
+
+    # Generate mask for marking peak locations.
+    mask_dist = ~np.isnan(
+        cm_beats.dist_beats[curr_elec].values)
+    dist_without_nan = cm_beats.dist_beats[curr_elec].values[
+        mask_dist].astype("int64")
+    
+    # Mark peak locations.
+    analysisGUI.fpdWindow.paramPlot1.axes.plot(
+        cm_beats.x_axis[dist_without_nan], 
+        cm_beats.y_axis[curr_elec].values[dist_without_nan], 
+        "xr")
+
+    # Generate mask for marking T-wave locations.
+    mask_Twave = ~np.isnan(
+        field_potential.T_wave_indices.loc[curr_elec].values)
+    Twave_sans_nan = field_potential.T_wave_indices.loc[curr_elec].values[
+        mask_Twave].astype("int64")
+    
+    # Mark T-wave locations.
+    analysisGUI.fpdWindow.paramPlot1.axes.plot(
+        cm_beats.x_axis[Twave_sans_nan],
+        cm_beats.y_axis[curr_elec].values[Twave_sans_nan],
+        "Dm")
+
+    # Original, full plot
+    analysisGUI.fpdWindow.paramPlot1.axes.plot(
+        cm_beats.x_axis, 
+        cm_beats.y_axis[curr_elec].values)
+    
+
+    analysisGUI.fpdWindow.paramPlot1.axes.legend(
+        [f"Electrode = {curr_elec}\nBeat = {curr_beat}"], 
+        loc='lower left')
+
+    analysisGUI.fpdWindow.paramPlot1.draw()
+
+
+def heatmap_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
     
     if hasattr(heat_map, 'fpd_solo_cbar') is True:
         heat_map.fpd_solo_cbar.remove()
@@ -166,6 +226,7 @@ def graph_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
         ylabel="Y coordinate (μm)")
     analysisGUI.fpdWindow.paramPlot.fig.tight_layout()
     analysisGUI.fpdWindow.paramPlot.draw()
+
 
 def bandpass_filter(cm_beats, input_param, bworth_ord=4, low_cutoff_freq=0.5, 
 high_cutoff_freq=30):

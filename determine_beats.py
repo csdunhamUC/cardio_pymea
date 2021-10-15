@@ -286,7 +286,6 @@ electrode_config, batch_data):
                 [cm_beats.negative_dist_beats, neg_dist_beats], 
                 axis='columns')
 
-
             prom_beats = pd.Series(find_peaks(
                 cm_beats.y_axis.iloc[0:, column], 
                 height=input_param.min_peak_height,
@@ -316,6 +315,9 @@ electrode_config, batch_data):
             cm_beats.thresh_beats = pd.concat(
                 [cm_beats.thresh_beats, thresh_beats], 
                 axis='columns')
+
+        # Assign column name identifiers to columns of dist_beats
+        cm_beats.dist_beats.columns = electrode_config.electrode_names
 
         # Data designation to ensure NaN values are properly handled by 
         # subsequent calculations.
