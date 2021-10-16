@@ -22,21 +22,26 @@ import scipy.stats as spstats
 
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
 input_param):
+    # Find indices for T-wave peak locations.
     field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
         local_act_time, input_param)
-    # print(field_potential.T_wave_indices)
-    # print(local_act_time.param_dist_raw)
+
+    # Adjust second slider (electrode slider) to maximum number of elecs.
     analysisGUI.fpdWindow.paramSlider1b.setMaximum(
         len(field_potential.T_wave_indices.index) - 1)
+    
+    # Plot T-wave calculation results.
     graph_T_wave(analysisGUI, cm_beats, field_potential, input_param)
+    
+
     # field_potential.T_wave_indices.to_excel("Twave_output.xlsx")
+
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
     fpd_full_dict = {}
 
     for beat in local_act_time.param_dist_raw.columns[3:]:
         # print(beat)
-        # print(local_act_time.param_dist_raw[beat])
         temp_dict = {}
         for elec in local_act_time.param_dist_raw.index:
             # print(elec)
@@ -45,7 +50,6 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
             if np.isnan(temp_idx) == True:
                 temp_idx = None
             elif np.isnan(temp_idx) == False:
-                # print(temp_idx)
                 temp_idx = int(temp_idx) + 30
                 idx_end = temp_idx + 430
                 temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
@@ -56,7 +60,6 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                     # rel_height=0.5,
                     prominence=2,
                     distance=50)
-                # print(f"Positive T-wave: {temp_pos_T_wave}")
                 temp_neg_T_wave = find_peaks(
                     -1*temp_volt_trace,
                     height=15,
@@ -64,53 +67,57 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                     # rel_height=0.5,
                     prominence=2,
                     distance=50)
-                # print(f"Negative T-wave: {temp_neg_T_wave}")
 
                 check_pos = np.any(temp_pos_T_wave[0])
-                # Electrode 9 (E10) has a very weak T-wave
                 if check_pos == True:
                     max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
                     max_pos_T_idx = np.where(
                         temp_volt_trace == max_pos_T_wave)[0]
                     real_pos_T_idx = temp_volt_trace.index[
                         max_pos_T_idx].values[0]
-                    # print(max_pos_T_wave)
-                    # print(max_pos_T_idx)
-                    # print(real_pos_T_idx)
                 else:
                     max_pos_T_wave = None
 
                 check_neg = np.any(temp_neg_T_wave[0])
-                # print(f"Array: {temp_neg_T_wave[0]}")
-                # print(f"Value of check_neg: {check_neg}")
                 if check_neg == True:
                     max_neg_T_wave = max(temp_neg_T_wave[1]["peak_heights"])
                     max_neg_T_idx = np.where(
                         temp_volt_trace == -1*max_neg_T_wave)[0]
                     real_neg_T_idx = temp_volt_trace.index[
                         max_neg_T_idx].values[0]
-                    # print(max_neg_T_wave)
-                    # print(max_neg_T_idx)
-                    # print(real_neg_T_idx)
                 else:
                     max_neg_T_wave = None
 
+                # Check if positive and negative amplitudes detected
                 if check_pos and check_neg == True:
-                    if max_pos_T_wave > max_neg_T_wave:
-                        temp_dict[elec] = real_pos_T_idx
-                    elif max_pos_T_wave < max_neg_T_wave:
-                        temp_dict[elec] = real_neg_T_idx
+                    # Check whether T-wave might be biphasic
+                    if (max_pos_T_wave - max_neg_T_wave) <= 10:
+                        if real_pos_T_idx > real_neg_T_idx:
+                            temp_dict[elec] = real_pos_T_idx
+                        elif real_pos_T_idx < real_neg_T_idx:
+                            temp_dict[elec] = real_neg_T_idx
+                    # If not biphasic (assuming roughly equal Twave+, Twave-
+                    # peak amplitudes), choose most reasonable index.
+                    else:
+                        if max_pos_T_wave > max_neg_T_wave:
+                            temp_dict[elec] = real_pos_T_idx
+                        elif max_pos_T_wave < max_neg_T_wave:
+                            temp_dict[elec] = real_neg_T_idx
+                # If not, proceed with whichever detection range worked.
                 elif check_pos == True and check_neg == False:
                     temp_dict[elec] = real_pos_T_idx
                 elif check_neg == True and check_pos == False:
                     temp_dict[elec] = real_neg_T_idx
 
+        # Discriminate against empty keys before adding to fictionary.
         if any(temp_dict.keys()) == False:
             continue
         else:
             fpd_full_dict[beat] = temp_dict
-
+    
+    # Return dataframe.
     return pd.DataFrame(fpd_full_dict)
+
 
 def calc_trapezium(cm_beats, x_i, x_m, x_r, y_i, y_m, y_r):
     # x_m, x_r, y_m, y_r are immobile points
@@ -131,12 +138,30 @@ def calc_trapezium(cm_beats, x_i, x_m, x_r, y_i, y_m, y_r):
 
 # Find x_m, y_m by first locating either the positive or negative T-wave peak
 # Determine whether T-wave is positive or negative
-def calc_Xm_Ym(cm_beats, input_param):
-    
+def calc_Xm_Ym(cm_beats, field_potential):
+    all_beats = field_potential.T_wave_indices.columns
+    all_elecs = field_potential.T_wave_indices.index
+
+    for beat in all_beats:
+        
+        for elec in all_elecs:
+
+            Twave_idx = field_potential.T_wave_indices.loc[elec, beat]
+
+            Twave_idx_end = T_wave_idx + 150
+
+            x_vals = cm_beats.x_axis[Twave_idx:Twave_idx_end]
+            y_vals = cm_beats.y_axis[elec].values[x_vals]
+
+            derivs = np.diff(y_vals)/np.diff(x_vals)
+            abs_derivs = abs(derivs)
+            max_deriv = max(abs_derivs)
+            max_deriv_loc = np.argmax(abs_derivs)
+
     return (x_m, y_m)
 
 
-def calc_Xr_Yr(cm_beats, x_m, y_m):
+def calc_Xr_Yr(cm_beats, field_potential, x_m, y_m):
 
     return (x_r, y_r)
 
