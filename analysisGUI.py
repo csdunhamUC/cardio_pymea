@@ -1157,8 +1157,6 @@ class AnalysisGUI(QMainWindow):
         # Set slider value to maximum number of beats
         self.fpdWindow.paramSlider1a.setMaximum(
             int(cm_beats.beat_count_dist_mode[0]) - 1)
-        self.fpdWindow.paramSlider1b.setMaximum(
-                len(cm_beats.y_axis.columns))
         # self.fpdWindow.paramSlider1a.valueChanged.connect(lambda: [])
         self.fpdWindow.paramSlider1b.valueChanged.connect(lambda: [
             calculate_fpd.graph_T_wave(self, cm_beats, field_potential, 

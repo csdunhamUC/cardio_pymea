@@ -24,10 +24,10 @@ def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map,
 input_param):
     field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
         local_act_time, input_param)
-    print(field_potential.T_wave_indices)
-    print(local_act_time.param_dist_raw)
-    print(field_potential.T_wave_indices.columns)
-    print(field_potential.T_wave_indices.index)
+    # print(field_potential.T_wave_indices)
+    # print(local_act_time.param_dist_raw)
+    analysisGUI.fpdWindow.paramSlider1b.setMaximum(
+        len(field_potential.T_wave_indices.index) - 1)
     graph_T_wave(analysisGUI, cm_beats, field_potential, input_param)
     # field_potential.T_wave_indices.to_excel("Twave_output.xlsx")
 
@@ -46,22 +46,24 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                 temp_idx = None
             elif np.isnan(temp_idx) == False:
                 # print(temp_idx)
-                temp_idx = int(temp_idx) + 60
-                idx_end = temp_idx + 400
+                temp_idx = int(temp_idx) + 30
+                idx_end = temp_idx + 430
                 temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
                 temp_pos_T_wave = find_peaks(
                     temp_volt_trace, 
                     height=15,
-                    width=5,
-                    rel_height=0.5,
-                    distance=100)
+                    # width=4,
+                    # rel_height=0.5,
+                    prominence=2,
+                    distance=50)
                 # print(f"Positive T-wave: {temp_pos_T_wave}")
                 temp_neg_T_wave = find_peaks(
                     -1*temp_volt_trace,
                     height=15,
-                    width=5,
-                    rel_height=0.5,
-                    distance=100)
+                    # width=4,
+                    # rel_height=0.5,
+                    prominence=2,
+                    distance=50)
                 # print(f"Negative T-wave: {temp_neg_T_wave}")
 
                 check_pos = np.any(temp_pos_T_wave[0])
@@ -143,19 +145,22 @@ def calc_Xr_Yr(cm_beats, x_m, y_m):
 # (Soon) designed to plot on a per-beat, per-electrode basis using two sliders.
 # Top slider: choose beat.  Bottom slider: choose electrode.
 def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
+    # Get beat, electrode from slider 1, slider 2
     beat_choice = analysisGUI.fpdWindow.paramSlider1a.value()
     elec_choice = analysisGUI.fpdWindow.paramSlider1b.value()
     
+    # Get all available beats, electrodes that are NaN from dataset.
     all_beats = field_potential.T_wave_indices.columns
     all_elecs = field_potential.T_wave_indices.index
     
+    # Use slider value as index for available beats, elecs to yield current one.
     curr_elec = all_elecs[elec_choice]
     curr_beat = all_beats[beat_choice]
     
+    # Clear axis for new plot.
     analysisGUI.fpdWindow.paramPlot1.axes.cla()
-
-    print(f"Generating graph for electrode {curr_elec}.")
     
+    # Assign figure title.
     analysisGUI.fpdWindow.paramPlot1.fig.suptitle(
         f"From FPD plot, full signal of {curr_elec}")
 
@@ -169,7 +174,8 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
     analysisGUI.fpdWindow.paramPlot1.axes.plot(
         cm_beats.x_axis[dist_without_nan], 
         cm_beats.y_axis[curr_elec].values[dist_without_nan], 
-        "xr")
+        "xr", 
+        label="R wave")
 
     # Generate mask for marking T-wave locations.
     mask_Twave = ~np.isnan(
@@ -181,18 +187,18 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
     analysisGUI.fpdWindow.paramPlot1.axes.plot(
         cm_beats.x_axis[Twave_sans_nan],
         cm_beats.y_axis[curr_elec].values[Twave_sans_nan],
-        "Dm")
+        "Dm", 
+        label="T wave")
 
     # Original, full plot
     analysisGUI.fpdWindow.paramPlot1.axes.plot(
         cm_beats.x_axis, 
         cm_beats.y_axis[curr_elec].values)
     
+    # Show legend.
+    analysisGUI.fpdWindow.paramPlot1.axes.legend(loc='lower left')
 
-    analysisGUI.fpdWindow.paramPlot1.axes.legend(
-        [f"Electrode = {curr_elec}\nBeat = {curr_beat}"], 
-        loc='lower left')
-
+    # Update the canvas by drawing the plot.
     analysisGUI.fpdWindow.paramPlot1.draw()
 
 
