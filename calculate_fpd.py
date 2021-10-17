@@ -7,7 +7,10 @@
 # Organization:
 # University of California, Los Angeles
 # Department of Chemistry and Biochemistry
-# Original work by CSD.
+# Original work by CSD unless otherwise noted.
+# Utilizes Trapezium's Area algorithm from Vasquez-Seisdedos et al 2011
+# "New approach for T-wave end detection on electrocardiogram: Performance
+# in noisy conditions"
 
 import time
 import pandas as pd
@@ -38,11 +41,11 @@ input_param):
     # Calculate x_m, y_m
     field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
         field_potential)
-    print(f"x_m: {field_potential.x_m}")
-    print(f"y_m: {field_potential.y_m}")
+    # print(f"x_m: {field_potential.x_m}")
+    # print(f"y_m: {field_potential.y_m}")
 
-    Tend = calc_Tend(cm_beats, field_potential)
-    print(f"Tend df:\n{Tend}")
+    field_potential.Tend = calc_Tend(cm_beats, field_potential)
+    print(f"Tend df:\n{field_potential.Tend}")
 
     # Plot T-wave calculation results.
     graph_T_wave(analysisGUI, cm_beats, field_potential, input_param)
@@ -165,7 +168,7 @@ def calc_Tend(cm_beats, field_potential):
                 bounds=Tend_bounds)
 
             real_x_i, real_y_i = min_trap_area.x
-            print(min_trap_area.x)
+            # print(min_trap_area.x)
 
             temp_dict[elec] = int(real_x_i)
         
@@ -180,7 +183,7 @@ def calc_Tend(cm_beats, field_potential):
     # x_r, y_r = coordinate of location somewhere after T_end, with a first
     # derivative value somewhere near zero. Exact location is unimportant;
     # what is important is that this point must be after T_end!
-    print(f"Finished.\nTend_dict: {Tend_dict}")
+    # print(f"Finished.\nTend_dict: {Tend_dict}")
 
     Tend = pd.DataFrame(Tend_dict)
     return Tend
@@ -210,7 +213,7 @@ def calc_Xm_Ym(cm_beats, field_potential):
 
                 Twave_idx_end = Twave_idx + 200
 
-                print(f"Row: {row}, Column: {col}")
+                # print(f"Row: {row}, Column: {col}")
                 x_vals = cm_beats.x_axis[
                     Twave_idx:Twave_idx_end].values.astype('int64')
                 y_vals = cm_beats.y_axis[elec].values[x_vals]
@@ -304,6 +307,14 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
         field_potential.y_m[elec_choice, :],
         "om",
         label="Derivative")
+
+    # Mark T-wave endpoint
+    analysisGUI.fpdWindow.paramPlot1.axes.plot(
+            field_potential.Tend.loc[curr_elec, all_beats[:-1]],
+        cm_beats.y_axis[curr_elec].values[
+            field_potential.Tend.loc[curr_elec, all_beats[:-1]]],
+        "Py",
+        label="T-wave End")
 
     # Original, full plot
     analysisGUI.fpdWindow.paramPlot1.axes.plot(
