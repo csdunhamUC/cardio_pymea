@@ -17,7 +17,7 @@ import seaborn as sns
 from scipy.signal import find_peaks
 from scipy.signal import butter
 from scipy.signal import sosfilt
-import scipy.stats as spstats
+from scipy.optimize import minimize
 
 
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
@@ -40,6 +40,9 @@ input_param):
         field_potential)
     print(f"x_m: {field_potential.x_m}")
     print(f"y_m: {field_potential.y_m}")
+
+    Tend = calc_Tend(cm_beats, field_potential)
+    print(f"Tend df:\n{Tend}")
 
     # Plot T-wave calculation results.
     graph_T_wave(analysisGUI, cm_beats, field_potential, input_param)
@@ -130,9 +133,44 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
     return pd.DataFrame(fpd_full_dict)
 
 
-def calc_trapezium(cm_beats, field_potential):
-    # x_m, x_r, y_m, y_r are immobile points
-    # Variable pairs: (x_m, y_m), (x_r, y_m), (x_r, y_i), (x_i, y_i)
+def calc_Tend(cm_beats, field_potential):
+    all_beats = field_potential.T_wave_indices.columns
+    all_elecs = field_potential.T_wave_indices.index
+
+    Tend_dict = {}
+
+    for col, beat in enumerate(all_beats):
+        temp_dict = {}
+        for row, elec in enumerate(all_elecs):
+            # x_m, x_r, y_m, y_r are immobile points for a given beat, 
+            # elec combo
+            print(f"Currently processing {beat}, {elec}.")
+            x_m = int(field_potential.x_m[row, col])
+            y_m = field_potential.y_m[row, col]
+            x_r = x_m + 150
+            y_r = y_m + 150
+            x_i = cm_beats.x_axis[x_m:x_r].values.astype("int64")
+            y_i = cm_beats.y_axis[elec].values[x_i]
+            y_i_min = min(y_i)
+            y_i_max = max(y_i)
+
+            Tend_guess = [x_m + 30, y_m - 10]
+
+            Tend_bounds = ((x_m, x_r), (y_i_min, y_i_max))
+
+            min_trap_area = minimize(
+                fun=trapezium_area, 
+                x0=Tend_guess,
+                args=(x_m, y_m, x_r, y_r),
+                bounds=Tend_bounds)
+
+            real_x_i, real_y_i = min_trap_area.x
+            print(min_trap_area.x)
+
+            temp_dict[elec] = int(real_x_i)
+        
+        Tend_dict[beat] = temp_dict
+    # Variable pairs: (x_m, y_m), (x_r, y_m), (x_r, y_i), (x_i, y_i) 
     # T_end corresponds to (x_i, y_i) where Area, A, is maximum.
 
     # x_m, y_m = coordinate of location of largest absolute first derivative
@@ -142,10 +180,17 @@ def calc_trapezium(cm_beats, field_potential):
     # x_r, y_r = coordinate of location somewhere after T_end, with a first
     # derivative value somewhere near zero. Exact location is unimportant;
     # what is important is that this point must be after T_end!
+    print(f"Finished.\nTend_dict: {Tend_dict}")
 
-    A_trap = 0.5 * (y_m - y_i) * (2*x_r - x_i - x_m)
+    Tend = pd.DataFrame(Tend_dict)
+    return Tend
+
+
+def trapezium_area(Tend: tuple, x_m, y_m, x_r, y_r):
+    x_i, y_i = Tend
+    # Need the maximum through minimization, so minimize the negative function.
+    A_trap = -1*(0.5 * (y_m - y_i) * (2*x_r - x_i - x_m))
     return A_trap
-
 
 # Find x_m, y_m by first locating either the positive or negative T-wave peak
 # Determine whether T-wave is positive or negative
