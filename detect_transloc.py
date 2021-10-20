@@ -47,8 +47,12 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
 
         # "Size" of event, or length in beats the pacemaker is at some electrode
         event_length = 0
-        # Store event lengths in list for however many events there are.
+        # Store event lengths, in units of SIZE, in list for however many 
+        # events there are.
         event_length_list = []
+        # Store event lengths, in units of TIME, in list for however many
+        # events there are.
+        event_time_list = []
         # Threshold distance in micrometers (microns)
         thresh = 500 # More than 2 electrodes away for 200x30 scheme
         print(f"Using threshold: {thresh} microns.")
@@ -98,7 +102,8 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
                         pace_maker.param_dist_normalized[beat] == max_pm[num], 
                         ["Electrode", "X", "Y", beat]],
                     pm_only_all_beats[["Electrode", "X", "Y", beat]], 
-                    temp_pm, thresh=thresh,
+                    temp_pm, 
+                    thresh=thresh,
                     calc_mode="multi_min")
                 # print(f"Inside multi-if: {current_pm}")
                 if current_pm == None:
@@ -125,11 +130,18 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
                                 pace_maker.param_dist_normalized[beat] == max_pm[num], 
                                 ["Electrode", "X", "Y", beat]],
                             pm_only_all_beats[["Electrode", "X", "Y", beat]], 
-                            pm_old_new, thresh=thresh,
+                            pm_old_new, 
+                            thresh=thresh,
                             calc_mode="new_min")
+                        
+                        # Get current pacemaker time for use in calculating
+                        # event time.
+                        time_of_event = pace_maker.param_dist_raw.loc[
+                            new_elec, beat]
 
                         if check_thresh == True:
                             event_length_list.append(event_length)
+                            event_time_list.append(time_of_event)
                             event_length = 1
                         elif check_thresh == False:
                             event_length += 1
@@ -162,9 +174,15 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
                             pm_only_all_beats[["Electrode", "X", "Y", beat]], 
                             pm_old_new, thresh=thresh,
                             calc_mode="new_min")
+                        
+                        # Get current pacemaker time for use in calculating
+                        # event time.
+                        time_of_event = pace_maker.param_dist_raw.loc[
+                            new_elec, beat]
 
                         if check_thresh == True:
                             event_length_list.append(event_length)
+                            event_time_list.append(time_of_event)
                             event_length = 1
                         elif check_thresh == False:
                             event_length += 1
@@ -188,16 +206,21 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
         # Store event list.
         pace_maker.transloc_events = event_length_list
 
+        # Store event times
+        pace_maker.transloc_times = event_time_list
+
         # Store number of beats.
         pace_maker.number_beats = num_beats
 
         # Print event list to terminal.
-        print("Event lengths:\n" + str(event_length_list))
+        # print(f"Event lengths:\n{event_length_list}")
+        # print(f"Event times:\n{event_time_list}")
         # print("Normalized event lengths:\n" + str(norm_event_length))
         deinit()
     except IndexError:
         print("No events.")
         pace_maker.transloc_events = [None]
+        pace_maker.transloc_times = [None]
         pace_maker.number_beats = None
 
 
