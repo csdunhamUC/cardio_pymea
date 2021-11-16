@@ -53,6 +53,9 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
         # Store event lengths, in units of TIME, in list for however many
         # events there are.
         event_time_list = []
+        # Store distance translocated, in units of micrometers, in list for
+        # however many events there are.
+        event_dist_trans = []
         # Threshold distance in micrometers (microns)
         thresh = 500 # More than 2 electrodes away for 200x30 scheme
         print(f"Using threshold: {thresh} microns.")
@@ -125,7 +128,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
 
                         # Boolean check whether electrode distance exceeds
                         # threshold
-                        check_thresh = distance_calc(
+                        check_thresh, dist_returned = distance_calc(
                             pace_maker.param_dist_normalized.loc[
                                 pace_maker.param_dist_normalized[beat] == max_pm[num], 
                                 ["Electrode", "X", "Y", beat]],
@@ -142,6 +145,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
                         if check_thresh == True:
                             event_length_list.append(event_length)
                             event_time_list.append(time_of_event)
+                            event_dist_trans.append(dist_returned)
                             event_length = 1
                         elif check_thresh == False:
                             event_length += 1
@@ -167,7 +171,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
 
                         # Boolean check whether electrode distance exceeds
                         # threshold
-                        check_thresh = distance_calc(
+                        check_thresh, dist_returned = distance_calc(
                             pace_maker.param_dist_normalized.loc[
                                 pace_maker.param_dist_normalized[beat] == max_pm[num], 
                                 ["Electrode", "X", "Y", beat]],
@@ -183,6 +187,7 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
                         if check_thresh == True:
                             event_length_list.append(event_length)
                             event_time_list.append(time_of_event)
+                            event_dist_trans.append(dist_returned)
                             event_length = 1
                         elif check_thresh == False:
                             event_length += 1
@@ -198,6 +203,8 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
         # artifact to the data, as we do not know when the translocation began
         # prior to recording.
         event_length_list.pop(0)
+        event_time_list.pop(0)
+        event_dist_trans.pop(0)
 
         file_length = analysisGUI.file_length
         num_beats = len(pace_maker.final_dist_beat_count)
@@ -209,20 +216,23 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
         # Store event times
         pace_maker.transloc_times = event_time_list
 
+        # Store translocation distance
+        pace_maker.transloc_dist = event_dist_trans
+
         # Store number of beats.
         pace_maker.number_beats = num_beats
 
         # Print event list to terminal.
-        # print(f"Event lengths:\n{event_length_list}")
-        # print(f"Event times:\n{event_time_list}")
-        # print("Normalized event lengths:\n" + str(norm_event_length))
+        print(f"Event lengths:\n{event_length_list}")
+        print(f"Event times:\n{event_time_list}")
+        print(f"Transloc distance:\n{event_dist_trans}")
         deinit()
     except IndexError:
         print("No events.")
         pace_maker.transloc_events = [None]
         pace_maker.transloc_times = [None]
         pace_maker.number_beats = None
-
+        pace_maker.transloc_dist = [None]
 
 def distance_calc(max_df: DataFrame, pacemaker_only_df: DataFrame, 
 pacemaker_elec: List, thresh: int, calc_mode=""):
@@ -288,6 +298,7 @@ pacemaker_elec: List, thresh: int, calc_mode=""):
                 temp_dists.append(dist)
         
         if any(dist > thresh for dist in temp_dists):
-            return True
+            ret_dist = max(np.round(temp_dists, decimals=3))
+            return True, ret_dist
         else:
-            return False
+            return False, None

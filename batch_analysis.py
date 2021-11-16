@@ -51,6 +51,9 @@ conduction_vel, beat_amp_int):
     # Store dataset event times
     batch_data.batch_times = []
 
+    # Store dataset translocation distances
+    batch_data.batch_dists = []
+
     # Store dataset beat count for datasets in batch
     batch_data.batch_beat_counts = []
 
@@ -59,6 +62,9 @@ conduction_vel, beat_amp_int):
 
     # Store dataset beat times, translocations as dictionary
     batch_data.beat_time_dict = {}
+
+    # Store dataset events, translocation distances as a dictionary
+    batch_data.trans_dist_dict = {}
 
     total_files = len(batch_df["file_name"].values)
 
@@ -138,6 +144,11 @@ conduction_vel, beat_amp_int):
         for time in temp_times:
             batch_data.batch_times.append(time)
 
+        # Populate list with translocation distances for each data set.
+        temp_dists = pace_maker.transloc_dist
+        for dist in temp_dists:
+            batch_data.batch_dists.append(dist)
+
         # Populate list with beat count of each data set.
         batch_data.batch_beat_counts.append(pace_maker.number_beats)
 
@@ -146,6 +157,7 @@ conduction_vel, beat_amp_int):
             dict_key = f"Key_{num+1}_{pace_maker.number_beats}"
             batch_data.beat_event_dict[dict_key] = temp_translocs
             batch_data.beat_time_dict[dict_key] = temp_times
+            batch_data.trans_dist_dict[dict_key] = temp_dists
         
     # Remove existent transloc_events attribute from pace_maker
     del pace_maker.transloc_events
@@ -158,10 +170,12 @@ conduction_vel, beat_amp_int):
     print("Translocations in batch:\n" + f"{batch_data.batch_translocs}")
     # Print list of beat counts.
     print("Beat counts in batch:\n" + f"{batch_data.batch_beat_counts}")
-    # Print event size (length) dictionary.
-    print("Event Size Dictionary:\n" + f"{batch_data.beat_event_dict}")
-    # Print event time (duration) dictionary.
-    print("Event Time Dictionary:\n" + f"{batch_data.beat_time_dict}")
+    # Print event length (beats) dictionary.
+    print("Event Time (beats) Dictionary:\n" + f"{batch_data.beat_event_dict}")
+    # Print event length (milliseconds) dictionary.
+    print("Event Time (ms) Dictionary:\n" + f"{batch_data.beat_time_dict}")
+    # Print translocation distance (micrometer) dictionary
+    print("Transloc. Dist (um) Dictionary:\n" + f"{batch_data.trans_dist_dict}")
     # Batch processing end.
     print("Batch processing complete.")
     # Reset batch_config flag to False to allow for single-file analysis
