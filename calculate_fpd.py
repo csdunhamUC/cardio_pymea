@@ -321,6 +321,14 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
         cm_beats.x_axis, 
         cm_beats.y_axis[curr_elec].values)
     
+    # Set axis units.
+    analysisGUI.fpdWindow.paramPlot1.axes.set(
+        xlabel="Time (ms)",
+        ylabel=r"Voltage ($\mu$V)")
+
+    # Increase DPI to 300.
+    # analysisGUI.fpdWindow.paramPlot1.fig.set_dpi(300)
+
     # Show legend.
     analysisGUI.fpdWindow.paramPlot1.axes.legend(loc='lower left')
 
