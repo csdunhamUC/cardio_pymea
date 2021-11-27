@@ -294,27 +294,27 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
     Twave_sans_nan = field_potential.T_wave_indices.loc[curr_elec].values[
         mask_Twave].astype("int64")
     
-    # Mark T-wave locations.
-    analysisGUI.fpdWindow.paramPlot1.axes.plot(
-        cm_beats.x_axis[Twave_sans_nan],
-        cm_beats.y_axis[curr_elec].values[Twave_sans_nan],
-        "Dm", 
-        label="T wave")
+    # # Mark T-wave locations.
+    # analysisGUI.fpdWindow.paramPlot1.axes.plot(
+    #     cm_beats.x_axis[Twave_sans_nan],
+    #     cm_beats.y_axis[curr_elec].values[Twave_sans_nan],
+    #     "Dm", 
+    #     label="T wave")
 
-    # Mark T-wave derivatives.
-    analysisGUI.fpdWindow.paramPlot1.axes.plot(
-        field_potential.x_m[elec_choice, :],
-        field_potential.y_m[elec_choice, :],
-        "om",
-        label="Derivative")
+    # # Mark T-wave derivatives.
+    # analysisGUI.fpdWindow.paramPlot1.axes.plot(
+    #     field_potential.x_m[elec_choice, :],
+    #     field_potential.y_m[elec_choice, :],
+    #     "om",
+    #     label="Derivative")
 
-    # Mark T-wave endpoint
-    analysisGUI.fpdWindow.paramPlot1.axes.plot(
-            field_potential.Tend.loc[curr_elec, all_beats[:-1]],
-        cm_beats.y_axis[curr_elec].values[
-            field_potential.Tend.loc[curr_elec, all_beats[:-1]]],
-        "Py",
-        label="T-wave End")
+    # # Mark T-wave endpoint
+    # analysisGUI.fpdWindow.paramPlot1.axes.plot(
+    #         field_potential.Tend.loc[curr_elec, all_beats[:-1]],
+    #     cm_beats.y_axis[curr_elec].values[
+    #         field_potential.Tend.loc[curr_elec, all_beats[:-1]]],
+    #     "Py",
+    #     label="T-wave End")
 
     # Original, full plot
     analysisGUI.fpdWindow.paramPlot1.axes.plot(
