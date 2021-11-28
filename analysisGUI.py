@@ -905,8 +905,9 @@ class AnalysisGUI(QMainWindow):
                 calculate_cv.graph_conduction_vel(self, heat_map, 
                 local_act_time, conduction_vel, input_param)])
         self.calcMenu.addAction("Calculate Field Potential &Duration",
-            lambda: [self.fieldPotDurWindow(cm_beats, field_potential, 
-                heat_map, input_param),
+            lambda: [
+                self.fieldPotDurWindow(cm_beats, local_act_time,
+                    field_potential, heat_map, input_param),
                 calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
                 local_act_time, heat_map, input_param)])
        
@@ -1149,18 +1150,20 @@ class AnalysisGUI(QMainWindow):
             calculate_cv.cv_quiver_plot(self, input_param, local_act_time, 
             conduction_vel)])
 
-    def fieldPotDurWindow(self, cm_beats, field_potential, heat_map, 
-    input_param):
+    def fieldPotDurWindow(self, cm_beats, local_act_time, field_potential, 
+    heat_map, input_param):
         self.fpdWindow = FPDWindow(self)
         self.fpdWindow.setWindowTitle("Field Potential Duration")
         self.fpdWindow.show()
         # Set slider value to maximum number of beats
         self.fpdWindow.paramSlider1a.setMaximum(
             int(cm_beats.beat_count_dist_mode[0]) - 1)
-        # self.fpdWindow.paramSlider1a.valueChanged.connect(lambda: [])
+        self.fpdWindow.paramSlider1a.valueChanged.connect(lambda: [
+            calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
+                field_potential, input_param)])
         self.fpdWindow.paramSlider1b.valueChanged.connect(lambda: [
-            calculate_fpd.graph_T_wave(self, cm_beats, field_potential, 
-            input_param)])
+            calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
+                field_potential, input_param)])
 
     def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):

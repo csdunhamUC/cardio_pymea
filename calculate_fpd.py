@@ -48,7 +48,8 @@ input_param):
     print(f"Tend df:\n{field_potential.Tend}")
 
     # Plot T-wave calculation results.
-    graph_T_wave(analysisGUI, cm_beats, field_potential, input_param)
+    graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
+        input_param)
     
 
 def preprocess_fpd(cm_beats, field_potential):
@@ -255,7 +256,8 @@ def calc_Xr_Yr(cm_beats, field_potential):
 # Function that graphs T-wave data on left-side plot (paramPlot1)
 # (Soon) designed to plot on a per-beat, per-electrode basis using two sliders.
 # Top slider: choose beat.  Bottom slider: choose electrode.
-def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
+def graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
+input_param):
     # Get beat, electrode from slider 1, slider 2
     beat_choice = analysisGUI.fpdWindow.paramSlider1a.value()
     elec_choice = analysisGUI.fpdWindow.paramSlider1b.value()
@@ -268,6 +270,8 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
     curr_elec = all_elecs[elec_choice]
     curr_beat = all_beats[beat_choice]
     
+    print(f"Beat: {curr_beat}")
+
     # Clear axis for new plot.
     analysisGUI.fpdWindow.paramPlot1.axes.cla()
     
@@ -321,10 +325,16 @@ def graph_T_wave(analysisGUI, cm_beats, field_potential, input_param):
         cm_beats.x_axis, 
         cm_beats.y_axis[curr_elec].values)
     
+    #
+    # print(local_act_time.param_dist_raw.loc[curr_elec, curr_beat])
+    x_low_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] - 500
+    x_high_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] + 500
+
     # Set axis units.
     analysisGUI.fpdWindow.paramPlot1.axes.set(
         xlabel="Time (ms)",
-        ylabel=r"Voltage ($\mu$V)")
+        ylabel=r"Voltage ($\mu$V)",
+        xlim=(x_low_lim, x_high_lim))
 
     # Increase DPI to 300.
     # analysisGUI.fpdWindow.paramPlot1.fig.set_dpi(300)
