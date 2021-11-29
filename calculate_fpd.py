@@ -269,15 +269,13 @@ input_param):
     # Use slider value as index for available beats, elecs to yield current one.
     curr_elec = all_elecs[elec_choice]
     curr_beat = all_beats[beat_choice]
-    
-    print(f"Beat: {curr_beat}")
 
     # Clear axis for new plot.
     analysisGUI.fpdWindow.paramPlot1.axes.cla()
     
     # Assign figure title.
     analysisGUI.fpdWindow.paramPlot1.fig.suptitle(
-        f"From FPD plot, full signal of {curr_elec}")
+        f"{curr_beat} of electrode {curr_elec}")
 
     # Generate mask for marking peak locations.
     mask_dist = ~np.isnan(
