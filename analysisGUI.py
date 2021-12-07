@@ -834,6 +834,7 @@ class AnalysisGUI(QMainWindow):
         self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
+        self.setUnifiedTitleAndToolBarOnMac(True)
 
         #######################################################################
         # Menu options.

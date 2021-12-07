@@ -327,6 +327,8 @@ input_param):
     # print(local_act_time.param_dist_raw.loc[curr_elec, curr_beat])
     x_low_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] - 500
     x_high_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] + 500
+    rwave_time = local_act_time.param_dist_normalized.loc[curr_elec, curr_beat]
+    print(f"R-wave Time (ms): {rwave_time}")
 
     # Set axis units.
     analysisGUI.fpdWindow.paramPlot1.axes.set(
@@ -334,9 +336,10 @@ input_param):
         ylabel=r"Voltage ($\mu$V)",
         xlim=(x_low_lim, x_high_lim))
 
-    # Increase DPI to 300.
+    # Change figure size, increase DPI to 300.
+    # analysisGUI.fpdWindow.paramPlot1.fig.set_size_inches(13, 2)
     # analysisGUI.fpdWindow.paramPlot1.fig.set_dpi(300)
-
+    
     # Show legend.
     analysisGUI.fpdWindow.paramPlot1.axes.legend(loc='lower left')
 
