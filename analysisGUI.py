@@ -953,6 +953,8 @@ class AnalysisGUI(QMainWindow):
                 electrode_config)])
         self.statMenu.addAction("&Power Law Distribution Comparison", 
             lambda: [self.powerlaw_window(), 
+                detect_transloc.pm_translocations(
+                self, pace_maker, electrode_config, beat_amp_int),
                 powerlaw_analysis.pl_histogram_plotting(self, 
                     pace_maker, batch_data), 
                 powerlaw_analysis.pl_truncated_histogram_plotting(self, 
