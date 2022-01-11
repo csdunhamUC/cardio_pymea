@@ -27,7 +27,7 @@ def pl_histogram_plotting(analysisGUI, pace_maker, batch_data):
             size_event = normalize_batch(batch_data.beat_event_dict)
             # size_event = batch_data.batch_translocs
             print("Using normalized batch translocations.")
-        
+
         sorted_size_event = sorted(size_event)
         
         #Model Distributions for Comparison
@@ -100,6 +100,11 @@ def pl_histogram_plotting(analysisGUI, pace_maker, batch_data):
         analysisGUI.plWindow.powerlawPlot.draw()
     except UnboundLocalError:
         print("No data.")
+    # except hasattr(pace_maker, "transloc_events"):
+    #     pace_maker.transloc_events = [None]
+    #     print("No translocations")
+    except TypeError:
+        print("Cannot Plot Histogram: No Translocations Detected")
 
 
 def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data): 
@@ -113,6 +118,9 @@ def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data):
             # size_event = batch_data.batch_translocs
             print("Using normalized batch translocations.")
 
+        #add if statement to assess how many things are in the size_event list
+            #if > value, do the code
+            #else print out insufficient data
         sorted_size_event = sorted(size_event)
         
         #Removing data below x_min
@@ -190,6 +198,8 @@ def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data):
         analysisGUI.plWindow.powerlawPlot.draw()
     except UnboundLocalError:
         print()
+    except TypeError:
+        print("Cannot Plot Truncated Histogram: No Translocations Detected")
 
 
 #R/p analysis
@@ -273,6 +283,8 @@ def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
 
     except UnboundLocalError:
         print()
+    except TypeError:
+        print("Cannot Calculate Statistics: No Translocations Detected")
 
 
 # Normalize batch, using dictionary form, by global median of beats in batch.
