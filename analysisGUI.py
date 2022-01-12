@@ -366,13 +366,13 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
         print("Saving processed data...")
 
         # For save file dialog box to enter custom name and file save location.
-        # saveFile = QFileDialog.getSaveFileName(analysisGUI, "Save File", 
-        #     analysisGUI.file_path, "Excel file (*.xlsx)")
-        # save_filepath, save_filename = os.path.split(saveFile[0])
+        saveFile = QFileDialog.getSaveFileName(analysisGUI, "Save File", 
+            analysisGUI.file_path, "Excel file (*.xlsx)")
+        file_path, file_name = os.path.split(saveFile[0])
         
-        file_name = analysisGUI.fileName.text()
-        file_name = file_name.replace(".txt", "")
-        file_path = "/home/csdunham/Documents/TempExcel"
+        # file_name = analysisGUI.fileName.text()
+        # file_name = file_name.replace(".txt", "")
+        # file_path = "/home/csdunham/Documents/TempExcel"
 
         with pd.ExcelWriter('{path}/{name}.xlsx'.format(
             path=file_path, name=file_name)) as writer:
@@ -428,6 +428,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
             (e.g. statistics)")
     except ValueError:
         print("Operation cancelled.")
+    except FileNotFoundError:
+        print("No such file or directory.")
 
 
 def print_something():
