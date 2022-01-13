@@ -32,10 +32,7 @@ import param_vs_distance_stats
 import psd_plotting
 import calculate_beat_amp_int
 import pca_plotting
-import detect_transloc
-import batch_analysis
-import powerlaw_analysis
-import calculate_fpd
+
 
 ################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and 
@@ -71,10 +68,6 @@ class CondVelData:
     pass
 
 
-class FieldPotDurationData:
-    pass
-
-
 class MEAHeatMaps:
     pass
 
@@ -88,10 +81,6 @@ class PSDData:
 
 
 class BeatAmpIntData:
-    pass
-
-
-class BatchData:
     pass
 
 
@@ -185,8 +174,7 @@ class CheckableComboBox(QComboBox):
 
         # Compute elided text (with "...")
         metrics = QFontMetrics(self.lineEdit().font())
-        elidedText = metrics.elidedText(text, Qt.ElideRight, 
-            self.lineEdit().width())
+        elidedText = metrics.elidedText(text, Qt.ElideRight, self.lineEdit().width())
         self.lineEdit().setText(elidedText)
 
     def addItem(self, text, data=None):
@@ -320,10 +308,16 @@ def data_import(analysisGUI, raw_data, electrode_config):
         if hasattr(raw_data, 'imported') is True:
             print("Raw data is not empty; clearing before reading file.")
             delattr(raw_data, 'imported')
+            delattr(raw_data, 'names')
 
         # print("Importing data...")
         print("Import data began at: ", 
             datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+
+        # Import electrodes for column headers from file.
+        raw_data.names = pd.read_csv(data_filename_and_path[0], sep="\s+\t", 
+            lineterminator='\n', skiprows=[0, 1, 3], header=None, nrows=1, 
+            encoding='iso-8859-15', skipinitialspace=True, engine='python')
 
         # Import data from file.
         raw_data.imported = pd.read_csv(data_filename_and_path[0], sep='\s+', 
@@ -356,8 +350,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
 
 # Save DataFrame in Excel Spreadsheet 
 # written by Madelynn E. Mackenize (MEM), undergrad, UCLA class of 2022
-# create different sheet for each calculated parameter: 
-# PM, LAT, dv/dt, CV, Amp, Int, Stats
+# create different sheet for each calculated parameter: PM, LAT, dv/dt, CV, Amp, Int, Stats
 # dataframe of PM data: pace_maker.param_dist_normalized
 # Modifications to original code by CSD.
 def export_excel(analysisGUI, pace_maker, local_act_time, upstroke_vel, 
@@ -366,13 +359,13 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
         print("Saving processed data...")
 
         # For save file dialog box to enter custom name and file save location.
-        saveFile = QFileDialog.getSaveFileName(analysisGUI, "Save File", 
-            analysisGUI.file_path, "Excel file (*.xlsx)")
-        file_path, file_name = os.path.split(saveFile[0])
+        # saveFile = QFileDialog.getSaveFileName(analysisGUI, "Save File", 
+        #     analysisGUI.file_path, "Excel file (*.xlsx)")
+        # save_filepath, save_filename = os.path.split(saveFile[0])
         
-        # file_name = analysisGUI.fileName.text()
-        # file_name = file_name.replace(".txt", "")
-        # file_path = "/home/csdunham/Documents/TempExcel"
+        file_name = analysisGUI.fileName.text()
+        file_name = file_name.replace(".txt", "")
+        file_path = "/home/csdunham/Documents/TempExcel"
 
         with pd.ExcelWriter('{path}/{name}.xlsx'.format(
             path=file_path, name=file_name)) as writer:
@@ -383,12 +376,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
                 sheet_name='Pacemaker (Raw)')
             pace_maker.param_dist_normalized_per_beat_max.to_excel(writer, 
                 sheet_name="Per Beat Max Time Lag")
-            pace_maker.transloc_events.to_excel(writer,
-                sheet_name="Translocation Events", index=False)
-            # pace_maker.param_width_normalized.to_excel(writer, 
-                # sheet_name='PM_Param_Width_Normalized')
-            # pace_maker.param_thresh_normalized.to_excel(writer, 
-                # sheet_name='PM_Param_Thresh_Normalized')
+            # pace_maker.param_width_normalized.to_excel(writer, sheet_name='PM_Param_Width_Normalized')
+            # pace_maker.param_thresh_normalized.to_excel(writer, sheet_name='PM_Param_Thresh_Normalized')
             local_act_time.param_dist_normalized.to_excel(writer, 
                 sheet_name='LAT Normalized')
             local_act_time.distance_from_min.to_excel(writer, 
@@ -428,9 +417,6 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
             (e.g. statistics)")
     except ValueError:
         print("Operation cancelled.")
-    except FileNotFoundError:
-        print("No such file or directory.")
-
 
 def print_something():
     print("Something.")
@@ -464,9 +450,6 @@ def reload_module():
     importlib.reload(calculate_pacemaker)
     importlib.reload(calculate_beat_amp_int)
     importlib.reload(pca_plotting)
-    importlib.reload(detect_transloc)
-    importlib.reload(calculate_fpd)
-    importlib.reload(powerlaw_analysis)
     print("Reloaded modules.")
 
 
@@ -497,6 +480,130 @@ class GenericPlotCanvas(FigureCanvasQTAgg):
         self.axis4 = self.fig.add_subplot(224)
         super(GenericPlotCanvas, self).__init__(self.fig)
 
+class FullArrayPlot(FigureCanvasQTAgg):
+    def __init__(self, parent=None, width=6, height=6, dpi=100):
+        self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
+        self.axis1 = self.fig.add_subplot(12, 12, 78)
+        self.axis2 = self.fig.add_subplot(12, 12, 90)
+        self.axis3 = self.fig.add_subplot(12, 12, 138)
+        self.axis4 = self.fig.add_subplot(12, 12, 126)
+        self.axis5 = self.fig.add_subplot(12, 12, 114)
+        self.axis6 = self.fig.add_subplot(12, 12, 102)
+        self.axis7 = self.fig.add_subplot(12, 12, 137)
+        self.axis8 = self.fig.add_subplot(12, 12, 125)
+        self.axis9 = self.fig.add_subplot(12, 12, 113)
+        self.axis10 = self.fig.add_subplot(12, 12, 101)
+        self.axis11 = self.fig.add_subplot(12, 12, 136)
+        self.axis12 = self.fig.add_subplot(12, 12, 124)
+        self.axis13 = self.fig.add_subplot(12, 12, 112)
+        self.axis14 = self.fig.add_subplot(12, 12, 100)
+        self.axis15 = self.fig.add_subplot(12, 12, 123)
+        self.axis16 = self.fig.add_subplot(12, 12, 111)
+        self.axis17 = self.fig.add_subplot(12, 12, 110)
+        self.axis18 = self.fig.add_subplot(12, 12, 89)
+        self.axis19 = self.fig.add_subplot(12, 12, 99)
+        self.axis20 = self.fig.add_subplot(12, 12, 98)
+        self.axis21 = self.fig.add_subplot(12, 12, 97)
+        self.axis22 = self.fig.add_subplot(12, 12, 88)
+        self.axis23 = self.fig.add_subplot(12, 12, 87)
+        self.axis24 = self.fig.add_subplot(12, 12, 86)
+        self.axis25 = self.fig.add_subplot(12, 12, 85)
+        self.axis26 = self.fig.add_subplot(12, 12, 76)
+        self.axis27 = self.fig.add_subplot(12, 12, 75)
+        self.axis28 = self.fig.add_subplot(12, 12, 74)
+        self.axis29 = self.fig.add_subplot(12, 12, 73)
+        self.axis30 = self.fig.add_subplot(12, 12, 77)
+        self.axis31 = self.fig.add_subplot(12, 12, 66)
+        self.axis32 = self.fig.add_subplot(12, 12, 65)
+        self.axis33 = self.fig.add_subplot(12, 12, 61)
+        self.axis34 = self.fig.add_subplot(12, 12, 62)
+        self.axis35 = self.fig.add_subplot(12, 12, 63)
+        self.axis36 = self.fig.add_subplot(12, 12, 64)
+        self.axis37 = self.fig.add_subplot(12, 12, 49)
+        self.axis38 = self.fig.add_subplot(12, 12, 50)
+        self.axis39 = self.fig.add_subplot(12, 12, 51)
+        self.axis40 = self.fig.add_subplot(12, 12, 52)
+        self.axis41 = self.fig.add_subplot(12, 12, 37)
+        self.axis42 = self.fig.add_subplot(12, 12, 38)
+        self.axis43 = self.fig.add_subplot(12, 12, 39)
+        self.axis44 = self.fig.add_subplot(12, 12, 40)
+        self.axis45 = self.fig.add_subplot(12, 12, 26)
+        self.axis46 = self.fig.add_subplot(12, 12, 27)
+        self.axis47 = self.fig.add_subplot(12, 12, 15)
+        self.axis48 = self.fig.add_subplot(12, 12, 53)
+        self.axis49 = self.fig.add_subplot(12, 12, 28)
+        self.axis50 = self.fig.add_subplot(12, 12, 16)
+        self.axis51 = self.fig.add_subplot(12, 12, 4)
+        self.axis52 = self.fig.add_subplot(12, 12, 41)
+        self.axis53 = self.fig.add_subplot(12, 12, 29)
+        self.axis54 = self.fig.add_subplot(12, 12, 17)
+        self.axis55 = self.fig.add_subplot(12, 12, 5)
+        self.axis56 = self.fig.add_subplot(12, 12, 42)
+        self.axis57 = self.fig.add_subplot(12, 12, 30)
+        self.axis58 = self.fig.add_subplot(12, 12, 18)
+        self.axis59 = self.fig.add_subplot(12, 12, 6)
+        self.axis60 = self.fig.add_subplot(12, 12, 54)
+        self.axis61 = self.fig.add_subplot(12, 12, 67)
+        self.axis62 = self.fig.add_subplot(12, 12, 55)
+        self.axis63 = self.fig.add_subplot(12, 12, 7)
+        self.axis64 = self.fig.add_subplot(12, 12, 19)
+        self.axis65 = self.fig.add_subplot(12, 12, 31)
+        self.axis66 = self.fig.add_subplot(12, 12, 43)
+        self.axis67 = self.fig.add_subplot(12, 12, 8)
+        self.axis68 = self.fig.add_subplot(12, 12, 20)
+        self.axis69 = self.fig.add_subplot(12, 12, 32)
+        self.axis70 = self.fig.add_subplot(12, 12, 44)
+        self.axis71 = self.fig.add_subplot(12, 12, 9)
+        self.axis72 = self.fig.add_subplot(12, 12, 21)
+        self.axis73 = self.fig.add_subplot(12, 12, 33)
+        self.axis74 = self.fig.add_subplot(12, 12, 45)
+        self.axis75 = self.fig.add_subplot(12, 12, 22)
+        self.axis76 = self.fig.add_subplot(12, 12, 34)
+        self.axis77 = self.fig.add_subplot(12, 12, 35)
+        self.axis78 = self.fig.add_subplot(12, 12, 56)
+        self.axis79 = self.fig.add_subplot(12, 12, 46)
+        self.axis80 = self.fig.add_subplot(12, 12, 47)
+        self.axis81 = self.fig.add_subplot(12, 12, 48)
+        self.axis82 = self.fig.add_subplot(12, 12, 57)
+        self.axis83 = self.fig.add_subplot(12, 12, 58)
+        self.axis84 = self.fig.add_subplot(12, 12, 59)
+        self.axis85 = self.fig.add_subplot(12, 12, 60)
+        self.axis86 = self.fig.add_subplot(12, 12, 69)
+        self.axis87 = self.fig.add_subplot(12, 12, 70)
+        self.axis88 = self.fig.add_subplot(12, 12, 71)
+        self.axis89 = self.fig.add_subplot(12, 12, 72)
+        self.axis90 = self.fig.add_subplot(12, 12, 68)
+        self.axis91 = self.fig.add_subplot(12, 12, 79)
+        self.axis92 = self.fig.add_subplot(12, 12, 80)
+        self.axis93 = self.fig.add_subplot(12, 12, 84)
+        self.axis94 = self.fig.add_subplot(12, 12, 83)
+        self.axis95 = self.fig.add_subplot(12, 12, 82)
+        self.axis96 = self.fig.add_subplot(12, 12, 81)
+        self.axis97 = self.fig.add_subplot(12, 12, 96)
+        self.axis98 = self.fig.add_subplot(12, 12, 95)
+        self.axis99 = self.fig.add_subplot(12, 12, 94)
+        self.axis100 = self.fig.add_subplot(12, 12, 93)
+        self.axis101 = self.fig.add_subplot(12, 12, 108)
+        self.axis102 = self.fig.add_subplot(12, 12, 107)
+        self.axis103 = self.fig.add_subplot(12, 12, 106)
+        self.axis104 = self.fig.add_subplot(12, 12, 105)
+        self.axis105 = self.fig.add_subplot(12, 12, 119)
+        self.axis106 = self.fig.add_subplot(12, 12, 118)
+        self.axis107 = self.fig.add_subplot(12, 12, 130)
+        self.axis108 = self.fig.add_subplot(12, 12, 92)
+        self.axis109 = self.fig.add_subplot(12, 12, 117)
+        self.axis110 = self.fig.add_subplot(12, 12, 129)
+        self.axis111 = self.fig.add_subplot(12, 12, 141)
+        self.axis112 = self.fig.add_subplot(12, 12, 104)
+        self.axis113 = self.fig.add_subplot(12, 12, 116)
+        self.axis114 = self.fig.add_subplot(12, 12, 128)
+        self.axis115 = self.fig.add_subplot(12, 12, 140)
+        self.axis116 = self.fig.add_subplot(12, 12, 103)
+        self.axis117 = self.fig.add_subplot(12, 12, 115)
+        self.axis118 = self.fig.add_subplot(12, 12, 127)
+        self.axis119 = self.fig.add_subplot(12, 12, 139)
+        self.axis120 = self.fig.add_subplot(12, 12, 91)
+        super(FullArrayPlot, self).__init__(self.fig)
 
 class PSDPlotCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=7, height=7, dpi=100):
@@ -504,14 +611,6 @@ class PSDPlotCanvas(FigureCanvasQTAgg):
         self.axis1 = self.fig.add_subplot(211)
         self.axis2 = self.fig.add_subplot(212)
         super(PSDPlotCanvas, self).__init__(self.fig)
-
-
-class PowerlawCanvas (FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=7, height=7, dpi=100):
-        self.fig=plt.Figure(figsize=(width, height), dpi=dpi)
-        self.axis1 = self.fig.add_subplot(1,2,1)
-        self.axis2 = self.fig.add_subplot(1,2,2)
-        super(PowerlawCanvas, self).__init__(self.fig)
 
 
 # Classes for the actual GUI windows
@@ -601,7 +700,8 @@ class BeatSignalPlotWindow(QWidget):
         self.highPassFreqEdit.hide()
         self.filterTypeEdit.activated.connect(self.check_filter)
 
-        self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+        #self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+        self.paramPlot = FullArrayPlot(self, width=8, height=7, dpi=100)
         self.paramSlider = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
 
@@ -761,107 +861,42 @@ class PlotBeatSelectWindows(QWidget):
         self.setLayout(mainLayout)
 
 
-class FPDWindow(QWidget):
-    def __init__(self, analysisGUI):
-        super(FPDWindow, self).__init__()
-        self.setupUI(analysisGUI)
-
-    def setupUI(self, analysisGUI):
-        layout = QGridLayout()
-        self.paramPlot1 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
-        self.paramPlot2 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
-        self.paramSlider1a = QSlider(Qt.Horizontal)
-        self.paramSlider1b = QSlider(Qt.Horizontal)
-        paramToolbar = NavigationToolbar2QT(self.paramPlot1, self)
-
-        layout.addWidget(self.paramPlot1, 0, 0)
-        layout.addWidget(self.paramPlot2, 0, 1)
-        layout.addWidget(self.paramSlider1a, 1, 0)
-        layout.addWidget(self.paramSlider1b, 2, 0)
-        layout.addWidget(paramToolbar, 3, 0)
-    
-        self.setLayout(layout)
-
-
-class PowerlawWindow(QWidget):
-    def __init__(self, analysisGUI):
-        super(PowerlawWindow, self).__init__()
-        self.setupUI(analysisGUI)
-    
-    def setupUI(self, analysisGUI):
-        mainLayout = QGridLayout()
-        plotLayout = QGridLayout()
-        rpvalueLayout = QGridLayout()
-
-        plotWidget = QWidget()
-        plotWidget.setLayout(plotLayout)
-        rpvalueWidget = QWidget()
-        rpvalueWidget.setFixedSize(760, 250)
-        rpvalueWidget.setLayout(rpvalueLayout)
-
-        self.powerlawPlot = PowerlawCanvas(self, width=11, height=6, dpi=120)
-        plToolbar = NavigationToolbar2QT(self.powerlawPlot, self)
-        plotLayout.addWidget(self.powerlawPlot, 0, 0)
-        plotLayout.addWidget(plToolbar, 1, 0)
-        
-        self.statsPrintout = QPlainTextEdit(
-            "powerlaw distribution_compare prinout (awaiting results)")
-        self.statsPrintout.setFixedWidth(750)
-        self.statsPrintout.setReadOnly(True)
-        rpvalueLayout.addWidget(self.statsPrintout, 1, 0)
-
-        mainLayout.addWidget(plotWidget, 0, 0)
-        mainLayout.addWidget(rpvalueWidget, 1, 0, 1, 1)
-        self.setLayout(mainLayout)
-
-
 # Primary GUI class.
 class AnalysisGUI(QMainWindow):
-    def __init__(self, raw_data, cm_beats, pace_maker, 
+    def __init__(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
-    cm_stats, electrode_config, psd_data, beat_amp_int, batch_data, 
-    field_potential, parent=None):
+    cm_stats, electrode_config, psd_data, beat_amp_int, parent=None):
         super().__init__(parent)
         # Function call to establish GUI widgets
-        self.setup_UI(raw_data, cm_beats, pace_maker, upstroke_vel, 
-            local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-            electrode_config, psd_data, beat_amp_int, batch_data,
-            field_potential)
+        self.setup_UI(x_var, y_var, raw_data, cm_beats, pace_maker, 
+            upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+            cm_stats, electrode_config, psd_data, beat_amp_int,)
         # Initial file path
         self.file_path = "/"
 
-    def setup_UI(self, raw_data, cm_beats, pace_maker, upstroke_vel, 
-    local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-    electrode_config, psd_data, beat_amp_int, batch_data, field_potential):
+    def setup_UI(self, x_var, y_var, raw_data, cm_beats, pace_maker, 
+    upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+    cm_stats, electrode_config, psd_data, beat_amp_int):
         self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
-        self.setUnifiedTitleAndToolBarOnMac(True)
 
-        #######################################################################
         # Menu options.
-        #######################################################################
         # File Menu
         self.fileMenu = self.menuBar().addMenu("&File")
         self.fileMenu.addAction("&Import", lambda: data_import(self, 
             raw_data, electrode_config))
-        self.fileMenu.addAction("&Batch", lambda: [
-            batch_analysis.import_batch_file(self, raw_data, batch_data, 
-                electrode_config, cm_beats, input_param, pace_maker, 
-                heat_map, local_act_time, upstroke_vel, conduction_vel,
-                beat_amp_int)])
         self.fileMenu.addAction("&Save Processed Data",
             lambda: export_excel(self, pace_maker, local_act_time, upstroke_vel, 
                 conduction_vel, beat_amp_int, cm_beats, cm_stats))
         self.fileMenu.addAction("&Print (debug)", print_something)
         self.fileMenu.addAction("&Exit", self.close)
-       
-
+        
         # Calculation Menu
         self.calcMenu = self.menuBar().addMenu("&Calculations")
         self.calcMenu.addAction("&Find Beats (Use First!)", 
             lambda: [self.determineBeatsWindow(raw_data, cm_beats, input_param, 
-                electrode_config, batch_data)])
+                electrode_config)])
         self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)",
             lambda: [calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
                 pace_maker, heat_map, input_param, electrode_config),
@@ -907,13 +942,6 @@ class AnalysisGUI(QMainWindow):
                 electrode_config),
                 calculate_cv.graph_conduction_vel(self, heat_map, 
                 local_act_time, conduction_vel, input_param)])
-        self.calcMenu.addAction("Calculate Field Potential &Duration",
-            lambda: [
-                self.fieldPotDurWindow(cm_beats, local_act_time,
-                    field_potential, heat_map, input_param),
-                calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
-                local_act_time, heat_map, input_param)])
-       
 
         # Plot Menu
         self.plotMenu = self.menuBar().addMenu("Special &Plots")
@@ -938,7 +966,7 @@ class AnalysisGUI(QMainWindow):
         self.plotMenu.addAction("&Estimated Pacemaker Origin",
             lambda: [self.pmOriginWindow(cm_beats, pace_maker, heat_map, 
                 input_param),
-                calculate_pacemaker.estimate_pm_origin(self, pace_maker, 
+                calculate_pacemaker.estmimate_pm_origin(self, pace_maker, 
                 input_param)])
 
         # Statistics Menu
@@ -948,28 +976,14 @@ class AnalysisGUI(QMainWindow):
                 upstroke_vel, local_act_time, conduction_vel, input_param, 
                 cm_stats)])
         self.statMenu.addAction("Principal Component &Analysis (PCA)",
-            lambda: [self.pcaPlotWindow(cm_beats, beat_amp_int, pace_maker, 
-                local_act_time, heat_map, input_param, electrode_config),
+            lambda: [self.pcaPlotWindow(cm_beats, beat_amp_int, pace_maker, local_act_time, 
+                heat_map, input_param, electrode_config),
                 pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, 
                 pace_maker, local_act_time, heat_map, input_param, 
                 electrode_config)])
-        self.statMenu.addAction("&Power Law Distribution Comparison", 
-            lambda: [self.powerlaw_window(), 
-                detect_transloc.pm_translocations(
-                self, pace_maker, electrode_config, beat_amp_int),
-                powerlaw_analysis.pl_histogram_plotting(self, 
-                    pace_maker, batch_data), 
-                powerlaw_analysis.pl_truncated_histogram_plotting(self, 
-                    pace_maker, batch_data), 
-                powerlaw_analysis.likelihood_and_significance(self, 
-                    pace_maker, batch_data)])
-
 
         # Tools Menu; To be filled later
         self.toolsMenu = self.menuBar().addMenu("&Tools")
-        self.toolsMenu.addAction("&Detect translocations", 
-            lambda: [detect_transloc.pm_translocations(
-                self, pace_maker, electrode_config, beat_amp_int)])
         # Advanced Tools Menu (ML, etc); To be filled later
         self.advToolsMenu = self.menuBar().addMenu("Advanced T&ools")
 
@@ -1060,6 +1074,7 @@ class AnalysisGUI(QMainWindow):
         self.mainHeatmap = MainHeatmapCanvas(self, width=10, height=8, dpi=100)
         # (row, column, rowspan, colspan)
         plotLayout.addWidget(self.mainHeatmap, 2, 0, 1, 2)
+        self.mainHeatmap.axis1.plot(x_var, y_var)
 
         self.mainSlider = QSlider(Qt.Horizontal)
         plotLayout.addWidget(self.mainSlider, 3, 0)
@@ -1076,7 +1091,7 @@ class AnalysisGUI(QMainWindow):
         self.mainWidget.setLayout(mainLayout)
     
     def determineBeatsWindow(self, raw_data, cm_beats, input_param, 
-    electrode_config, batch_data):
+    electrode_config):
         self.beatsWindow = BeatSignalPlotWindow()
         self.beatsWindow.setWindowTitle("Beat Finder Results")
         # self.beatsWindow.paramPlot.axis1.plot([1,2,3,4,5],[10,20,30,40,50])
@@ -1086,177 +1101,131 @@ class AnalysisGUI(QMainWindow):
             electrode_config)])
         self.beatsWindow.plotButton.clicked.connect(lambda: [
             determine_beats.determine_beats(self, raw_data, cm_beats, 
-            input_param, electrode_config, batch_data)])
+            input_param, electrode_config)])
 
     def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
-        try:
-            self.pmWindow = SoloHeatmapWindows(self)
-            self.pmWindow.setWindowTitle("Pacemaker Results")
-            self.pmWindow.show()
-            # Set slider value to maximum number of beats
-            self.pmWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.pmWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
-                input_param)])
-        except AttributeError:
-            print("")
-
+        self.pmWindow = SoloHeatmapWindows(self)
+        self.pmWindow.setWindowTitle("Pacemaker Results")
+        self.pmWindow.show()
+        # Set slider value to maximum number of beats
+        self.pmWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.pmWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
+            input_param)])
 
     def pmOriginWindow(self, cm_beats, pace_maker, heat_map, input_param):
-        try:
-            self.circFitWindow = SoloHeatmapWindows(self)
-            self.circFitWindow.setWindowTitle("Predicted PM Origin")
-            self.circFitWindow.show()
-            self.circFitWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.circFitWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_pacemaker.estimate_pm_origin(self, pace_maker, 
-                input_param)])
-        except AttributeError:
-            print("")
+        self.circFitWindow = SoloHeatmapWindows(self)
+        self.circFitWindow.setWindowTitle("Predicted PM Origin")
+        self.circFitWindow.show()
+        self.circFitWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.circFitWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_pacemaker.estmimate_pm_origin(self, pace_maker, 
+            input_param)])
 
     def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):
-        try:
-            self.dvdtWindow = SoloHeatmapWindows(self)
-            self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
-            self.dvdtWindow.show()
-            # Set slider value to maximum number of beats
-            self.dvdtWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.dvdtWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_upstroke_vel.graph_upstroke(self, heat_map, upstroke_vel, 
-                input_param)])
-        except (AttributeError):
-            print("")
+        self.dvdtWindow = SoloHeatmapWindows(self)
+        self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
+        self.dvdtWindow.show()
+        # Set slider value to maximum number of beats
+        self.dvdtWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.dvdtWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_upstroke_vel.graph_upstroke(self, heat_map, upstroke_vel, 
+            input_param)])
 
     def localActTimeWindow(self, cm_beats, local_act_time, heat_map, 
     input_param):
-        try:
-            self.latWindow = SoloHeatmapWindows(self)
-            self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
-            self.latWindow.show()
-            # Set slider value to maximum number of beats
-            self.latWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.latWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_lat.graph_local_act_time(self, heat_map, local_act_time, 
-                input_param)])
-        except (AttributeError):
-            print("")
+        self.latWindow = SoloHeatmapWindows(self)
+        self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
+        self.latWindow.show()
+        # Set slider value to maximum number of beats
+        self.latWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.latWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_lat.graph_local_act_time(self, heat_map, local_act_time, 
+            input_param)])
 
     def condVelocityWindow(self, cm_beats, local_act_time, conduction_vel, 
     heat_map, input_param):
-        try:
-            self.cvWindow = SoloHeatmapWindows(self)
-            self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
-            self.cvWindow.show()
-            # Set slider value to maximum number of beats
-            self.cvWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.cvWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
-                conduction_vel, input_param)])
-        except (AttributeError):
-            print("")
+        self.cvWindow = SoloHeatmapWindows(self)
+        self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
+        self.cvWindow.show()
+        # Set slider value to maximum number of beats
+        self.cvWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.cvWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
+            conduction_vel, input_param)])
 
     def condVelVectorWindow(self, cm_beats, local_act_time, conduction_vel, 
     input_param):
-        try:
-            self.cvVectWindow = SoloHeatmapWindows(self)
-            self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
-            self.cvVectWindow.show()
-            self.cvVectWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.cvVectWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_cv.cv_quiver_plot(self, input_param, local_act_time, 
-                conduction_vel)])
-        except AttributeError:
-            print("No data found.")
-
-    def fieldPotDurWindow(self, cm_beats, local_act_time, field_potential, 
-    heat_map, input_param):
-        try:
-            self.fpdWindow = FPDWindow(self)
-            self.fpdWindow.setWindowTitle("Field Potential Duration")
-            self.fpdWindow.show()
-            # Set slider value to maximum number of beats
-            self.fpdWindow.paramSlider1a.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.fpdWindow.paramSlider1a.valueChanged.connect(lambda: [
-                calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
-                    field_potential, input_param)])
-            self.fpdWindow.paramSlider1b.valueChanged.connect(lambda: [
-                calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
-                    field_potential, input_param)])
-        except (AttributeError):
-            print("")
+        self.cvVectWindow = SoloHeatmapWindows(self)
+        self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
+        self.cvVectWindow.show()
+        self.cvVectWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.cvVectWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_cv.cv_quiver_plot(self, input_param, local_act_time, 
+            conduction_vel)])
 
     def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):
-        try:
-            self.pvdWindow = ParamStatWindows()
-            self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
-            self.pvdWindow.show()
-            self.pvdWindow.sigmaButton.clicked.connect(lambda: [
-                param_vs_distance_stats.param_vs_distance_analysis(self, 
-                cm_beats, pace_maker, upstroke_vel, local_act_time, 
-                conduction_vel, input_param, cm_stats)])
-            self.pvdWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.pvdWindow.paramSlider.valueChanged.connect(lambda: [
-                param_vs_distance_stats.param_vs_distance_graphing(self, cm_beats, 
-                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
-                input_param, cm_stats)])
-        except AttributeError:
-            print("")
+        self.pvdWindow = ParamStatWindows()
+        self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
+        self.pvdWindow.show()
+        self.pvdWindow.sigmaButton.clicked.connect(lambda: [
+            param_vs_distance_stats.param_vs_distance_analysis(self, 
+            cm_beats, pace_maker, upstroke_vel, local_act_time, 
+            conduction_vel, input_param, cm_stats)])
+        self.pvdWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.pvdWindow.paramSlider.valueChanged.connect(lambda: [
+            param_vs_distance_stats.param_vs_distance_graphing(self, cm_beats, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, cm_stats)])
 
     def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
     psd_data):
-        try:
-            self.psdCheck = True
-            self.psdWindow = PlotBeatSelectWindows(self)
-            self.psdWindow.setWindowTitle("Power Spectra")
-            self.psdWindow.show()
-            self.psdWindow.plotButton.clicked.connect(lambda: [
-                psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
-                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
-                input_param, psd_data)])
-            self.psdWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.psdWindow.paramSlider.valueChanged.connect(lambda: [
-                psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
-                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
-                input_param, psd_data)])
-            self.psdCheck = False
-        except AttributeError:
-            print("")
+        self.psdCheck = True
+        self.psdWindow = PlotBeatSelectWindows(self)
+        self.psdWindow.setWindowTitle("Power Spectra")
+        self.psdWindow.show()
+        self.psdWindow.plotButton.clicked.connect(lambda: [
+            psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, psd_data)])
+        self.psdWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.psdWindow.paramSlider.valueChanged.connect(lambda: [
+            psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
+            pace_maker, upstroke_vel, local_act_time, conduction_vel, 
+            input_param, psd_data)])
+        self.psdCheck = False
 
     def beatAmpIntWindow(self, cm_beats, pace_maker, local_act_time,
     beat_amp_int, input_param, electrode_config):
-        try:
-            self.ampCheck = True
-            self.ampIntWindow = PlotBeatSelectWindows(self)
-            self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
-            self.ampIntWindow.show()
-            self.ampIntWindow.paramSlider.setMaximum(
-                int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_beat_amp_int.beat_amp_interval_graph(self, 
-                electrode_config, beat_amp_int, pace_maker, local_act_time, 
-                input_param)])
-            self.ampIntWindow.plotButton.clicked.connect(lambda: [
-                calculate_beat_amp_int.beat_amp_interval_graph(self, 
-                electrode_config, beat_amp_int, pace_maker, local_act_time, 
-                input_param)])
-            self.ampIntWindow.elecLabel.hide()
-            self.ampIntWindow.elecSelect.hide()
-            self.ampIntWindow.paramLabel.hide()
-            self.ampIntWindow.paramSelect.hide()
-            self.ampCheck = False
-        except AttributeError:
-            print("")
+        self.ampCheck = True
+        self.ampIntWindow = PlotBeatSelectWindows(self)
+        self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
+        self.ampIntWindow.show()
+        self.ampIntWindow.paramSlider.setMaximum(
+            int(cm_beats.beat_count_dist_mode[0]) - 1)
+        self.ampIntWindow.paramSlider.valueChanged.connect(lambda: [
+            calculate_beat_amp_int.beat_amp_interval_graph(self, 
+            electrode_config, beat_amp_int, pace_maker, local_act_time, 
+            input_param)])
+        self.ampIntWindow.plotButton.clicked.connect(lambda: [
+            calculate_beat_amp_int.beat_amp_interval_graph(self, 
+            electrode_config, beat_amp_int, pace_maker, local_act_time, 
+            input_param)])
+        self.ampIntWindow.elecLabel.hide()
+        self.ampIntWindow.elecSelect.hide()
+        self.ampIntWindow.paramLabel.hide()
+        self.ampIntWindow.paramSelect.hide()
+        self.ampCheck = False
 
     def pcaPlotWindow(self, cm_beats, beat_amp_int, pace_maker, local_act_time, 
     heat_map, input_param, electrode_config):
@@ -1270,12 +1239,6 @@ class AnalysisGUI(QMainWindow):
         self.pcaWindow.paramSlider.hide()
         self.pcaCheck = False
 
-    def powerlaw_window(self):
-        self.plWindow = PowerlawWindow(self)
-        self.plWindow.setWindowTitle(
-            "Powerlaw Distribution Comparison")
-        self.plWindow.show()
-
 
 def main():
     raw_data = ImportedData()
@@ -1284,22 +1247,22 @@ def main():
     upstroke_vel = UpstrokeVelData()
     local_act_time = LocalATData()
     conduction_vel = CondVelData()
-    field_potential = FieldPotDurationData()
     input_param = InputParameters()
     heat_map = MEAHeatMaps()
     cm_stats = StatisticsData()
     psd_data = PSDData()
     electrode_config = ElectrodeConfig(raw_data)
     beat_amp_int = BeatAmpIntData()
-    batch_data = BatchData()
-    batch_data.batch_config = False
-
+    
     app = QApplication([])
     app.setStyle("Fusion")
 
-    analysisGUI = AnalysisGUI(raw_data, cm_beats, pace_maker, upstroke_vel, 
-        local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
-        electrode_config, psd_data, beat_amp_int, batch_data, field_potential)
+    x_var = [0,1,2,3,4,8]
+    y_var = [10,20,30,40,50,60]
+
+    analysisGUI = AnalysisGUI(x_var, y_var, raw_data, cm_beats, pace_maker, 
+        upstroke_vel, local_act_time, conduction_vel, input_param, heat_map, 
+        cm_stats, electrode_config, psd_data, beat_amp_int)
     analysisGUI.show()
     sys.exit(app.exec_())
 

@@ -119,3 +119,7 @@ local_act_time, conduction_vel, input_param):
         analysisGUI.mainHeatmap.draw()
     except KeyError:
         print("Could not plot.  Confirm beat mode value is non-zero.")
+    except AttributeError:
+        print("")
+    except IndexError:
+        print("")

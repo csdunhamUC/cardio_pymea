@@ -323,7 +323,7 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
 # adapted (with modifications) for the purpose of the circle fitting.
 # (https://stackoverflow.com/questions/44647239/
 # how-to-fit-a-circle-to-a-set-of-points-with-a-constrained-radius)
-def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
+def estimate_pm_origin(analysisGUI, pace_maker, input_param):
     try:
         analysisGUI.circFitWindow.paramPlot.axes.cla()
         # pace_maker.param_dist_normalized
@@ -425,6 +425,8 @@ def estmimate_pm_origin(analysisGUI, pace_maker, input_param):
         print("Issue with chosen allseg.  Select a new band.")
     except IndexError:
         print("Early allseg entries are empty.")
+    except AttributeError:
+        print("No data.")
 
 
 # Calculate residuals for least_squares, with bounds on R

@@ -224,6 +224,8 @@ local_act_time, conduction_vel, input_param, cm_stats):
         local_act_time, conduction_vel, input_param, cm_stats)
     except(TypeError, AttributeError):
         print("Something went wrong.  Try again.")
+    except(ValueError):
+        print("Please input a numerical value.")
 
 
 def param_vs_distance_graphing(analysisGUI, cm_beats, pace_maker, upstroke_vel, 

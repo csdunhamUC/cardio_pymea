@@ -129,6 +129,8 @@ local_act_time, heat_map, input_param, electrode_config):
     except TypeError:
         print("Insufficient electrode count. Must have more than 6 electrodes.")
         return
+    except KeyError:
+        print("Insufficient Data.")
 
 
 # Function for fitting if using lmfit.

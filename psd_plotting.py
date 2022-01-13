@@ -16,47 +16,50 @@ import pandas as pd
 
 def psd_plotting(analysisGUI, cm_beats, electrode_config, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param, psd_data):
-    # Get slider value.
-    input_param.psd_plot_slider = analysisGUI.psdWindow.paramSlider.value()
-    # Set file name.
-    # analysisGUI.psd_file_name.set(analysisGUI.file_name_label.cget("text"))
-    
-    # Update entry boxes for PSD Plotting window.
-    if analysisGUI.psdWindow.startBeat.count() != len(
-    local_act_time.final_dist_beat_count):
-        analysisGUI.psdWindow.startBeat.clear()
-        analysisGUI.psdWindow.endBeat.clear()
-        analysisGUI.psdWindow.elecSelect.clear()
+    try:
+        # Get slider value.
+        input_param.psd_plot_slider = analysisGUI.psdWindow.paramSlider.value()
+        # Set file name.
+        # analysisGUI.psd_file_name.set(analysisGUI.file_name_label.cget("text"))
+        
+        # Update entry boxes for PSD Plotting window.
+        if analysisGUI.psdWindow.startBeat.count() != len(
+        local_act_time.final_dist_beat_count):
+            analysisGUI.psdWindow.startBeat.clear()
+            analysisGUI.psdWindow.endBeat.clear()
+            analysisGUI.psdWindow.elecSelect.clear()
 
-    if analysisGUI.psdWindow.startBeat.count() < 2:
-        analysisGUI.psdWindow.startBeat.addItems(
-            local_act_time.final_dist_beat_count)
-        analysisGUI.psdWindow.endBeat.addItems(
-            local_act_time.final_dist_beat_count)
-        analysisGUI.psdWindow.elecSelect.addItems(
-            electrode_config.electrode_names)
+        if analysisGUI.psdWindow.startBeat.count() < 2:
+            analysisGUI.psdWindow.startBeat.addItems(
+                local_act_time.final_dist_beat_count)
+            analysisGUI.psdWindow.endBeat.addItems(
+                local_act_time.final_dist_beat_count)
+            analysisGUI.psdWindow.elecSelect.addItems(
+                electrode_config.electrode_names)
 
-    start_beat = analysisGUI.psdWindow.startBeat.currentText()
-    end_beat = analysisGUI.psdWindow.endBeat.currentText()
-    elec_choice = analysisGUI.psdWindow.elecSelect.currentText()
+        start_beat = analysisGUI.psdWindow.startBeat.currentText()
+        end_beat = analysisGUI.psdWindow.endBeat.currentText()
+        elec_choice = analysisGUI.psdWindow.elecSelect.currentText()
 
-    param_choices = {"Orig. Signal": cm_beats.y_axis, 
-        "Cond. Vel.": conduction_vel.param_dist_raw,
-        "Up. Vel.": upstroke_vel.param_dist_normalized, 
-        "Pacemaker": pace_maker.param_dist_normalized, 
-        "Local AT": local_act_time.param_dist_normalized}
+        param_choices = {"Orig. Signal": cm_beats.y_axis, 
+            "Cond. Vel.": conduction_vel.param_dist_raw,
+            "Up. Vel.": upstroke_vel.param_dist_normalized, 
+            "Pacemaker": pace_maker.param_dist_normalized, 
+            "Local AT": local_act_time.param_dist_normalized}
 
-    if len(analysisGUI.psdWindow.paramPlot.axis1.lines) >= 12:
-        analysisGUI.psdWindow.paramPlot.axis1.cla()
-        analysisGUI.psdWindow.paramPlot.axis2.cla()
+        if len(analysisGUI.psdWindow.paramPlot.axis1.lines) >= 12:
+            analysisGUI.psdWindow.paramPlot.axis1.cla()
+            analysisGUI.psdWindow.paramPlot.axis2.cla()
 
-    plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-        local_act_time, conduction_vel, input_param, psd_data, start_beat, 
-        end_beat, elec_choice, param_choices, electrode_config)
-    
-    plot_psd_welch(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
-        local_act_time, conduction_vel, input_param, psd_data, start_beat, 
-        end_beat, elec_choice, param_choices, electrode_config)
+        plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
+            local_act_time, conduction_vel, input_param, psd_data, start_beat, 
+            end_beat, elec_choice, param_choices, electrode_config)
+        
+        plot_psd_welch(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
+            local_act_time, conduction_vel, input_param, psd_data, start_beat, 
+            end_beat, elec_choice, param_choices, electrode_config)
+    except AttributeError:
+        print("No data.")
 
 
 def plot_log_vs_log(analysisGUI, cm_beats, pace_maker, upstroke_vel, 

@@ -14,54 +14,57 @@ import pandas as pd
 
 def pca_data_prep(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
-    analysisGUI.pcaWindow.paramPlot.axes.cla()
+    try:
+        analysisGUI.pcaWindow.paramPlot.axes.cla()
 
-    # Maximum time lag with end beat removed, done so in order to match dimensions with
-    # beat interval and delta beat amplitude.
-    temp_time_lag = pace_maker.param_dist_normalized_per_beat_max.drop(
-        [pace_maker.final_dist_beat_count[-1]])
-    interval_trans = beat_amp_int.raw_beat_interval.T
-    amplitude_trans = beat_amp_int.raw_delta_beat_amp.T
+        # Maximum time lag with end beat removed, done so in order to match dimensions with
+        # beat interval and delta beat amplitude.
+        temp_time_lag = pace_maker.param_dist_normalized_per_beat_max.drop(
+            [pace_maker.final_dist_beat_count[-1]])
+        interval_trans = beat_amp_int.raw_beat_interval.T
+        amplitude_trans = beat_amp_int.raw_delta_beat_amp.T
 
-    interval_labels = ["Interval" for idx in interval_trans.index]
-    amp_labels = ["Amplitude" for idx in amplitude_trans.index]
-    sample_labels = ["Sample" for idx in amplitude_trans.index]
-    interval_trans["Label"] = interval_labels
-    amplitude_trans["Label"] = amp_labels
-    print(len(sample_labels))
+        interval_labels = ["Interval" for idx in interval_trans.index]
+        amp_labels = ["Amplitude" for idx in amplitude_trans.index]
+        sample_labels = ["Sample" for idx in amplitude_trans.index]
+        interval_trans["Label"] = interval_labels
+        amplitude_trans["Label"] = amp_labels
+        print(len(sample_labels))
 
-    pre_norm = np.array([beat_amp_int.beat_interval, 
-        beat_amp_int.delta_beat_amp]).T
+        pre_norm = np.array([beat_amp_int.beat_interval, 
+            beat_amp_int.delta_beat_amp]).T
 
-    pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 
-        'Delta Beat Amp'])
+        pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 
+            'Delta Beat Amp'])
 
-    pre_norm = np.array([beat_amp_int.beat_interval, beat_amp_int.delta_beat_amp]).T
+        pre_norm = np.array([beat_amp_int.beat_interval, beat_amp_int.delta_beat_amp]).T
 
-    pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 'Delta Beat Amp'])
+        pre_norm_df = pd.DataFrame(pre_norm, columns=['Beat Interval', 'Delta Beat Amp'])
 
-    norm_array = StandardScaler().fit_transform(pre_norm_df.values)
-    norm_df = pd.DataFrame(norm_array, columns=["Normalized Beat Interval", "Normalized Delta Beat Amp"])
-    print(np.mean(norm_df))
-    print(np.std(norm_df))
-    print(np.shape(norm_df))
+        norm_array = StandardScaler().fit_transform(pre_norm_df.values)
+        norm_df = pd.DataFrame(norm_array, columns=["Normalized Beat Interval", "Normalized Delta Beat Amp"])
+        print(np.mean(norm_df))
+        print(np.std(norm_df))
+        print(np.shape(norm_df))
 
-    pca_execute = PCA(n_components=2)
+        pca_execute = PCA(n_components=2)
 
-    pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_df), 
-        columns=["Principal Component 1", "Principal Component 2"])
+        pcaAmpInt = pd.DataFrame(pca_execute.fit_transform(norm_df), 
+            columns=["Principal Component 1", "Principal Component 2"])
 
-    print("Explained variation per principal component: {}".format(
-        pca_execute.explained_variance_ratio_))
+        print("Explained variation per principal component: {}".format(
+            pca_execute.explained_variance_ratio_))
 
-    analysisGUI.pcaWindow.paramPlot.axes.scatter(
-        pcaAmpInt.loc[:, "Principal Component 1"], 
-        pcaAmpInt.loc[:, "Principal Component 2"])
-    analysisGUI.pcaWindow.paramPlot.axes.set(
-        title="Principal Component Analysis of Beat Interval and ΔBeat Amp",
-        xlabel="Principal Component 1", ylabel="Principal Component 2")
-    
-    analysisGUI.pcaWindow.paramPlot.draw()
+        analysisGUI.pcaWindow.paramPlot.axes.scatter(
+            pcaAmpInt.loc[:, "Principal Component 1"], 
+            pcaAmpInt.loc[:, "Principal Component 2"])
+        analysisGUI.pcaWindow.paramPlot.axes.set(
+            title="Principal Component Analysis of Beat Interval and ΔBeat Amp",
+            xlabel="Principal Component 1", ylabel="Principal Component 2")
+        
+        analysisGUI.pcaWindow.paramPlot.draw()
+    except AttributeError:
+        print("No data.")
 
 
 def pca_plot(analysisGUI, cm_beats, beat_amp_int, pace_maker, 

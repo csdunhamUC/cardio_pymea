@@ -233,6 +233,8 @@ def pm_translocations(analysisGUI, pace_maker, electrode_config, beat_amp_int):
         pace_maker.transloc_times = [None]
         pace_maker.number_beats = None
         pace_maker.transloc_dist = [None]
+    except AttributeError:
+        print("No data.")
 
 def distance_calc(max_df: DataFrame, pacemaker_only_df: DataFrame, 
 pacemaker_elec: List, thresh: int, calc_mode=""):

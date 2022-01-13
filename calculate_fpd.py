@@ -25,116 +25,122 @@ from scipy.optimize import minimize
 
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
 input_param):
-    # Filter signals.
-    # preprocess_fpd()
+    try:
+        # Filter signals.
+        # preprocess_fpd()
 
-    # Find indices for T-wave peak locations.
-    field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
-        local_act_time, input_param)
+        # Find indices for T-wave peak locations.
+        field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
+            local_act_time, input_param)
 
-    # Adjust second slider (electrode slider) to maximum number of elecs.
-    analysisGUI.fpdWindow.paramSlider1b.setMaximum(
-        len(field_potential.T_wave_indices.index) - 1)
-    
-    # field_potential.T_wave_indices.to_excel("Twave_output3.xlsx")
+        # Adjust second slider (electrode slider) to maximum number of elecs.
+        analysisGUI.fpdWindow.paramSlider1b.setMaximum(
+            len(field_potential.T_wave_indices.index) - 1)
+        
+        # field_potential.T_wave_indices.to_excel("Twave_output3.xlsx")
 
-    # Calculate x_m, y_m
-    field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
-        field_potential)
-    # print(f"x_m: {field_potential.x_m}")
-    # print(f"y_m: {field_potential.y_m}")
+        # Calculate x_m, y_m
+        field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
+            field_potential)
+        # print(f"x_m: {field_potential.x_m}")
+        # print(f"y_m: {field_potential.y_m}")
 
-    field_potential.Tend = calc_Tend(cm_beats, field_potential)
-    print(f"Tend df:\n{field_potential.Tend}")
+        field_potential.Tend = calc_Tend(cm_beats, field_potential)
+        print(f"Tend df:\n{field_potential.Tend}")
 
-    # Plot T-wave calculation results.
-    graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
-        input_param)
+        # Plot T-wave calculation results.
+        graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
+            input_param)
+    except (AttributeError):
+        print("Please use Find Beats first.")
     
 
 def preprocess_fpd(cm_beats, field_potential):
     return 5
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
-    fpd_full_dict = {}
+    try:
+        fpd_full_dict = {}
 
-    for beat in local_act_time.param_dist_raw.columns[3:]:
-        # print(beat)
-        temp_dict = {}
-        for elec in local_act_time.param_dist_raw.index:
-            # print(elec)
-            temp_idx = local_act_time.param_dist_raw.loc[elec, beat]
-            # print(temp_idx)
-            if np.isnan(temp_idx) == True:
-                temp_idx = None
-            elif np.isnan(temp_idx) == False:
-                temp_idx = int(temp_idx) + 100
-                idx_end = temp_idx + 400
-                temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
-                temp_pos_T_wave = find_peaks(
-                    temp_volt_trace, 
-                    height=15,
-                    # width=4,
-                    # rel_height=0.5,
-                    prominence=1,
-                    distance=50)
-                temp_neg_T_wave = find_peaks(
-                    -1*temp_volt_trace,
-                    height=15,
-                    # width=4,
-                    # rel_height=0.5,
-                    prominence=1,
-                    distance=50)
+        for beat in local_act_time.param_dist_raw.columns[3:]:
+            # print(beat)
+            temp_dict = {}
+            for elec in local_act_time.param_dist_raw.index:
+                # print(elec)
+                temp_idx = local_act_time.param_dist_raw.loc[elec, beat]
+                # print(temp_idx)
+                if np.isnan(temp_idx) == True:
+                    temp_idx = None
+                elif np.isnan(temp_idx) == False:
+                    temp_idx = int(temp_idx) + 100
+                    idx_end = temp_idx + 400
+                    temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
+                    temp_pos_T_wave = find_peaks(
+                        temp_volt_trace, 
+                        height=15,
+                        # width=4,
+                        # rel_height=0.5,
+                        prominence=1,
+                        distance=50)
+                    temp_neg_T_wave = find_peaks(
+                        -1*temp_volt_trace,
+                        height=15,
+                        # width=4,
+                        # rel_height=0.5,
+                        prominence=1,
+                        distance=50)
 
-                check_pos = np.any(temp_pos_T_wave[0])
-                if check_pos == True:
-                    max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
-                    max_pos_T_idx = np.where(
-                        temp_volt_trace == max_pos_T_wave)[0]
-                    real_pos_T_idx = temp_volt_trace.index[
-                        max_pos_T_idx].values[0]
-                else:
-                    max_pos_T_wave = None
-
-                check_neg = np.any(temp_neg_T_wave[0])
-                if check_neg == True:
-                    max_neg_T_wave = max(temp_neg_T_wave[1]["peak_heights"])
-                    max_neg_T_idx = np.where(
-                        temp_volt_trace == -1*max_neg_T_wave)[0]
-                    real_neg_T_idx = temp_volt_trace.index[
-                        max_neg_T_idx].values[0]
-                else:
-                    max_neg_T_wave = None
-
-                # Check if positive and negative amplitudes detected
-                if check_pos and check_neg == True:
-                    # Check whether T-wave might be biphasic
-                    if (max_pos_T_wave - max_neg_T_wave) <= 10:
-                        if real_pos_T_idx > real_neg_T_idx:
-                            temp_dict[elec] = real_pos_T_idx
-                        elif real_pos_T_idx < real_neg_T_idx:
-                            temp_dict[elec] = real_neg_T_idx
-                    # If not biphasic (assuming roughly equal Twave+, Twave-
-                    # peak amplitudes), choose most reasonable index.
+                    check_pos = np.any(temp_pos_T_wave[0])
+                    if check_pos == True:
+                        max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
+                        max_pos_T_idx = np.where(
+                            temp_volt_trace == max_pos_T_wave)[0]
+                        real_pos_T_idx = temp_volt_trace.index[
+                            max_pos_T_idx].values[0]
                     else:
-                        if max_pos_T_wave > max_neg_T_wave:
-                            temp_dict[elec] = real_pos_T_idx
-                        elif max_pos_T_wave < max_neg_T_wave:
-                            temp_dict[elec] = real_neg_T_idx
-                # If not, proceed with whichever detection range worked.
-                elif check_pos == True and check_neg == False:
-                    temp_dict[elec] = real_pos_T_idx
-                elif check_neg == True and check_pos == False:
-                    temp_dict[elec] = real_neg_T_idx
+                        max_pos_T_wave = None
 
-        # Discriminate against empty keys before adding to fictionary.
-        if any(temp_dict.keys()) == False:
-            continue
-        else:
-            fpd_full_dict[beat] = temp_dict
+                    check_neg = np.any(temp_neg_T_wave[0])
+                    if check_neg == True:
+                        max_neg_T_wave = max(temp_neg_T_wave[1]["peak_heights"])
+                        max_neg_T_idx = np.where(
+                            temp_volt_trace == -1*max_neg_T_wave)[0]
+                        real_neg_T_idx = temp_volt_trace.index[
+                            max_neg_T_idx].values[0]
+                    else:
+                        max_neg_T_wave = None
+
+                    # Check if positive and negative amplitudes detected
+                    if check_pos and check_neg == True:
+                        # Check whether T-wave might be biphasic
+                        if (max_pos_T_wave - max_neg_T_wave) <= 10:
+                            if real_pos_T_idx > real_neg_T_idx:
+                                temp_dict[elec] = real_pos_T_idx
+                            elif real_pos_T_idx < real_neg_T_idx:
+                                temp_dict[elec] = real_neg_T_idx
+                        # If not biphasic (assuming roughly equal Twave+, Twave-
+                        # peak amplitudes), choose most reasonable index.
+                        else:
+                            if max_pos_T_wave > max_neg_T_wave:
+                                temp_dict[elec] = real_pos_T_idx
+                            elif max_pos_T_wave < max_neg_T_wave:
+                                temp_dict[elec] = real_neg_T_idx
+                    # If not, proceed with whichever detection range worked.
+                    elif check_pos == True and check_neg == False:
+                        temp_dict[elec] = real_pos_T_idx
+                    elif check_neg == True and check_pos == False:
+                        temp_dict[elec] = real_neg_T_idx
+
+            # Discriminate against empty keys before adding to fictionary.
+            if any(temp_dict.keys()) == False:
+                continue
+            else:
+                fpd_full_dict[beat] = temp_dict
     
-    # Return dataframe.
-    return pd.DataFrame(fpd_full_dict)
+        # Return dataframe.
+        return pd.DataFrame(fpd_full_dict)
+    except (AttributeError):
+        print("")
 
 
 def calc_Tend(cm_beats, field_potential):
