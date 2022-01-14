@@ -15,7 +15,7 @@ import pandas as pd
 def pca_data_prep(analysisGUI, cm_beats, beat_amp_int, pace_maker, 
 local_act_time, heat_map, input_param, electrode_config):
     try:
-        analysisGUI.pcaWindow.paramPlot.axes.cla()
+        analysisGUI.pcaWindow.paramPlot.axis1.cla()
 
         # Maximum time lag with end beat removed, done so in order to match dimensions with
         # beat interval and delta beat amplitude.
@@ -55,10 +55,10 @@ local_act_time, heat_map, input_param, electrode_config):
         print("Explained variation per principal component: {}".format(
             pca_execute.explained_variance_ratio_))
 
-        analysisGUI.pcaWindow.paramPlot.axes.scatter(
+        analysisGUI.pcaWindow.paramPlot.axis1.scatter(
             pcaAmpInt.loc[:, "Principal Component 1"], 
             pcaAmpInt.loc[:, "Principal Component 2"])
-        analysisGUI.pcaWindow.paramPlot.axes.set(
+        analysisGUI.pcaWindow.paramPlot.axis1.set(
             title="Principal Component Analysis of Beat Interval and ΔBeat Amp",
             xlabel="Principal Component 1", ylabel="Principal Component 2")
         
@@ -109,9 +109,9 @@ local_act_time, heat_map, input_param, electrode_config):
 #     colors = ["b", "r"]
 #     for target, color in zip(targets, colors):
 #         indices_to_keep = test_frame["Label"] == target
-#         analysisGUI.pcaWindow.paramPlot.axes.scatter(
+#         analysisGUI.pcaWindow.paramPlot.axis1.scatter(
 #             pcaAmpInt.loc[indices_to_keep, "Principal Component 1"], 
 #             pcaAmpInt.loc[indices_to_keep, "Principal Component 2"],
 #             c = color)
 
-#     analysisGUI.pcaWindow.paramPlot.axes.legend(targets)
+#     analysisGUI.pcaWindow.paramPlot.axis1.legend(targets)

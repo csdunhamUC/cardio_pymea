@@ -288,7 +288,7 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
             heat_map.pm_solo_cbar.remove()
             delattr(heat_map, 'pm_solo_cbar')
 
-        analysisGUI.pmWindow.paramPlot.axes.cla()
+        analysisGUI.pmWindow.paramPlot.axis1.cla()
         input_param.pm_solo_beat_choice = analysisGUI.pmWindow.paramSlider.value()
 
         electrode_names = pace_maker.param_dist_normalized.pivot(index='Y', 
@@ -299,15 +299,15 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
 
         pm_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet", 
             annot=electrode_names, fmt="", 
-            ax=analysisGUI.pmWindow.paramPlot.axes, vmin=0, 
+            ax=analysisGUI.pmWindow.paramPlot.axis1, vmin=0, 
             vmax=pace_maker.param_dist_normalized_max, cbar=False)
         mappable = pm_solo_temp.get_children()[0]
         heat_map.pm_solo_cbar = (
-            analysisGUI.pmWindow.paramPlot.axes.figure.colorbar(mappable, 
-            ax=analysisGUI.pmWindow.paramPlot.axes))
+            analysisGUI.pmWindow.paramPlot.axis1.figure.colorbar(mappable, 
+            ax=analysisGUI.pmWindow.paramPlot.axis1))
         heat_map.pm_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        analysisGUI.pmWindow.paramPlot.axes.set(title="Pacemaker, Beat " + 
+        analysisGUI.pmWindow.paramPlot.axis1.set(title="Pacemaker, Beat " + 
             str(input_param.pm_solo_beat_choice+1), xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
         analysisGUI.pmWindow.paramPlot.fig.tight_layout()
@@ -325,7 +325,7 @@ def graph_pacemaker(analysisGUI, heat_map, pace_maker, input_param):
 # how-to-fit-a-circle-to-a-set-of-points-with-a-constrained-radius)
 def estimate_pm_origin(analysisGUI, pace_maker, input_param):
     try:
-        analysisGUI.circFitWindow.paramPlot.axes.cla()
+        analysisGUI.circFitWindow.paramPlot.axis1.cla()
         # pace_maker.param_dist_normalized
         curr_beat = pace_maker.final_dist_beat_count[
             analysisGUI.circFitWindow.paramSlider.value()]
@@ -408,15 +408,15 @@ def estimate_pm_origin(analysisGUI, pace_maker, input_param):
         pm_estimate=np.array(
             [gen_circle(phi,*circle_fit_pts) for phi in phi_vals])
 
-        analysisGUI.circFitWindow.paramPlot.axes.plot(pm_estimate[:,0], 
+        analysisGUI.circFitWindow.paramPlot.axis1.plot(pm_estimate[:,0], 
             pm_estimate[:,1])
-        analysisGUI.circFitWindow.paramPlot.axes.contourf(contX, contY, contPM, 
+        analysisGUI.circFitWindow.paramPlot.axis1.contourf(contX, contY, contPM, 
             cmap='jet')
-        analysisGUI.circFitWindow.paramPlot.axes.scatter(x_test, y_test)
-        analysisGUI.circFitWindow.paramPlot.axes.scatter(circle_fit_pts[0], 
+        analysisGUI.circFitWindow.paramPlot.axis1.scatter(x_test, y_test)
+        analysisGUI.circFitWindow.paramPlot.axis1.scatter(circle_fit_pts[0], 
             circle_fit_pts[1], c="orange")
-        analysisGUI.circFitWindow.paramPlot.axes.invert_yaxis()
-        analysisGUI.circFitWindow.paramPlot.axes.set(
+        analysisGUI.circFitWindow.paramPlot.axis1.invert_yaxis()
+        analysisGUI.circFitWindow.paramPlot.axis1.set(
             title="Estimated Origin of Pacemaker During " + curr_beat, 
             xlabel="Coordinates (μm)", ylabel="Coordinates (μm)")
         analysisGUI.circFitWindow.paramPlot.draw()

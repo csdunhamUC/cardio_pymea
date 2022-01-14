@@ -485,7 +485,7 @@ class MainHeatmapCanvas(FigureCanvasQTAgg):
 class MinorHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
-        self.axes = self.fig.add_subplot(111)
+        self.axis1 = self.fig.add_subplot(111)
         super(MinorHeatmapCanvas, self).__init__(self.fig)
 
 
@@ -585,6 +585,7 @@ class BeatSignalPlotWindow(QWidget):
         self.highPassFreqEdit.setText("0.5")
         self.highPassFreqEdit.setFixedWidth(70)
 
+        # Set widget layouts
         paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
         paramLayout.addWidget(self.filterType, 0, 1)
         paramLayout.addWidget(self.filterTypeEdit, 1, 1)
@@ -601,14 +602,26 @@ class BeatSignalPlotWindow(QWidget):
         self.highPassFreqLabel.hide()
         self.highPassFreqEdit.hide()
         self.filterTypeEdit.activated.connect(self.check_filter)
+ 
+        # From FPDWindow
+        self.paramPlot1 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
+        self.paramPlot2 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
+        self.paramSlider1a = QSlider(Qt.Horizontal)
+        self.paramSlider1b = QSlider(Qt.Horizontal)
+        paramToolbar = NavigationToolbar2QT(self.paramPlot1, self)
 
-        self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
-        self.paramSlider = QSlider(Qt.Horizontal)
-        paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
-
-        plotLayout.addWidget(self.paramPlot, 0, 0)
-        plotLayout.addWidget(self.paramSlider, 1, 0)
-        plotLayout.addWidget(paramToolbar, 2, 0)
+        plotLayout.addWidget(self.paramPlot1, 0, 0)
+        plotLayout.addWidget(self.paramPlot2, 0, 1)
+        plotLayout.addWidget(self.paramSlider1a, 1, 0)
+        plotLayout.addWidget(self.paramSlider1b, 2, 0)
+        plotLayout.addWidget(paramToolbar, 3, 0)
+    
+        # self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
+        # self.paramSlider = QSlider(Qt.Horizontal)
+        # paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
+        # plotLayout.addWidget(self.paramPlot, 0, 0)
+        # plotLayout.addWidget(self.paramSlider, 1, 0)
+        # plotLayout.addWidget(paramToolbar, 2, 0)
 
         mainLayout.addWidget(paramWidget, 0, 0)
         mainLayout.addWidget(plotWidget, 1, 0)
@@ -1080,14 +1093,19 @@ class AnalysisGUI(QMainWindow):
     electrode_config, batch_data):
         self.beatsWindow = BeatSignalPlotWindow()
         self.beatsWindow.setWindowTitle("Find Beats Results")
-        # self.beatsWindow.paramPlot.axis1.plot([1,2,3,4,5],[10,20,30,40,50])
         self.beatsWindow.show()
-        self.beatsWindow.paramSlider.valueChanged.connect(lambda: [
+        # Change beat slider signal connection
+        self.beatsWindow.paramSlider1a.valueChanged.connect(lambda: [
             determine_beats.graph_beats(self, cm_beats, input_param, 
             electrode_config)])
+        # Change electrode slider signal connection (to come)
+        self.beatsWindow.paramSlider1b.valueChanged.connect(lambda: [
+            determine_beats.graph_beats(self, cm_beats, input_param,
+                electrode_config)])
+        # Plot button signal connection
         self.beatsWindow.plotButton.clicked.connect(lambda: [
             determine_beats.determine_beats(self, raw_data, cm_beats, 
-            input_param, electrode_config, batch_data)])
+                input_param, electrode_config, batch_data)])
 
     def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
         try:

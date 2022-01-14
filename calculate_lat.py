@@ -231,7 +231,7 @@ def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
             heat_map.lat_solo_cbar.remove()
             delattr(heat_map, 'lat_solo_cbar')
         
-        analysisGUI.latWindow.paramPlot.axes.cla()
+        analysisGUI.latWindow.paramPlot.axis1.cla()
         input_param.lat_solo_beat_choice = analysisGUI.latWindow.paramSlider.value()
 
         electrode_names_3 = local_act_time.param_dist_normalized.pivot(
@@ -243,15 +243,15 @@ def graph_local_act_time(analysisGUI, heat_map, local_act_time, input_param):
 
         lat_solo_temp = sns.heatmap(heatmap_pivot_table_3, cmap="jet", 
             annot=electrode_names_3, fmt="", 
-            ax=analysisGUI.latWindow.paramPlot.axes, 
+            ax=analysisGUI.latWindow.paramPlot.axis1, 
             vmax=local_act_time.param_dist_normalized_max, cbar=False)
         mappable_3 = lat_solo_temp.get_children()[0]
-        heat_map.lat_solo_cbar = analysisGUI.latWindow.paramPlot.axes.figure.colorbar(
+        heat_map.lat_solo_cbar = analysisGUI.latWindow.paramPlot.axis1.figure.colorbar(
             mappable_3, 
-            ax=analysisGUI.latWindow.paramPlot.axes)
+            ax=analysisGUI.latWindow.paramPlot.axis1)
         heat_map.lat_solo_cbar.ax.set_title("Time Lag (ms)", fontsize=10)
 
-        analysisGUI.latWindow.paramPlot.axes.set(
+        analysisGUI.latWindow.paramPlot.axis1.set(
             title="Local Activation Time, Beat " + 
             str(input_param.lat_solo_beat_choice+1), 
             xlabel="X coordinate (μm)", 

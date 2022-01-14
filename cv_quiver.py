@@ -15,7 +15,7 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         input_param.cv_vector_beat_choice = analysisGUI.cvVectWindow.paramSlider.value()
         
         # X and Y electrode coordinates
-        analysisGUI.cvVectWindow.paramPlot.axes.cla()
+        analysisGUI.cvVectWindow.paramPlot.axis1.cla()
 
         curr_beat = local_act_time.final_dist_beat_count[
             input_param.cv_vector_beat_choice]
@@ -51,26 +51,26 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
         # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
-        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_mag,
+        analysisGUI.cvVectWindow.paramPlot.axis1.contour(contX, contY, contZ_mag,
             cmap='jet')
-        contf = analysisGUI.cvVectWindow.paramPlot.axes.contourf(contX, contY, 
+        contf = analysisGUI.cvVectWindow.paramPlot.axis1.contourf(contX, contY, 
             contZ_mag, cmap='jet')
         # Plot streamplot.
-        analysisGUI.cvVectWindow.paramPlot.axes.streamplot(contX, contY, contU, 
+        analysisGUI.cvVectWindow.paramPlot.axis1.streamplot(contX, contY, contU, 
             contV)
         # Plot quiver plot.
-        analysisGUI.cvVectWindow.paramPlot.axes.quiver(contX, contY, contU, 
+        analysisGUI.cvVectWindow.paramPlot.axis1.quiver(contX, contY, contU, 
             contV, angles='xy')
-        analysisGUI.cvVectWindow.paramPlot.axes.set(xlabel="X coordinate (μm)", 
+        analysisGUI.cvVectWindow.paramPlot.axis1.set(xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)", title="Quiver, Stream, Contour of CV. " + 
                 str(curr_beat))
 
         # Add colorbar.
-        cbar = plt.colorbar(contf, ax=analysisGUI.cvVectWindow.paramPlot.axes)
+        cbar = plt.colorbar(contf, ax=analysisGUI.cvVectWindow.paramPlot.axis1)
         cbar.ax.set_ylabel('Conduction Velocity (μm/(ms))')
 
         # Invert y-axis
-        analysisGUI.cvVectWindow.paramPlot.axes.invert_yaxis()
+        analysisGUI.cvVectWindow.paramPlot.axis1.invert_yaxis()
 
         # Draw plot.
         analysisGUI.cvVectWindow.paramPlot.fig.tight_layout()

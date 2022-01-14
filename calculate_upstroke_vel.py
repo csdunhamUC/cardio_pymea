@@ -166,24 +166,31 @@ def graph_upstroke(analysisGUI, heat_map, upstroke_vel, input_param):
             heat_map.dvdt_solo_cbar.remove()
             delattr(heat_map, 'dvdt_solo_cbar')
 
-        analysisGUI.dvdtWindow.paramPlot.axes.cla()
+        analysisGUI.dvdtWindow.paramPlot.axis1.cla()
         input_param.dvdt_solo_beat_choice = analysisGUI.dvdtWindow.paramSlider.value()
 
         electrode_names_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
             columns='X', values='Electrode')
-        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(index='Y', 
-            columns='X', values=upstroke_vel.final_dist_beat_count[input_param.dvdt_solo_beat_choice])
+        heatmap_pivot_table_2 = upstroke_vel.param_dist_normalized.pivot(
+            index='Y', 
+            columns='X', 
+            values=upstroke_vel.final_dist_beat_count[
+                input_param.dvdt_solo_beat_choice])
 
         dvdt_solo_temp = sns.heatmap(heatmap_pivot_table_2, cmap="jet", 
-            annot=electrode_names_2, fmt="", ax=analysisGUI.dvdtWindow.paramPlot.axes, 
+            annot=electrode_names_2, fmt="", 
+            ax=analysisGUI.dvdtWindow.paramPlot.axis1, 
             vmax=upstroke_vel.param_dist_normalized_max, cbar=False)
         mappable_2 = dvdt_solo_temp.get_children()[0]
-        heat_map.dvdt_solo_cbar = analysisGUI.dvdtWindow.paramPlot.axes.figure.colorbar(mappable_2, 
-            ax=analysisGUI.dvdtWindow.paramPlot.axes)
+        heat_map.dvdt_solo_cbar = analysisGUI.dvdtWindow.paramPlot.axis1.figure.colorbar(
+            mappable_2, 
+            ax=analysisGUI.dvdtWindow.paramPlot.axis1)
         heat_map.dvdt_solo_cbar.ax.set_title("μV/ms", fontsize=10)
 
-        analysisGUI.dvdtWindow.paramPlot.axes.set(title="Upstroke Velocity, Beat " + 
-            str(input_param.dvdt_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+        analysisGUI.dvdtWindow.paramPlot.axis1.set(
+            title="Upstroke Velocity, Beat " + 
+            str(input_param.dvdt_solo_beat_choice+1), 
+            xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
         analysisGUI.dvdtWindow.paramPlot.fig.tight_layout()
         analysisGUI.dvdtWindow.paramPlot.draw()

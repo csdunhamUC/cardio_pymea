@@ -37,8 +37,12 @@ local_act_time, heat_map, input_param, electrode_config):
             'Beat 1'].isna())[0]
         # Remove electrodes with NaN values for fitting modules (which cannot 
         # handle NaN values)
-        x_elec = np.delete(electrode_config.electrode_coords_x, nan_electrodes_idx)
-        y_elec = np.delete(electrode_config.electrode_coords_y, nan_electrodes_idx)
+        x_elec = np.delete(
+            electrode_config.electrode_coords_x, 
+            nan_electrodes_idx)
+        y_elec = np.delete(
+            electrode_config.electrode_coords_y, 
+            nan_electrodes_idx)
         # Generate 2xN, where N = number of non-NaN electrodes, of elec. coords.
         elec_nan_removed = np.array([x_elec, y_elec])
 
@@ -46,7 +50,8 @@ local_act_time, heat_map, input_param, electrode_config):
         # print(elec_nan_removed[1])
         
         # Generate new list with the electrode names with NaN values removed.
-        elec_to_remove = [electrode_config.electrode_names[i] for i in nan_electrodes_idx]
+        elec_to_remove = [
+            electrode_config.electrode_names[i] for i in nan_electrodes_idx]
         elec_removed_names = [
             i for i in electrode_config.electrode_names if i not in elec_to_remove]
         
@@ -96,15 +101,42 @@ local_act_time, heat_map, input_param, electrode_config):
         conduction_vel.vector_mag = conduction_vel.vector_mag.T
         conduction_vel.vector_x_comp = conduction_vel.vector_x_comp.T
         conduction_vel.vector_y_comp = conduction_vel.vector_y_comp.T
-        conduction_vel.vector_mag.insert(0, 'Electrode', electrode_config.electrode_names)
-        conduction_vel.vector_mag.insert(1, 'X', electrode_config.electrode_coords_x)
-        conduction_vel.vector_mag.insert(2, 'Y', electrode_config.electrode_coords_y)
-        conduction_vel.vector_x_comp.insert(0, 'Electrode', electrode_config.electrode_names)
-        conduction_vel.vector_x_comp.insert(1, 'X', electrode_config.electrode_coords_x)
-        conduction_vel.vector_x_comp.insert(2, 'Y', electrode_config.electrode_coords_y)
-        conduction_vel.vector_y_comp.insert(0, 'Electrode', electrode_config.electrode_names)
-        conduction_vel.vector_y_comp.insert(1, 'X', electrode_config.electrode_coords_x)
-        conduction_vel.vector_y_comp.insert(2, 'Y', electrode_config.electrode_coords_y)
+        conduction_vel.vector_mag.insert(
+            0, 
+            'Electrode', 
+            electrode_config.electrode_names)
+        conduction_vel.vector_mag.insert(
+            1, 
+            'X', 
+            electrode_config.electrode_coords_x)
+        conduction_vel.vector_mag.insert(
+            2, 
+            'Y', 
+            electrode_config.electrode_coords_y)
+        conduction_vel.vector_x_comp.insert(
+            0, 
+            'Electrode', 
+            electrode_config.electrode_names)
+        conduction_vel.vector_x_comp.insert(
+            1, 
+            'X', 
+            electrode_config.electrode_coords_x)
+        conduction_vel.vector_x_comp.insert(
+            2, 
+            'Y', 
+            electrode_config.electrode_coords_y)
+        conduction_vel.vector_y_comp.insert(
+            0, 
+            'Electrode', 
+            electrode_config.electrode_names)
+        conduction_vel.vector_y_comp.insert(
+            1, 
+            'X', 
+            electrode_config.electrode_coords_x)
+        conduction_vel.vector_y_comp.insert(
+            2, 
+            'Y', 
+            electrode_config.electrode_coords_y)
 
         # Calculate CV using simplistic finite difference methods.
         conduction_vel.param_dist_raw = local_act_time.distance_from_min.divide(
@@ -113,13 +145,23 @@ local_act_time, heat_map, input_param, electrode_config):
                     [np.inf, -np.inf], np.nan)
 
         conduction_vel.param_dist_raw_max = conduction_vel.param_dist_raw.max().max()
-        conduction_vel.param_dist_raw_mean = np.nanmean(conduction_vel.param_dist_raw)
+        conduction_vel.param_dist_raw_mean = np.nanmean(
+            conduction_vel.param_dist_raw)
 
         # As before, insert electrode and coordinate columns into approp. fields.
         conduction_vel.param_dist_raw.index = electrode_config.electrode_names
-        conduction_vel.param_dist_raw.insert(0, 'Electrode', electrode_config.electrode_names)
-        conduction_vel.param_dist_raw.insert(1, 'X', electrode_config.electrode_coords_x)
-        conduction_vel.param_dist_raw.insert(2, 'Y', electrode_config.electrode_coords_y)
+        conduction_vel.param_dist_raw.insert(
+            0, 
+            'Electrode', 
+            electrode_config.electrode_names)
+        conduction_vel.param_dist_raw.insert(
+            1, 
+            'X', 
+            electrode_config.electrode_coords_x)
+        conduction_vel.param_dist_raw.insert(
+            2, 
+            'Y', 
+            electrode_config.electrode_coords_y)
 
         end_time = time.process_time()
         print("CV calculation complete.")
@@ -193,7 +235,8 @@ def calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel):
         y_component = T_part_y / (T_part_x**2 + T_part_y**2)
         
         # Calculate vector magnitude for all electrodes in the given beat
-        vector_mag[beat] = np.sqrt(np.square(x_component) + np.square(y_component))
+        vector_mag[beat] = np.sqrt(
+            np.square(x_component) + np.square(y_component))
         # Store vector components for all electrodes for each beat.
         vector_x_comp[beat] = x_component
         vector_y_comp[beat] = y_component
@@ -212,7 +255,7 @@ input_param):
             heat_map.cv_solo_cbar.remove()
             delattr(heat_map, 'cv_solo_cbar')
         
-        analysisGUI.cvWindow.paramPlot.axes.cla()
+        analysisGUI.cvWindow.paramPlot.axis1.cla()
         input_param.cv_solo_beat_choice = analysisGUI.cvWindow.paramSlider.value()
 
         electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
@@ -222,14 +265,19 @@ input_param):
                 input_param.cv_solo_beat_choice])
 
         cv_solo_temp = sns.heatmap(heatmap_pivot_table_4, cmap="jet", 
-            annot=electrode_names_4, fmt="", ax=analysisGUI.cvWindow.paramPlot.axes, cbar=False)
+            annot=electrode_names_4, fmt="", 
+            ax=analysisGUI.cvWindow.paramPlot.axis1, 
+            cbar=False)
         mappable_4 = cv_solo_temp.get_children()[0]
-        heat_map.cv_solo_cbar = analysisGUI.cvWindow.paramPlot.axes.figure.colorbar(mappable_4, 
-            ax=analysisGUI.cvWindow.paramPlot.axes)
+        heat_map.cv_solo_cbar = analysisGUI.cvWindow.paramPlot.axis1.figure.colorbar(
+            mappable_4, 
+            ax=analysisGUI.cvWindow.paramPlot.axis1)
         heat_map.cv_solo_cbar.ax.set_title("μm/(ms)", fontsize=10)
 
-        analysisGUI.cvWindow.paramPlot.axes.set(title="Conduction Velocity, Beat " + 
-            str(input_param.cv_solo_beat_choice+1), xlabel="X coordinate (μm)", 
+        analysisGUI.cvWindow.paramPlot.axis1.set(
+            title="Conduction Velocity, Beat " + 
+            str(input_param.cv_solo_beat_choice+1), 
+            xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
 
         analysisGUI.cvWindow.paramPlot.fig.tight_layout()
@@ -244,7 +292,7 @@ input_param):
 def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     try:
         input_param.cv_vector_beat_choice = analysisGUI.cvVectWindow.paramSlider.value() 
-        analysisGUI.cvVectWindow.paramPlot.axes.cla()
+        analysisGUI.cvVectWindow.paramPlot.axis1.cla()
         curr_beat = local_act_time.final_dist_beat_count[
             input_param.cv_vector_beat_choice]
 
@@ -276,26 +324,26 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
         contV = y_comp.pivot_table(index='Y', columns='X', values=y_comp).values
 
         # Plot contour plots.  Change contZ_mag to contZ_raw for other contour plot.
-        analysisGUI.cvVectWindow.paramPlot.axes.contour(contX, contY, contZ_mag,
+        analysisGUI.cvVectWindow.paramPlot.axis1.contour(contX, contY, contZ_mag,
             cmap='jet')
-        contf = analysisGUI.cvVectWindow.paramPlot.axes.contourf(contX, contY, 
+        contf = analysisGUI.cvVectWindow.paramPlot.axis1.contourf(contX, contY, 
             contZ_mag, cmap='jet')
         # Plot streamplot.
-        analysisGUI.cvVectWindow.paramPlot.axes.streamplot(contX, contY, contU, 
+        analysisGUI.cvVectWindow.paramPlot.axis1.streamplot(contX, contY, contU, 
             contV)
         # Plot quiver plot.
-        analysisGUI.cvVectWindow.paramPlot.axes.quiver(contX, contY, contU, 
+        analysisGUI.cvVectWindow.paramPlot.axis1.quiver(contX, contY, contU, 
             contV, angles='xy')
-        analysisGUI.cvVectWindow.paramPlot.axes.set(xlabel="X coordinate (μm)", 
+        analysisGUI.cvVectWindow.paramPlot.axis1.set(xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)", title="Quiver, Stream, Contour of CV. " + 
                 str(curr_beat))
 
         # Add colorbar.
-        cbar = plt.colorbar(contf, ax=analysisGUI.cvVectWindow.paramPlot.axes)
+        cbar = plt.colorbar(contf, ax=analysisGUI.cvVectWindow.paramPlot.axis1)
         cbar.ax.set_ylabel('Conduction Velocity (μm/(ms))')
 
         # Invert y-axis
-        analysisGUI.cvVectWindow.paramPlot.axes.invert_yaxis()
+        analysisGUI.cvVectWindow.paramPlot.axis1.invert_yaxis()
 
         # Draw plot.
         analysisGUI.cvVectWindow.paramPlot.fig.tight_layout()
