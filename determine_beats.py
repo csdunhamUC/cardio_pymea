@@ -435,18 +435,22 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         # Get beat choice from slider 2, use to get beat occurrence time.
         beat_choice = analysisGUI.beatsWindow.paramSlider1b.value()
 
-        print(f"Beat slider value: {beat_choice}")
-        # print(cm_beats.dist_beats.loc[beat_choice, curr_elec].dropna())
+        # print(f"Beat slider value: {beat_choice}")
+        # print(f"Type: {type(beat_choice)}")
+        # print(cm_beats.dist_beats.loc[beat_choice, curr_elec])
+        # print(min(cm_beats.x_axis))
+        # print(max(cm_beats.x_axis))
 
-        # if cm_beats.dist_beats.loc[beat_choice, curr_elec].dropna().empty:
-        #     x_low_lim = min(cm_beats.x_axis)
-        #     x_high_lim = max(cm_beats.x_axis)
-        #     print(f"No R-waves detected for electrode {curr_elec}")
-        # else:
-        #     x_low_lim = cm_beats.dist_beats.loc[
-        #         beat_choice, curr_elec].dropna() - 500
-        #     x_high_lim = cm_beats.dist_beats.loc[
-        #         beat_choice, curr_elec].dropna() + 500
+        if np.isnan(cm_beats.dist_beats.loc[beat_choice, curr_elec]):
+            x_low_lim = min(cm_beats.x_axis)
+            x_high_lim = max(cm_beats.x_axis)
+            print(f"No R-waves detected for electrode {curr_elec}")
+        else:
+            x_low_lim = cm_beats.dist_beats.loc[
+                beat_choice, curr_elec] - 500
+            x_high_lim = cm_beats.dist_beats.loc[
+                beat_choice, curr_elec] + 500
+            # print("Everything is OK.")
 
         analysisGUI.beatsWindow.paramPlot1.fig.suptitle(
             f"Field potentials recorded by electrode {curr_elec}")
@@ -469,8 +473,8 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         analysisGUI.beatsWindow.paramPlot1.axis1.legend(
             ['R-wave Peak'], 
             loc='lower left')
-        # analysisGUI.beatsWindow.paramPlot1.axis1.set(
-        #     xlim=(x_low_lim, x_high_lim))
+        analysisGUI.beatsWindow.paramPlot1.axis1.set(
+            xlim=(x_low_lim, x_high_lim))
 
         analysisGUI.beatsWindow.paramPlot1.draw()
     
