@@ -27,9 +27,10 @@ input_param, electrode_config):
         if hasattr(pace_maker, 'param_dist_raw') is True:
             print("Clearing old pacemaker data before new calculation.")
             delattr(pace_maker, 'param_dist_raw')
-            delattr(pace_maker, 'param_prom_raw')
-            delattr(pace_maker, 'param_width_raw')
-            delattr(pace_maker, 'param_thresh_raw')
+            delattr(pace_maker, 'param_negative_dist_raw')
+            # delattr(pace_maker, 'param_prom_raw')
+            # delattr(pace_maker, 'param_width_raw')
+            # delattr(pace_maker, 'param_thresh_raw')
 
         # Clock the time it takes to run the calculation.
         start_time = time.process_time()
@@ -38,9 +39,9 @@ input_param, electrode_config):
         # Establishing these attributes of the pace_maker class as DataFrames.
         pace_maker.param_dist_raw = pd.DataFrame()
         pace_maker.param_negative_dist_raw = pd.DataFrame()
-        pace_maker.param_prom_raw = pd.DataFrame()
-        pace_maker.param_width_raw = pd.DataFrame()
-        pace_maker.param_thresh_raw = pd.DataFrame()
+        # pace_maker.param_prom_raw = pd.DataFrame()
+        # pace_maker.param_width_raw = pd.DataFrame()
+        # pace_maker.param_thresh_raw = pd.DataFrame()
 
         # Performs PM calculation for each detection parameter 
         # (peak distance, negative distance, prominence, width, threshold)
@@ -80,56 +81,56 @@ input_param, electrode_config):
                         pace_maker_neg_dist_raw], 
                     axis='columns')
 
-        for column in range(len(cm_beats.prom_beats.columns)):
-            if cm_beats.beat_count_prom_mode[0] == len(
-            cm_beats.prom_beats.iloc[0:, column].dropna()):
-                pace_maker_prom_raw = pd.Series(
-                    cm_beats.prom_beats.iloc[0:, column].dropna(), 
-                    name=column+1)
-                pace_maker.param_prom_raw = pd.concat(
-                    [pace_maker.param_prom_raw, pace_maker_prom_raw], 
-                    axis='columns')
-            else:
-                pace_maker_prom_raw = pd.Series(
-                    name=column+1, 
-                    dtype='float64')
-                pace_maker.param_prom_raw = pd.concat(
-                    [pace_maker.param_prom_raw, pace_maker_prom_raw], 
-                    axis='columns')
+        # for column in range(len(cm_beats.prom_beats.columns)):
+        #     if cm_beats.beat_count_prom_mode[0] == len(
+        #     cm_beats.prom_beats.iloc[0:, column].dropna()):
+        #         pace_maker_prom_raw = pd.Series(
+        #             cm_beats.prom_beats.iloc[0:, column].dropna(), 
+        #             name=column+1)
+        #         pace_maker.param_prom_raw = pd.concat(
+        #             [pace_maker.param_prom_raw, pace_maker_prom_raw], 
+        #             axis='columns')
+        #     else:
+        #         pace_maker_prom_raw = pd.Series(
+        #             name=column+1, 
+        #             dtype='float64')
+        #         pace_maker.param_prom_raw = pd.concat(
+        #             [pace_maker.param_prom_raw, pace_maker_prom_raw], 
+        #             axis='columns')
 
-        for column in range(len(cm_beats.width_beats.columns)):
-            if cm_beats.beat_count_prom_mode[0] == len(
-            cm_beats.width_beats.iloc[0:, column].dropna()):
-                pace_maker_width_raw = pd.Series(
-                    cm_beats.width_beats.iloc[0:, column].dropna(), 
-                    name=column+1)
-                pace_maker.param_width_raw = pd.concat(
-                    [pace_maker.param_width_raw, pace_maker_width_raw], 
-                    axis='columns')
-            else:
-                pace_maker_width_raw = pd.Series(
-                    name=column+1, 
-                    dtype='float64')
-                pace_maker.param_width_raw = pd.concat(
-                    [pace_maker.param_width_raw, pace_maker_width_raw], 
-                    axis='columns')
+        # for column in range(len(cm_beats.width_beats.columns)):
+        #     if cm_beats.beat_count_prom_mode[0] == len(
+        #     cm_beats.width_beats.iloc[0:, column].dropna()):
+        #         pace_maker_width_raw = pd.Series(
+        #             cm_beats.width_beats.iloc[0:, column].dropna(), 
+        #             name=column+1)
+        #         pace_maker.param_width_raw = pd.concat(
+        #             [pace_maker.param_width_raw, pace_maker_width_raw], 
+        #             axis='columns')
+        #     else:
+        #         pace_maker_width_raw = pd.Series(
+        #             name=column+1, 
+        #             dtype='float64')
+        #         pace_maker.param_width_raw = pd.concat(
+        #             [pace_maker.param_width_raw, pace_maker_width_raw], 
+        #             axis='columns')
 
-        for column in range(len(cm_beats.thresh_beats.columns)):
-            if cm_beats.beat_count_thresh_mode[0] == len(
-            cm_beats.thresh_beats.iloc[0:, column].dropna()):
-                pace_maker_thresh_raw = pd.Series(
-                    cm_beats.thresh_beats.iloc[0:, column].dropna(), 
-                    name=column+1)
-                pace_maker.param_thresh_raw = pd.concat(
-                    [pace_maker.param_thresh_raw, pace_maker_thresh_raw], 
-                    axis='columns')
-            else:
-                pace_maker_thresh_raw = pd.Series(
-                    name=column+1, 
-                    dtype='float64')
-                pace_maker.param_thresh_raw = pd.concat(
-                    [pace_maker.param_thresh_raw, pace_maker_thresh_raw], 
-                    axis='columns')
+        # for column in range(len(cm_beats.thresh_beats.columns)):
+        #     if cm_beats.beat_count_thresh_mode[0] == len(
+        #     cm_beats.thresh_beats.iloc[0:, column].dropna()):
+        #         pace_maker_thresh_raw = pd.Series(
+        #             cm_beats.thresh_beats.iloc[0:, column].dropna(), 
+        #             name=column+1)
+        #         pace_maker.param_thresh_raw = pd.concat(
+        #             [pace_maker.param_thresh_raw, pace_maker_thresh_raw], 
+        #             axis='columns')
+        #     else:
+        #         pace_maker_thresh_raw = pd.Series(
+        #             name=column+1, 
+        #             dtype='float64')
+        #         pace_maker.param_thresh_raw = pd.concat(
+        #             [pace_maker.param_thresh_raw, pace_maker_thresh_raw], 
+        #             axis='columns')
 
         # Normalizes the values for each beat by subtracting the minimum time 
         # of a given beat from all other electrodes
@@ -138,23 +139,23 @@ input_param, electrode_config):
                 pace_maker.param_dist_raw.min(axis=1), axis=0)
             pace_maker.param_neg_dist_normalized = pace_maker.param_negative_dist_raw.sub(
                 pace_maker.param_negative_dist_raw.min(axis=1), axis=0)
-            pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(
-                pace_maker.param_prom_raw.min(axis=1), axis=0)
-            pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(
-                pace_maker.param_width_raw.min(axis=1), axis=0)
-            pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(
-                pace_maker.param_thresh_raw.min(axis=1), axis=0)
+            # pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(
+            #     pace_maker.param_prom_raw.min(axis=1), axis=0)
+            # pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(
+            #     pace_maker.param_width_raw.min(axis=1), axis=0)
+            # pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(
+            #     pace_maker.param_thresh_raw.min(axis=1), axis=0)
         elif 1000 / input_param.sample_frequency == 0.1:
             pace_maker.param_dist_normalized = pace_maker.param_dist_raw.sub(
                 pace_maker.param_dist_raw.min(axis=1), axis=0).div(10)
             pace_maker.param_neg_dist_normalized = pace_maker.param_negative_dist_raw.sub(
                 pace_maker.param_negative_dist_raw.min(axis=1), axis=0).div(10)
-            pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(
-                pace_maker.param_prom_raw.min(axis=1), axis=0).div(10)
-            pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(
-                pace_maker.param_width_raw.min(axis=1), axis=0).div(10)
-            pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(
-                pace_maker.param_thresh_raw.min(axis=1), axis=0).div(10)
+            # pace_maker.param_prom_normalized = pace_maker.param_prom_raw.sub(
+            #     pace_maker.param_prom_raw.min(axis=1), axis=0).div(10)
+            # pace_maker.param_width_normalized = pace_maker.param_width_raw.sub(
+            #     pace_maker.param_width_raw.min(axis=1), axis=0).div(10)
+            # pace_maker.param_thresh_normalized = pace_maker.param_thresh_raw.sub(
+            #     pace_maker.param_thresh_raw.min(axis=1), axis=0).div(10)
 
         # Set slider values to maximum number of beats
         analysisGUI.mainSlider.setMaximum(
@@ -170,9 +171,9 @@ input_param, electrode_config):
         # in the electrode_config class.
         pace_maker.param_dist_normalized.columns = electrode_config.electrode_names
         pace_maker.param_neg_dist_normalized.columns = electrode_config.electrode_names
-        pace_maker.param_prom_normalized.columns = electrode_config.electrode_names
-        pace_maker.param_width_normalized.columns = electrode_config.electrode_names
-        pace_maker.param_thresh_normalized.columns = electrode_config.electrode_names
+        # pace_maker.param_prom_normalized.columns = electrode_config.electrode_names
+        # pace_maker.param_width_normalized.columns = electrode_config.electrode_names
+        # pace_maker.param_thresh_normalized.columns = electrode_config.electrode_names
 
         pace_maker.param_dist_raw.columns = electrode_config.electrode_names
         pace_maker.param_negative_dist_raw.columns = electrode_config.electrode_names
@@ -193,24 +194,24 @@ input_param, electrode_config):
         for row in pace_maker.param_neg_dist_normalized.index:
             neg_dist_new_index.append('Beat ' + str(row+1))
 
-        prom_new_index = []
-        for row in pace_maker.param_prom_normalized.index:
-            prom_new_index.append('Beat ' + str(row+1))
+        # prom_new_index = []
+        # for row in pace_maker.param_prom_normalized.index:
+        #     prom_new_index.append('Beat ' + str(row+1))
 
-        width_new_index = []
-        for row in pace_maker.param_width_normalized.index:
-            width_new_index.append('Beat ' + str(row+1))
+        # width_new_index = []
+        # for row in pace_maker.param_width_normalized.index:
+        #     width_new_index.append('Beat ' + str(row+1))
 
-        thresh_new_index = []
-        for row in pace_maker.param_thresh_normalized.index:
-            thresh_new_index.append('Beat ' + str(row+1))
+        # thresh_new_index = []
+        # for row in pace_maker.param_thresh_normalized.index:
+        #     thresh_new_index.append('Beat ' + str(row+1))
 
         # Adds beat number labeling to each row, pre-transpose.
         pace_maker.param_dist_normalized.index = dist_new_index
         pace_maker.param_neg_dist_normalized.index = neg_dist_new_index
-        pace_maker.param_prom_normalized.index = prom_new_index
-        pace_maker.param_width_normalized.index = width_new_index
-        pace_maker.param_thresh_normalized.index = thresh_new_index
+        # pace_maker.param_prom_normalized.index = prom_new_index
+        # pace_maker.param_width_normalized.index = width_new_index
+        # pace_maker.param_thresh_normalized.index = thresh_new_index
 
         pace_maker.param_dist_raw.index = dist_new_index
         pace_maker.param_negative_dist_raw.index = neg_dist_new_index
@@ -218,9 +219,9 @@ input_param, electrode_config):
         # Transpose dataframe to make future plotting easier.  
         # Makes rows = electrodes and columns = beat number.
         pace_maker.param_dist_normalized = pace_maker.param_dist_normalized.transpose()
-        pace_maker.param_prom_normalized = pace_maker.param_prom_normalized.transpose()
-        pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
-        pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
+        # pace_maker.param_prom_normalized = pace_maker.param_prom_normalized.transpose()
+        # pace_maker.param_width_normalized = pace_maker.param_width_normalized.transpose()
+        # pace_maker.param_thresh_normalized = pace_maker.param_thresh_normalized.transpose()
 
         pace_maker.param_dist_raw = pace_maker.param_dist_raw.transpose()
         pace_maker.param_negative_dist_raw = pace_maker.param_negative_dist_raw.transpose()
@@ -239,12 +240,12 @@ input_param, electrode_config):
         # attempting to use pivot table.
         pace_maker.param_dist_normalized.insert(
             0, 'Electrode', electrode_config.electrode_names)
-        pace_maker.param_prom_normalized.insert(
-            0, 'Electrode', electrode_config.electrode_names)
-        pace_maker.param_width_normalized.insert(
-            0, 'Electrode', electrode_config.electrode_names)
-        pace_maker.param_thresh_normalized.insert(
-            0, 'Electrode', electrode_config.electrode_names)
+        # pace_maker.param_prom_normalized.insert(
+        #     0, 'Electrode', electrode_config.electrode_names)
+        # pace_maker.param_width_normalized.insert(
+        #     0, 'Electrode', electrode_config.electrode_names)
+        # pace_maker.param_thresh_normalized.insert(
+        #     0, 'Electrode', electrode_config.electrode_names)
 
         # Insert electrode coordinates X,Y (in micrometers) as columns after 
         # electrode identifier.
@@ -252,21 +253,21 @@ input_param, electrode_config):
             1, 'X', electrode_config.electrode_coords_x)
         pace_maker.param_dist_normalized.insert(
             2, 'Y', electrode_config.electrode_coords_y)
-        # Repeat for prominence parameter.
-        pace_maker.param_prom_normalized.insert(
-            1, 'X', electrode_config.electrode_coords_x)
-        pace_maker.param_prom_normalized.insert(
-            2, 'Y', electrode_config.electrode_coords_y)
-        # Repeat for width parameter.
-        pace_maker.param_width_normalized.insert(
-            1, 'X', electrode_config.electrode_coords_x)
-        pace_maker.param_width_normalized.insert(
-            2, 'Y', electrode_config.electrode_coords_y)
-        # Repeat for threshold parameter.
-        pace_maker.param_thresh_normalized.insert(
-            1, 'X', electrode_config.electrode_coords_x)
-        pace_maker.param_thresh_normalized.insert(
-            2, 'Y', electrode_config.electrode_coords_y)
+        # # Repeat for prominence parameter.
+        # pace_maker.param_prom_normalized.insert(
+        #     1, 'X', electrode_config.electrode_coords_x)
+        # pace_maker.param_prom_normalized.insert(
+        #     2, 'Y', electrode_config.electrode_coords_y)
+        # # Repeat for width parameter.
+        # pace_maker.param_width_normalized.insert(
+        #     1, 'X', electrode_config.electrode_coords_x)
+        # pace_maker.param_width_normalized.insert(
+        #     2, 'Y', electrode_config.electrode_coords_y)
+        # # Repeat for threshold parameter.
+        # pace_maker.param_thresh_normalized.insert(
+        #     1, 'X', electrode_config.electrode_coords_x)
+        # pace_maker.param_thresh_normalized.insert(
+        #     2, 'Y', electrode_config.electrode_coords_y)
 
         pace_maker.param_dist_normalized.name = 'Pacemaker (Normalized)'
 

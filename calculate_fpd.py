@@ -277,7 +277,7 @@ input_param):
     curr_beat = all_beats[beat_choice]
 
     # Clear axis for new plot.
-    analysisGUI.fpdWindow.paramPlot1.axes.cla()
+    analysisGUI.fpdWindow.paramPlot1.axis1.cla()
     
     # Assign figure title.
     analysisGUI.fpdWindow.paramPlot1.fig.suptitle(
@@ -290,7 +290,7 @@ input_param):
         mask_dist].astype("int64")
     
     # Mark peak locations.
-    analysisGUI.fpdWindow.paramPlot1.axes.plot(
+    analysisGUI.fpdWindow.paramPlot1.axis1.plot(
         cm_beats.x_axis[dist_without_nan], 
         cm_beats.y_axis[curr_elec].values[dist_without_nan], 
         "xr", 
@@ -302,34 +302,33 @@ input_param):
     Twave_sans_nan = field_potential.T_wave_indices.loc[curr_elec].values[
         mask_Twave].astype("int64")
     
-    # # Mark T-wave locations.
-    # analysisGUI.fpdWindow.paramPlot1.axes.plot(
-    #     cm_beats.x_axis[Twave_sans_nan],
-    #     cm_beats.y_axis[curr_elec].values[Twave_sans_nan],
-    #     "Dm", 
-    #     label="T wave")
+    # Mark T-wave locations.
+    analysisGUI.fpdWindow.paramPlot1.axis1.plot(
+        cm_beats.x_axis[Twave_sans_nan],
+        cm_beats.y_axis[curr_elec].values[Twave_sans_nan],
+        "Dm", 
+        label="T wave")
 
-    # # Mark T-wave derivatives.
-    # analysisGUI.fpdWindow.paramPlot1.axes.plot(
-    #     field_potential.x_m[elec_choice, :],
-    #     field_potential.y_m[elec_choice, :],
-    #     "om",
-    #     label="Derivative")
+    # Mark T-wave derivatives.
+    analysisGUI.fpdWindow.paramPlot1.axis1.plot(
+        field_potential.x_m[elec_choice, :],
+        field_potential.y_m[elec_choice, :],
+        "om",
+        label="Derivative")
 
-    # # Mark T-wave endpoint
-    # analysisGUI.fpdWindow.paramPlot1.axes.plot(
-    #         field_potential.Tend.loc[curr_elec, all_beats[:-1]],
-    #     cm_beats.y_axis[curr_elec].values[
-    #         field_potential.Tend.loc[curr_elec, all_beats[:-1]]],
-    #     "Py",
-    #     label="T-wave End")
+    # Mark T-wave endpoint
+    analysisGUI.fpdWindow.paramPlot1.axis1.plot(
+            field_potential.Tend.loc[curr_elec, all_beats[:-1]],
+        cm_beats.y_axis[curr_elec].values[
+            field_potential.Tend.loc[curr_elec, all_beats[:-1]]],
+        "Py",
+        label="T-wave End")
 
     # Original, full plot
-    analysisGUI.fpdWindow.paramPlot1.axes.plot(
+    analysisGUI.fpdWindow.paramPlot1.axis1.plot(
         cm_beats.x_axis, 
         cm_beats.y_axis[curr_elec].values)
     
-    #
     # print(local_act_time.param_dist_raw.loc[curr_elec, curr_beat])
     x_low_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] - 500
     x_high_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] + 500
@@ -337,7 +336,7 @@ input_param):
     print(f"R-wave Time (ms): {rwave_time}")
 
     # Set axis units.
-    analysisGUI.fpdWindow.paramPlot1.axes.set(
+    analysisGUI.fpdWindow.paramPlot1.axis1.set(
         xlabel="Time (ms)",
         ylabel=r"Voltage ($\mu$V)",
         xlim=(x_low_lim, x_high_lim))
@@ -347,7 +346,7 @@ input_param):
     # analysisGUI.fpdWindow.paramPlot1.fig.set_dpi(300)
     
     # Show legend.
-    analysisGUI.fpdWindow.paramPlot1.axes.legend(loc='lower left')
+    analysisGUI.fpdWindow.paramPlot1.axis1.legend(loc='lower left')
 
     # Update the canvas by drawing the plot.
     analysisGUI.fpdWindow.paramPlot1.draw()
@@ -359,7 +358,7 @@ def heatmap_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
         heat_map.fpd_solo_cbar.remove()
         delattr(heat_map, 'fpd_solo_cbar')
 
-    analysisGUI.fpdWindow.paramPlot.axes.cla()
+    analysisGUI.fpdWindow.paramPlot.axis1.cla()
     selected_beat = analysisGUI.fpdWindow.paramSlider.value()
 
     electrode_names = to_plot.bp_filt_y.pivot(index='Y', columns='X',
@@ -369,15 +368,15 @@ def heatmap_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
 
     fpd_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet",
         annot=electrode_names, fmt="",
-        ax=analysisGUI.fpdWindow.paramPlot.axes, vmin=0,
+        ax=analysisGUI.fpdWindow.paramPlot.axis1, vmin=0,
         vmax=field_potential.fpd_max, cbar=False)
     mappable = fpd_solo_temp.get_children()[0]
     heat_map.fpd_solo_cbar = (
-        analysisGUI.fpdWindow.paramPlot.axes.figure.colorbar(mappable, 
-            ax=analysisGUI.fpdWindow.paramPlot.axes))
+        analysisGUI.fpdWindow.paramPlot.axis1.figure.colorbar(mappable, 
+            ax=analysisGUI.fpdWindow.paramPlot.axis1))
     heat_map.fpd_solo_cbar.ax.set_title("FPD (ms)", fontsize=10)
 
-    analysisGUI.fpdWindow.paramPlot.axes.set(
+    analysisGUI.fpdWindow.paramPlot.axis1.set(
         title=f"Field Potential Duration, Beat {selected_beat+1}",
         xlabel="X coordinate (μm)",
         ylabel="Y coordinate (μm)")
