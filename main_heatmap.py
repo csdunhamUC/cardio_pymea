@@ -36,8 +36,13 @@ local_act_time, conduction_vel, input_param):
         heat_map.cbar_1.ax.set_title("Time Lag (ms)", fontsize=10)
 
         analysisGUI.mainHeatmap.axis1.set(title="Pacemaker", 
-            xlabel="X coordinate (μm)",
+            xlabel="",
+            xticks=[],
             ylabel="Y coordinate (μm)")
+        analysisGUI.mainHeatmap.axis1.tick_params(axis='x', rotation=45)
+
+        analysisGUI.mainHeatmap.axis1.get_shared_y_axes().join(
+            analysisGUI.mainHeatmap.axis2)
 
         # --------------------------- Upstroke velocity ----------------------------
         if hasattr(heat_map, 'cbar_2') is True:
@@ -60,8 +65,11 @@ local_act_time, conduction_vel, input_param):
         heat_map.cbar_2.ax.set_title("μV/(ms)", fontsize=10)
 
         analysisGUI.mainHeatmap.axis2.set(title="Upstroke Velocity", 
-            xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)")
+            xlabel="",
+            xticks=[],
+            ylabel="",
+            yticks=[])
+        analysisGUI.mainHeatmap.axis2.tick_params(axis='x', rotation=45)
 
         # ------------------------- Local activation time --------------------------
         if hasattr(heat_map, 'cbar_3') is True:
@@ -86,6 +94,13 @@ local_act_time, conduction_vel, input_param):
         analysisGUI.mainHeatmap.axis3.set(title="Local Activation Time", 
             xlabel="X coordinate (μm)", 
             ylabel="Y coordinate (μm)")
+        analysisGUI.mainHeatmap.axis3.tick_params(axis='x', rotation=45)
+
+        analysisGUI.mainHeatmap.axis3.get_shared_x_axes().join(
+            analysisGUI.mainHeatmap.axis1)
+        analysisGUI.mainHeatmap.axis3.get_shared_y_axes().join(
+            analysisGUI.mainHeatmap.axis4)
+
 
         # -------------------------- Conduction velocity ---------------------------
         if hasattr(heat_map, 'cbar_4') is True:
@@ -109,8 +124,13 @@ local_act_time, conduction_vel, input_param):
 
         analysisGUI.mainHeatmap.axis4.set(title="Conduction Velocity" , 
             xlabel="X coordinate (μm)", 
-            ylabel="Y coordinate (μm)")
+            ylabel="",
+            yticks=[])
+        analysisGUI.mainHeatmap.axis4.tick_params(axis='x', rotation=45)
 
+        analysisGUI.mainHeatmap.axis4.get_shared_x_axes().join(
+            analysisGUI.mainHeatmap.axis2)
+        
         analysisGUI.mainHeatmap.fig.tight_layout()
         analysisGUI.mainHeatmap.fig.subplots_adjust(top=0.9)
         analysisGUI.mainHeatmap.fig.suptitle("Parameter Heatmaps. Beat " + 

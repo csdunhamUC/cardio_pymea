@@ -473,7 +473,8 @@ def reload_module():
 # Classes for the plots (axes) of GUI.
 class MainHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
-        self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
+        self.fig = plt.Figure(figsize=(width, height), dpi=dpi, 
+            tight_layout=True)
         self.axis1 = self.fig.add_subplot(221)
         self.axis2 = self.fig.add_subplot(222)
         self.axis3 = self.fig.add_subplot(223)
@@ -833,7 +834,7 @@ class AnalysisGUI(QMainWindow):
     def setup_UI(self, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
     electrode_config, psd_data, beat_amp_int, batch_data, field_potential):
-        self.setWindowTitle("Analysis GUI - PyQt5 v1.0")
+        self.setWindowTitle("C-MEAP v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         self.setUnifiedTitleAndToolBarOnMac(True)
@@ -1078,7 +1079,7 @@ class AnalysisGUI(QMainWindow):
     def determineBeatsWindow(self, raw_data, cm_beats, input_param, 
     electrode_config, batch_data):
         self.beatsWindow = BeatSignalPlotWindow()
-        self.beatsWindow.setWindowTitle("Beat Finder Results")
+        self.beatsWindow.setWindowTitle("Find Beats Results")
         # self.beatsWindow.paramPlot.axis1.plot([1,2,3,4,5],[10,20,30,40,50])
         self.beatsWindow.show()
         self.beatsWindow.paramSlider.valueChanged.connect(lambda: [
@@ -1101,7 +1102,6 @@ class AnalysisGUI(QMainWindow):
                 input_param)])
         except AttributeError:
             print("")
-
 
     def pmOriginWindow(self, cm_beats, pace_maker, heat_map, input_param):
         try:
@@ -1178,7 +1178,8 @@ class AnalysisGUI(QMainWindow):
     heat_map, input_param):
         try:
             self.fpdWindow = FPDWindow(self)
-            self.fpdWindow.setWindowTitle("Field Potential Duration")
+            self.fpdWindow.setWindowTitle(
+                "Field Potential Duration (FPD) Results")
             self.fpdWindow.show()
             # Set slider value to maximum number of beats
             self.fpdWindow.paramSlider1a.setMaximum(
