@@ -418,6 +418,7 @@ electrode_config, batch_data):
 def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
     try:
         analysisGUI.beatsWindow.paramPlot1.axis1.cla()
+        analysisGUI.beatsWindow.paramPlot2.axis1.cla()
 
         # Get electrode choice from slider 1, use to get electrode name
         elec_choice = analysisGUI.beatsWindow.paramSlider1a.value()
@@ -427,12 +428,6 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         # Get beat choice from slider 2, use to get beat occurrence time.
         beat_choice = analysisGUI.beatsWindow.paramSlider1b.value()
 
-        # print(f"Beat slider value: {beat_choice}")
-        # print(f"Type: {type(beat_choice)}")
-        # print(cm_beats.dist_beats.loc[beat_choice, curr_elec])
-        # print(min(cm_beats.x_axis))
-        # print(max(cm_beats.x_axis))
-
         if np.isnan(cm_beats.dist_beats.loc[beat_choice, curr_elec]):
             x_low_lim = min(cm_beats.x_axis)
             x_high_lim = max(cm_beats.x_axis)
@@ -441,9 +436,9 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
                 f"Signal recorded by (excluded) electrode {curr_elec}")
         else:
             x_low_lim = cm_beats.dist_beats.loc[
-                beat_choice, curr_elec] - 500
+                beat_choice, curr_elec] - 400
             x_high_lim = cm_beats.dist_beats.loc[
-                beat_choice, curr_elec] + 500
+                beat_choice, curr_elec] + 400
             analysisGUI.beatsWindow.paramPlot1.fig.suptitle(
                 f"Beat {beat_choice+1} " + 
                 f"field potentials recorded by electrode {curr_elec}")
@@ -474,7 +469,66 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         # End left-panel plot
 
         # Right-panel plot
+        electrode_config.electrode_coords_x
+        electrode_config.electrode_coords_y
 
+        tpose_df = cm_beats.y_axis.T
+
+        tpose_df.insert(0, "Electrode", electrode_config.electrode_names)
+        tpose_df.insert(1, "X", electrode_config.electrode_coords_x)
+        tpose_df.insert(2, "Y", electrode_config.electrode_coords_y)
+
+        pivot_tpose_df = tpose_df.pivot(
+            index='Y', 
+            columns='X', 
+            values='Electrode')
+
+        K_max = 12
+        K_min = 0
+        L_max = 12
+        L_min = 0
+        x_offset = 1000 # tune these
+        y_offset = 1000 # tune these
+        
+        ax = analysisGUI.beatsWindow.paramPlot2.axis1
+        ax.axis("off")
+        ax.set_ylim([0, (K_max-K_min +1)*y_offset])
+        ax.set_xlim([0, (L_max - L_min+1)*x_offset])
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.grid('off')
+
+        int_xlow_lim = int(x_low_lim)
+        int_xhigh_lim = int(x_high_lim)
+        print(f"X-low: {int_xlow_lim}, X-high: {int_xhigh_lim}")
+
+        # Iterate through the 12x12 grid for each electrode
+        # col = distance coordinate from pivot table
+        for col_pos, col in enumerate(pivot_tpose_df.columns):
+            # val = values (i.e. electrode) from pivot table
+            for row_pos, val in enumerate(pivot_tpose_df[col]):
+                if val != val:
+                    ax.plot(np.arange(800) + row_pos*x_offset, 
+                        5+np.random.rand(800) + col_pos*y_offset, 
+                        color='white')
+                    # print(f"NaN: {val}")
+                else:
+                    ax.plot(
+                        cm_beats.x_axis[
+                            int_xlow_lim:int_xhigh_lim] + row_pos*x_offset, 
+                        cm_beats.y_axis.iloc[
+                            int_xlow_lim:int_xhigh_lim, 0:].values + col_pos*y_offset, 
+                        color='black')
+                    # print(f"{val} is NOT NaN!")
+                    ax.annotate(
+                        f"{val}",
+                        (400 + (col_pos*x_offset), 400 + (row_pos*y_offset)),
+                        size=8,
+                        ha="center")
+
+        analysisGUI.beatsWindow.paramPlot2.fig.suptitle("All Electrodes View")
+        analysisGUI.beatsWindow.paramPlot2.fig.tight_layout()
+        analysisGUI.beatsWindow.paramPlot2.draw()
         # End right-panel plot
 
     except AttributeError:
