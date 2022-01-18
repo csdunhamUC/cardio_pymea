@@ -436,9 +436,9 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
                 f"Signal recorded by (excluded) electrode {curr_elec}")
         else:
             x_low_lim = cm_beats.dist_beats.loc[
-                beat_choice, curr_elec] - 400
+                beat_choice, curr_elec] - 500
             x_high_lim = cm_beats.dist_beats.loc[
-                beat_choice, curr_elec] + 400
+                beat_choice, curr_elec] + 500
             analysisGUI.beatsWindow.paramPlot1.fig.suptitle(
                 f"Beat {beat_choice+1} " + 
                 f"field potentials recorded by electrode {curr_elec}")
@@ -482,47 +482,56 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
             index='Y', 
             columns='X', 
             values='Electrode')
-
+        
+        # Still fixing from here down.
         K_max = 12
         K_min = 0
         L_max = 12
         L_min = 0
-        x_offset = 1000 # tune these
-        y_offset = 1000 # tune these
+        
+        int_xlow_lim = int(x_low_lim)
+        int_xhigh_lim = int(x_high_lim)
+        print(f"X-low: {int_xlow_lim}, X-high: {int_xhigh_lim}")
+        int_xmid = (int_xlow_lim + int_xhigh_lim)/2
+
+        x_offset = 1200 # tune these
+        y_offset = 1200 # tune these
         
         ax = analysisGUI.beatsWindow.paramPlot2.axis1
         ax.axis("off")
-        ax.set_ylim([0, (K_max-K_min +1)*y_offset])
-        ax.set_xlim([0, (L_max - L_min+1)*x_offset])
+        ax.set_ylim([0, 
+            (K_max-K_min +1)*y_offset])
+        ax.set_xlim([int_xlow_lim-100, 
+            (L_max - L_min+1)*x_offset + int_xhigh_lim+100])
         ax.set_xticks([])
         ax.set_yticks([])
         ax.grid('off')
 
-        int_xlow_lim = int(x_low_lim)
-        int_xhigh_lim = int(x_high_lim)
-        print(f"X-low: {int_xlow_lim}, X-high: {int_xhigh_lim}")
-
+        print(cm_beats.y_axis.iloc[
+            int_xlow_lim:int_xhigh_lim, 0:])
+ 
         # Iterate through the 12x12 grid for each electrode
         # col = distance coordinate from pivot table
         for col_pos, col in enumerate(pivot_tpose_df.columns):
             # val = values (i.e. electrode) from pivot table
             for row_pos, val in enumerate(pivot_tpose_df[col]):
                 if val != val:
-                    ax.plot(np.arange(800) + row_pos*x_offset, 
-                        5+np.random.rand(800) + col_pos*y_offset, 
+                    ax.plot(np.arange(1000) + row_pos*x_offset, 
+                        5+np.random.rand(1000) + col_pos*y_offset, 
                         color='white')
                     # print(f"NaN: {val}")
                 else:
                     ax.plot(
                         cm_beats.x_axis[
                             int_xlow_lim:int_xhigh_lim] + row_pos*x_offset, 
-                        cm_beats.y_axis.iloc[
-                            int_xlow_lim:int_xhigh_lim, 0:].values + col_pos*y_offset, 
-                        color='black')
+                        (cm_beats.y_axis.iloc[
+                            int_xlow_lim:int_xhigh_lim, 0:].values + 
+                            col_pos*y_offset))
                     # print(f"{val} is NOT NaN!")
                     ax.annotate(
                         f"{val}",
-                        (400 + (col_pos*x_offset), 400 + (row_pos*y_offset)),
+                        (500 + int_xlow_lim + (col_pos*x_offset), 
+                            500 + (row_pos*y_offset)),
                         size=8,
                         ha="center")
 
