@@ -269,11 +269,7 @@ electrode_config, batch_data):
 
             # Applying a different standard for negative beat detection.
             # In many MEA samples, the negative peaks can be largely lost.
-            # Using a fairly generous parameter set here may help.
-            # 9/28/21: Updating the previous comment, unable to find
-            # a consistent, fair parameter set for this purpose.
-            # Leaving in the code for negative peaks, but it's functionally
-            # useless at this stage; data are not robust enough.
+            # Optimization of parameters here may help.
             neg_dist_beats = pd.Series(find_peaks(
                 cm_beats.neg_y_axis.iloc[0:, column], 
                 height=25,
@@ -397,10 +393,6 @@ electrode_config, batch_data):
         # thresh_beats_size = np.shape(cm_beats.thresh_beats)
         # print("Shape of cm_beats.thresh_beats: " + 
         #     str(thresh_beats_size) + ".\n")
-            
-        print(f"cm_beats.y_axis: \n{cm_beats.y_axis}")
-        print(f"cm_beats.x_axis: \n{cm_beats.x_axis}")
-        print(f"cm_beats.dist_beats: \n{cm_beats.dist_beats}")
 
         print("Finished.")
         end_time = time.process_time()
@@ -445,16 +437,18 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
             x_low_lim = min(cm_beats.x_axis)
             x_high_lim = max(cm_beats.x_axis)
             print(f"No R-waves detected for electrode {curr_elec}")
+            analysisGUI.beatsWindow.paramPlot1.fig.suptitle( 
+                f"Signal recorded by (excluded) electrode {curr_elec}")
         else:
             x_low_lim = cm_beats.dist_beats.loc[
                 beat_choice, curr_elec] - 500
             x_high_lim = cm_beats.dist_beats.loc[
                 beat_choice, curr_elec] + 500
-            # print("Everything is OK.")
+            analysisGUI.beatsWindow.paramPlot1.fig.suptitle(
+                f"Beat {beat_choice+1} " + 
+                f"field potentials recorded by electrode {curr_elec}")
 
-        analysisGUI.beatsWindow.paramPlot1.fig.suptitle(
-            f"Field potentials recorded by electrode {curr_elec}")
-
+        # Left-panel plot
         mask_dist = ~np.isnan(
             cm_beats.dist_beats.iloc[0:, elec_choice].values)
         dist_without_nan = cm_beats.dist_beats.iloc[
@@ -477,6 +471,11 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
             xlim=(x_low_lim, x_high_lim))
 
         analysisGUI.beatsWindow.paramPlot1.draw()
-    
+        # End left-panel plot
+
+        # Right-panel plot
+
+        # End right-panel plot
+
     except AttributeError:
         print("Please use Find Peaks first.")
