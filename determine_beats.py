@@ -400,11 +400,12 @@ electrode_config, batch_data):
         
         # If not doing batch analysis, set slider maxima and generate plots.
         if batch_data.batch_config == False:
-            analysisGUI.beatsWindow.paramSlider1a.setMaximum(
-                len(cm_beats.y_axis.columns) - 1)
             analysisGUI.beatsWindow.paramSlider1b.setMaximum(
+                len(cm_beats.y_axis.columns) - 1)
+            analysisGUI.beatsWindow.paramSlider1a.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1) 
             graph_beats(analysisGUI, cm_beats, electrode_config)
+            full_mea_plot(analysisGUI, cm_beats, electrode_config)
 
     except AttributeError:
         print("No data found." + 
@@ -421,17 +422,18 @@ def graph_beats(analysisGUI, cm_beats, electrode_config):
         analysisGUI.beatsWindow.paramPlot2.axis1.cla()
 
         # Get electrode choice from slider 1, use to get electrode name
-        elec_choice = analysisGUI.beatsWindow.paramSlider1a.value()
+        elec_choice = analysisGUI.beatsWindow.paramSlider1b.value()
         all_elecs = cm_beats.dist_beats.columns
         curr_elec = all_elecs[elec_choice]
         
         # Get beat choice from slider 2, use to get beat occurrence time.
-        beat_choice = analysisGUI.beatsWindow.paramSlider1b.value()
+        beat_choice = analysisGUI.beatsWindow.paramSlider1a.value()
 
         if np.isnan(cm_beats.dist_beats.loc[beat_choice, curr_elec]):
-            x_low_lim = min(cm_beats.x_axis)
-            x_high_lim = max(cm_beats.x_axis)
-            print(f"No R-waves detected for electrode {curr_elec}")
+            x_low_lim = np.nanmedian(cm_beats.dist_beats.loc[
+                beat_choice, :]) - 500
+            x_high_lim = np.nanmedian(cm_beats.dist_beats.loc[
+                beat_choice, :]) + 500
             analysisGUI.beatsWindow.paramPlot1.fig.suptitle( 
                 f"Signal recorded by (excluded) electrode {curr_elec}")
         else:
@@ -468,8 +470,6 @@ def graph_beats(analysisGUI, cm_beats, electrode_config):
         analysisGUI.beatsWindow.paramPlot1.draw()
         # End left-panel plot
 
-
-
     except AttributeError:
         print("Please use Find Peaks first.")
 
@@ -495,12 +495,13 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         L_max = 12
         L_min = 0
 
+        # Get beat choice from slider 2, use to get beat occurrence time.
+        beat_choice = analysisGUI.beatsWindow.paramSlider1a.value()
         
-        x_low_lim = np.median(cm_beats.dist_beats.loc[
+        x_low_lim = np.nanmedian(cm_beats.dist_beats.loc[
             beat_choice, :]) - 500
-        x_high_lim = np.median(cm_beats.dist_beats.loc[
+        x_high_lim = np.nanmedian(cm_beats.dist_beats.loc[
             beat_choice, :]) + 500
-        print(f"x_low: {x_low_lim}\nx_high: {x_high_lim}")
 
         int_xlow_lim = int(x_low_lim)
         int_xhigh_lim = int(x_high_lim)
@@ -529,15 +530,16 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
                 if val != val:
                     ax.plot(np.arange(1000) + row_pos*x_offset, 
                         5+np.random.rand(1000) + col_pos*y_offset, 
-                        color='white')
+                        color='white',
+                        alpha=0)
                     # print(f"NaN: {val}")
                 else:
-                    temp_y = cm_beats.y_axis.loc[:, val]
+                    temp_y = cm_beats.y_axis.loc[0:, val]
                     y_axis_vals = temp_y[int_xlow_lim:int_xhigh_lim]
                     ax.plot(
                         (cm_beats.x_axis[
-                            int_xlow_lim:int_xhigh_lim] + row_pos*x_offset), 
-                        (y_axis_vals + col_pos*y_offset))
+                            int_xlow_lim:int_xhigh_lim] + col_pos*x_offset), 
+                        (1000 + y_axis_vals + row_pos*y_offset))
                     # print(f"{val} is NOT NaN!")
                     # Generate MEA electrode labels
                     ax.annotate(

@@ -1096,12 +1096,11 @@ class AnalysisGUI(QMainWindow):
         self.beatsWindow.show()
         # Change beat slider signal connection
         self.beatsWindow.paramSlider1a.valueChanged.connect(lambda: [
-            determine_beats.graph_beats(self, cm_beats, input_param, 
-            electrode_config)])
-        # Change electrode slider signal connection (to come)
+            determine_beats.graph_beats(self, cm_beats, electrode_config),
+            determine_beats.full_mea_plot(self, cm_beats, electrode_config)])
+        # Change electrode slider signal connection
         self.beatsWindow.paramSlider1b.valueChanged.connect(lambda: [
-            determine_beats.graph_beats(self, cm_beats, input_param,
-                electrode_config)])
+            determine_beats.graph_beats(self, cm_beats, electrode_config)])
         # Plot button signal connection
         self.beatsWindow.plotButton.clicked.connect(lambda: [
             determine_beats.determine_beats(self, raw_data, cm_beats, 
