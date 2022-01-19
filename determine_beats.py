@@ -404,7 +404,7 @@ electrode_config, batch_data):
                 len(cm_beats.y_axis.columns) - 1)
             analysisGUI.beatsWindow.paramSlider1b.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1) 
-            graph_beats(analysisGUI, cm_beats, input_param, electrode_config)
+            graph_beats(analysisGUI, cm_beats, electrode_config)
 
     except AttributeError:
         print("No data found." + 
@@ -415,7 +415,7 @@ electrode_config, batch_data):
 
 # Produces 4-subplot plot of peak finder data and graphs it.  Can be called via 
 # button. Will throw exception of data does not exist.
-def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
+def graph_beats(analysisGUI, cm_beats, electrode_config):
     try:
         analysisGUI.beatsWindow.paramPlot1.axis1.cla()
         analysisGUI.beatsWindow.paramPlot2.axis1.cla()
@@ -468,10 +468,16 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         analysisGUI.beatsWindow.paramPlot1.draw()
         # End left-panel plot
 
-        # Right-panel plot
-        electrode_config.electrode_coords_x
-        electrode_config.electrode_coords_y
 
+
+    except AttributeError:
+        print("Please use Find Peaks first.")
+
+
+def full_mea_plot(analysisGUI, cm_beats, electrode_config):
+    try:
+        print()
+        # Right-panel plot
         tpose_df = cm_beats.y_axis.T
 
         tpose_df.insert(0, "Electrode", electrode_config.electrode_names)
@@ -488,7 +494,14 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         K_min = 0
         L_max = 12
         L_min = 0
+
         
+        x_low_lim = np.median(cm_beats.dist_beats.loc[
+            beat_choice, :]) - 500
+        x_high_lim = np.median(cm_beats.dist_beats.loc[
+            beat_choice, :]) + 500
+        print(f"x_low: {x_low_lim}\nx_high: {x_high_lim}")
+
         int_xlow_lim = int(x_low_lim)
         int_xhigh_lim = int(x_high_lim)
         print(f"X-low: {int_xlow_lim}, X-high: {int_xhigh_lim}")
@@ -507,9 +520,7 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
         ax.set_yticks([])
         ax.grid('off')
 
-        print(cm_beats.y_axis.iloc[
-            int_xlow_lim:int_xhigh_lim, 0:])
- 
+        print(pivot_tpose_df)
         # Iterate through the 12x12 grid for each electrode
         # col = distance coordinate from pivot table
         for col_pos, col in enumerate(pivot_tpose_df.columns):
@@ -521,24 +532,27 @@ def graph_beats(analysisGUI, cm_beats, input_param, electrode_config):
                         color='white')
                     # print(f"NaN: {val}")
                 else:
+                    temp_y = cm_beats.y_axis.loc[:, val]
+                    y_axis_vals = temp_y[int_xlow_lim:int_xhigh_lim]
                     ax.plot(
-                        cm_beats.x_axis[
-                            int_xlow_lim:int_xhigh_lim] + row_pos*x_offset, 
-                        (cm_beats.y_axis.iloc[
-                            int_xlow_lim:int_xhigh_lim, 0:].values + 
-                            col_pos*y_offset))
+                        (cm_beats.x_axis[
+                            int_xlow_lim:int_xhigh_lim] + row_pos*x_offset), 
+                        (y_axis_vals + col_pos*y_offset))
                     # print(f"{val} is NOT NaN!")
+                    # Generate MEA electrode labels
                     ax.annotate(
                         f"{val}",
                         (500 + int_xlow_lim + (col_pos*x_offset), 
                             500 + (row_pos*y_offset)),
                         size=8,
                         ha="center")
+        
+        # Adjust y-axis so that it fits our coordinate system
+        ax.invert_yaxis()
 
         analysisGUI.beatsWindow.paramPlot2.fig.suptitle("All Electrodes View")
         analysisGUI.beatsWindow.paramPlot2.fig.tight_layout()
         analysisGUI.beatsWindow.paramPlot2.draw()
         # End right-panel plot
-
     except AttributeError:
         print("Please use Find Peaks first.")
