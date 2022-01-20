@@ -547,7 +547,8 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
                         (500 + int_xlow_lim + (col_pos*x_offset), 
                             500 + (row_pos*y_offset)),
                         size=8,
-                        ha="center")
+                        ha="center",
+                        color=ax.lines[-1].get_color())
         
         # Adjust y-axis so that it fits our coordinate system
         ax.invert_yaxis()
