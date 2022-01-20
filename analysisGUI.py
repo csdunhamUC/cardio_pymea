@@ -570,6 +570,7 @@ class BeatSignalPlotWindow(QWidget):
         self.filterTypeEdit.addItem("Low-pass Only")
         self.filterTypeEdit.addItem("High-pass Only")
         self.filterTypeEdit.addItem("Bandpass")
+        self.filterTypeEdit.setStyleSheet('selection-background-color: #483a78;')
 
         # Filter parameters widgets.
         self.butterOrderLabel = QLabel("Butterworth\nOrder")
@@ -734,19 +735,23 @@ class PlotBeatSelectWindows(QWidget):
         self.startBeat = QComboBox()
         self.startBeat.setFixedWidth(80)
         self.startBeat.addItem("Beat 1")
+        self.startBeat.setStyleSheet('selection-background-color: #483a78;')
         self.endBeat = QComboBox()
         self.endBeat.setFixedWidth(80)
         self.endBeat.addItem("Beat 1")
+        self.endBeat.setStyleSheet('selection-background-color: #483a78;')
         self.elecLabel = QLabel("Electrode")
         self.elecSelect = QComboBox()
         self.elecSelect.setFixedWidth(70)
         self.elecSelect.addItem("F7")
+        self.elecSelect.setStyleSheet('selection-background-color: #483a78;')
         self.paramLabel = QLabel("Parameter")
         self.paramSelect = QComboBox()
         self.paramSelect.setFixedWidth(180)
         paramItems = ["Orig. Signal", "Cond. Vel.", "Up. Vel.", "Pacemaker", 
             "Local AT"]
         self.paramSelect.addItems(paramItems)
+        self.paramSelect.setStyleSheet('selection-background-color: #483a78;')
         self.plotButton = QPushButton("Plot")
         self.plotButton.setFixedSize(70, 70)
         paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
@@ -1075,6 +1080,7 @@ class AnalysisGUI(QMainWindow):
         self.sampleFreqEdit.setFixedWidth(100)
         self.sampleFreqEdit.addItem("1000")
         self.sampleFreqEdit.addItem("10000")
+        self.sampleFreqEdit.setStyleSheet('selection-background-color: #483a78')
         paramLayout.addWidget(self.sampleFreq, 0, 5)
         paramLayout.addWidget(self.sampleFreqEdit, 1, 5)
         # Truncation widgets.
@@ -1131,6 +1137,7 @@ class AnalysisGUI(QMainWindow):
     electrode_config, batch_data):
         self.beatsWindow = BeatSignalPlotWindow()
         self.beatsWindow.setWindowTitle("Find Beats Results")
+        self.beatsWindow.setStyleSheet("background-color: white;")
         self.beatsWindow.show()
         # Change beat slider signal connection
         self.beatsWindow.paramSlider1a.valueChanged.connect(lambda: [
@@ -1148,6 +1155,7 @@ class AnalysisGUI(QMainWindow):
         try:
             self.pmWindow = SoloHeatmapWindows(self)
             self.pmWindow.setWindowTitle("Pacemaker Results")
+            self.pmWindow.setStyleSheet("background-color: white;")
             self.pmWindow.show()
             # Set slider value to maximum number of beats
             self.pmWindow.paramSlider.setMaximum(
@@ -1163,6 +1171,7 @@ class AnalysisGUI(QMainWindow):
             self.circFitWindow = SoloHeatmapWindows(self)
             self.circFitWindow.setWindowTitle("Predicted PM Origin")
             self.circFitWindow.show()
+            self.circFitWindow.setStyleSheet("background-color: white;")
             self.circFitWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
             self.circFitWindow.paramSlider.valueChanged.connect(lambda: [
@@ -1175,6 +1184,7 @@ class AnalysisGUI(QMainWindow):
         try:
             self.dvdtWindow = SoloHeatmapWindows(self)
             self.dvdtWindow.setWindowTitle("Upstroke Velocity (dV/dt) Results")
+            self.dvdtWindow.setStyleSheet("background-color: white;")
             self.dvdtWindow.show()
             # Set slider value to maximum number of beats
             self.dvdtWindow.paramSlider.setMaximum(
@@ -1190,6 +1200,7 @@ class AnalysisGUI(QMainWindow):
         try:
             self.latWindow = SoloHeatmapWindows(self)
             self.latWindow.setWindowTitle("Local Activation Time (LAT) Results")
+            self.latWindow.setStyleSheet("background-color: white;")
             self.latWindow.show()
             # Set slider value to maximum number of beats
             self.latWindow.paramSlider.setMaximum(
@@ -1205,6 +1216,7 @@ class AnalysisGUI(QMainWindow):
         try:
             self.cvWindow = SoloHeatmapWindows(self)
             self.cvWindow.setWindowTitle("Conduction Velocity (CV) Results")
+            self.cvWindow.setStyleSheet("background-color: white;")
             self.cvWindow.show()
             # Set slider value to maximum number of beats
             self.cvWindow.paramSlider.setMaximum(
@@ -1220,6 +1232,7 @@ class AnalysisGUI(QMainWindow):
         try:
             self.cvVectWindow = SoloHeatmapWindows(self)
             self.cvVectWindow.setWindowTitle("Conduction Velocity Vector Field")
+            self.cvVectWindow.setStyleSheet("background-color: white;")
             self.cvVectWindow.show()
             self.cvVectWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
@@ -1235,6 +1248,7 @@ class AnalysisGUI(QMainWindow):
             self.fpdWindow = FPDWindow(self)
             self.fpdWindow.setWindowTitle(
                 "Field Potential Duration (FPD) Results")
+            self.fpdWindow.setStyleSheet("background-color: white;")
             self.fpdWindow.show()
             # Set slider value to maximum number of beats
             self.fpdWindow.paramSlider1a.setMaximum(
@@ -1253,6 +1267,7 @@ class AnalysisGUI(QMainWindow):
         try:
             self.pvdWindow = ParamStatWindows()
             self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R-Square")
+            self.pvdWindow.setStyleSheet("background-color: white;")
             self.pvdWindow.show()
             self.pvdWindow.sigmaButton.clicked.connect(lambda: [
                 param_vs_distance_stats.param_vs_distance_analysis(self, 
@@ -1274,6 +1289,7 @@ class AnalysisGUI(QMainWindow):
             self.psdCheck = True
             self.psdWindow = PlotBeatSelectWindows(self)
             self.psdWindow.setWindowTitle("Power Spectra")
+            self.psdWindow.setStyleSheet("background-color: white;")
             self.psdWindow.show()
             self.psdWindow.plotButton.clicked.connect(lambda: [
                 psd_plotting.psd_plotting(self, cm_beats, electrode_config, 
@@ -1295,6 +1311,7 @@ class AnalysisGUI(QMainWindow):
             self.ampCheck = True
             self.ampIntWindow = PlotBeatSelectWindows(self)
             self.ampIntWindow.setWindowTitle("Beat Amplitude & Interval")
+            self.ampIntWindow.setStyleSheet("background-color: white;")
             self.ampIntWindow.show()
             self.ampIntWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
@@ -1319,6 +1336,7 @@ class AnalysisGUI(QMainWindow):
         self.pcaCheck = True
         self.pcaWindow = SoloHeatmapWindows(self)
         self.pcaWindow.setWindowTitle("PCA Analysis")
+        self.pcaWindow.setStyleSheet("background-color: white;")
         self.pcaWindow.show()
         self.pcaWindow.plotButton.clicked.connect(lambda: [
             pca_plotting.pca_data_prep(self, cm_beats, beat_amp_int, pace_maker, 
@@ -1330,6 +1348,7 @@ class AnalysisGUI(QMainWindow):
         self.plWindow = PowerlawWindow(self)
         self.plWindow.setWindowTitle(
             "Powerlaw Distribution Comparison")
+        self.plWindow.setStyleSheet("background-color: white;")
         self.plWindow.show()
 
 
