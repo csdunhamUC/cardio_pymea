@@ -993,6 +993,8 @@ class AnalysisGUI(QMainWindow):
         self.testingMenu.addAction("&Reload modules (debug)", reload_module)
 
         # Set menubar color scheme, #ccbcc8
+        # Credit to this Stack Overflow post for the style sheet config
+        # https://stackoverflow.com/questions/28353151/styling-the-menu-bar-in-pyqt4
         self.menuBar().setStyleSheet(
             """
             QMenuBar
@@ -1008,17 +1010,17 @@ class AnalysisGUI(QMainWindow):
             QMenuBar::item::selected
             {
                 background-color: #ccbcc8;
-                color: #fff;
+                color: #000;
             }
             QMenu
             {
                 background-color: #bf97b5;
-                color: #fff;
+                color: #000;
             }
             QMenu::item::selected
             {
-                background-color: #333399;
-                color: #999;
+                background-color: #483a78;
+                color: #fff;
             }
              """
         )
