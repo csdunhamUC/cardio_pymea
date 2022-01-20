@@ -508,22 +508,28 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         print(f"X-low: {int_xlow_lim}, X-high: {int_xhigh_lim}")
         int_xmid = (int_xlow_lim + int_xhigh_lim)/2
 
+        # If the resulting plot is not centered on the axis, tune these 
+        # parameters for the x and y offset. 
+        # Remember: x and y here refer to geometric coordinates for the array!
         x_offset = 1200 # tune these
         y_offset = 1200 # tune these
         
+        # Assign shorthand name for the GUI axis/plot.
         ax = analysisGUI.beatsWindow.paramPlot2.axis1
         ax.axis("off")
+        # Set plot limits based on the array configuration.
+        # Set y limit
         ax.set_ylim([0, 
             (K_max-K_min +1)*y_offset])
+        # Set x limit
         ax.set_xlim([int_xlow_lim-100, 
             (L_max - L_min+1)*x_offset + int_xhigh_lim+100])
         ax.set_xticks([])
         ax.set_yticks([])
+        # Turn off grid axes
         ax.grid('off')
 
-        print(pivot_tpose_df)
-        # Iterate through the 12x12 grid for each electrode
-        # col = distance coordinate from pivot table
+        # Iterate through the 12x12 grid for each electrode to plot the signal.
         for col_pos, col in enumerate(pivot_tpose_df.columns):
             # val = values (i.e. electrode) from pivot table
             for row_pos, val in enumerate(pivot_tpose_df[col]):
@@ -534,7 +540,9 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
                         alpha=0)
                     # print(f"NaN: {val}")
                 else:
+                    # Placeholder variable, get y values for electrode
                     temp_y = cm_beats.y_axis.loc[0:, val]
+                    # Limit y values (amplitudes) shown to the provided x lim
                     y_axis_vals = temp_y[int_xlow_lim:int_xhigh_lim]
                     ax.plot(
                         (cm_beats.x_axis[
@@ -553,6 +561,7 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         # Adjust y-axis so that it fits our coordinate system
         ax.invert_yaxis()
 
+        # Assign title and tighten up layout before drawing the figure.
         analysisGUI.beatsWindow.paramPlot2.fig.suptitle("All Electrodes View")
         analysisGUI.beatsWindow.paramPlot2.fig.tight_layout()
         analysisGUI.beatsWindow.paramPlot2.draw()

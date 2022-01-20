@@ -609,12 +609,14 @@ class BeatSignalPlotWindow(QWidget):
         self.paramSlider1a = QSlider(Qt.Horizontal)
         self.paramSlider1b = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot1, self)
+        paramToolbar2 = NavigationToolbar2QT(self.paramPlot2, self)
 
         plotLayout.addWidget(self.paramPlot1, 0, 0)
         plotLayout.addWidget(self.paramPlot2, 0, 1)
-        plotLayout.addWidget(self.paramSlider1a, 1, 0)
-        plotLayout.addWidget(self.paramSlider1b, 2, 0)
-        plotLayout.addWidget(paramToolbar, 3, 0)
+        plotLayout.addWidget(self.paramSlider1a, 2, 0)
+        plotLayout.addWidget(self.paramSlider1b, 3, 0)
+        plotLayout.addWidget(paramToolbar, 1, 0)
+        plotLayout.addWidget(paramToolbar2, 1, 1)
     
         # self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
         # self.paramSlider = QSlider(Qt.Horizontal)
@@ -989,6 +991,40 @@ class AnalysisGUI(QMainWindow):
 
         self.testingMenu = self.menuBar().addMenu("Testin&g")
         self.testingMenu.addAction("&Reload modules (debug)", reload_module)
+
+        # Set menubar color scheme, #ccbcc8
+        self.menuBar().setStyleSheet(
+            """
+            QMenuBar
+            {
+                background-color: #5D1049;
+                color: #fff;
+            }
+            QMenuBar::item
+            {
+                background-color: #5D1049;
+                color: #fff;
+            }
+            QMenuBar::item::selected
+            {
+                background-color: #ccbcc8;
+                color: #fff;
+            }
+            QMenu
+            {
+                background-color: #bf97b5;
+                color: #fff;
+            }
+            QMenu::item::selected
+            {
+                background-color: #333399;
+                color: #999;
+            }
+             """
+        )
+
+        # Set window background color.
+        self.setStyleSheet("background-color: white;")
 
         # Arrange Widgets using row, col grid arrangement.
         mainLayout = QGridLayout()
