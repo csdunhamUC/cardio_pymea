@@ -711,6 +711,7 @@ class PlotBeatSelectWindows(QWidget):
         paramWidget = QWidget()
         plotWidget = QWidget()
         paramWidget.setLayout(paramLayout)
+        paramWidget.setFixedWidth(530)
         plotWidget.setLayout(plotLayout)
         self.beatRangeLabel = QLabel("Start/End Beats")
         self.beatRangeLabel.setFixedWidth(170)
