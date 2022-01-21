@@ -332,7 +332,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
             skipinitialspace=True, low_memory=False)
 
         # Update file name display in GUI following import
-        analysisGUI.fileName.setText(import_filename)
+        analysisGUI.fileName.setText(f"File: {import_filename}")
         analysisGUI.file_path = import_path
 
         print("Import data completed at: ", 
@@ -862,10 +862,10 @@ class AnalysisGUI(QMainWindow):
 
         # Calculation Menu
         self.calcMenu = self.menuBar().addMenu("&Calculations")
-        self.calcMenu.addAction("&Find Beats (Use First!)", 
+        self.calcMenu.addAction("Find &Beats (Use First!)", 
             lambda: [self.determineBeatsWindow(raw_data, cm_beats, input_param, 
                 electrode_config, batch_data)])
-        self.calcMenu.addAction("&Calculate All (PM, LAT, dV/dt, CV, Amp, Int)",
+        self.calcMenu.addAction("&All (PM, LAT, dV/dt, CV, Amp, Int)",
             lambda: [calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
                 pace_maker, heat_map, input_param, electrode_config),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time,
@@ -881,28 +881,28 @@ class AnalysisGUI(QMainWindow):
                 main_heatmap.graph_all(self, heat_map, cm_beats, 
                 pace_maker, upstroke_vel, local_act_time, conduction_vel, 
                 input_param)])
-        self.calcMenu.addAction("Calculate &Pacemaker", 
+        self.calcMenu.addAction("&Pacemaker", 
             lambda: [self.pacemakerWindow(cm_beats, pace_maker, heat_map, 
                 input_param),
                 calculate_pacemaker.calculate_pacemaker(self, cm_beats, 
                 pace_maker, heat_map, input_param, electrode_config),
                 calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
                 input_param)])
-        self.calcMenu.addAction("Calculate &Local Act. Time",
+        self.calcMenu.addAction("&Local Activation Time",
             lambda: [self.localActTimeWindow(cm_beats, local_act_time, heat_map, 
                 input_param),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time,
                 heat_map, input_param, electrode_config),
                 calculate_lat.graph_local_act_time(self, heat_map, 
                 local_act_time, input_param)])
-        self.calcMenu.addAction("Calculate &Upstroke Velocity",
+        self.calcMenu.addAction("&Upstroke Velocity (dV/dt)",
             lambda: [self.upVelocityWindow(cm_beats, upstroke_vel, heat_map,
                 input_param),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
                 upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.graph_upstroke(self, heat_map, 
                 upstroke_vel, input_param)])
-        self.calcMenu.addAction("Calculate Conduction &Velocity",
+        self.calcMenu.addAction("Conduction &Velocity",
             lambda: [self.condVelocityWindow(cm_beats, local_act_time, 
                 conduction_vel, heat_map, input_param),
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
@@ -910,7 +910,7 @@ class AnalysisGUI(QMainWindow):
                 electrode_config),
                 calculate_cv.graph_conduction_vel(self, heat_map, 
                 local_act_time, conduction_vel, input_param)])
-        self.calcMenu.addAction("Calculate Field Potential &Duration",
+        self.calcMenu.addAction("&Field Potential Duration",
             lambda: [
                 self.fieldPotDurWindow(cm_beats, local_act_time,
                     field_potential, heat_map, input_param),
@@ -919,7 +919,7 @@ class AnalysisGUI(QMainWindow):
        
 
         # Plot Menu
-        self.plotMenu = self.menuBar().addMenu("Special &Plots")
+        self.plotMenu = self.menuBar().addMenu("Other &Plots")
         self.plotMenu.addAction("Cond. Vel. Vector &Field",
             lambda: [self.condVelVectorWindow(cm_beats, local_act_time, 
                 conduction_vel, input_param),
@@ -1022,18 +1022,18 @@ class AnalysisGUI(QMainWindow):
 
         # Parameters, linked to paramLayout widget.
         self.paramWidget = QWidget()
-        self.paramWidget.setFixedWidth(730)
+        self.paramWidget.setFixedWidth(830)
         self.plotWidget = QWidget()
         self.paramWidget.setLayout(paramLayout)
         self.plotWidget.setLayout(plotLayout)
         # Parameter entry widgets & labels.
-        self.pkHeightLab = QLabel("Min Peak" + "\n" + "Height (µV)")
+        self.pkHeightLab = QLabel("Min Peak\nHeight (µV)")
         self.pkHeightEdit = QLineEdit()
         self.pkHeightEdit.setFixedWidth(85)
         self.pkHeightEdit.setText("100")
         paramLayout.addWidget(self.pkHeightLab, 0, 0)
         paramLayout.addWidget(self.pkHeightEdit, 1, 0)
-        self.pkDistLab = QLabel("Min Peak" + "\n" + "Distance (ms)")
+        self.pkDistLab = QLabel("Min Peak\nDistance (ms)")
         self.pkDistEdit = QLineEdit()
         self.pkDistEdit.setFixedWidth(85)
         self.pkDistEdit.setText("1000")
@@ -1072,12 +1072,12 @@ class AnalysisGUI(QMainWindow):
         self.elecCombobox.setVisible(False)
         # File name label.
         self.fileName = QLabel("Waiting for file.")
-        self.fileName.setFixedWidth(200)
+        self.fileName.setFixedWidth(300)
         self.fileName.setWordWrap(True)
         paramLayout.addWidget(self.fileName, 0, 6)
         # File duration label.
         self.fileLength = QLabel("Waiting for calculation.")
-        self.fileLength.setFixedWidth(200)
+        self.fileLength.setFixedWidth(300)
         self.fileLength.setWordWrap(True)
         paramLayout.addWidget(self.fileLength, 1, 6)
         

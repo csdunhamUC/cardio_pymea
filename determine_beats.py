@@ -41,8 +41,10 @@ electrode_config, batch_data):
         analysisGUI.file_length = ((len(raw_data.imported.index) / 
             input_param.sample_frequency) / 60)
 
+        rounded_file_length = str(round(analysisGUI.file_length, 2))
+
         analysisGUI.fileLength.setText(
-            str(round(analysisGUI.file_length, 2)) + " minutes")
+            f"Recording length: {rounded_file_length} minutes")
 
         # Check if using batch processing.
         # If not, get truncation status & endpoints from GUI
@@ -473,9 +475,10 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         
         # Adjust y-axis so that it fits our coordinate system
         ax.invert_yaxis()
+        ax.set_title("All Electrodes View", x=0.425, y=1, pad=20)
 
         # Assign title and tighten up layout before drawing the figure.
-        analysisGUI.beatsWindow.paramPlot2.fig.suptitle("All Electrodes View")
+        # analysisGUI.beatsWindow.paramPlot2.fig.suptitle("All Electrodes View")
         analysisGUI.beatsWindow.paramPlot2.fig.tight_layout()
         analysisGUI.beatsWindow.paramPlot2.draw()
         # End right-panel plot
