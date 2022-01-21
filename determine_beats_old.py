@@ -25,6 +25,9 @@ electrode_config, batch_data):
             delattr(cm_beats, 'y_axis')
             delattr(cm_beats, 'dist_beats')
             delattr(cm_beats, 'negative_dist_beats')
+            # delattr(cm_beats, 'prom_beats')
+            # delattr(cm_beats, 'width_beats')
+            # delattr(cm_beats, 'thresh_beats')
 
         # Check whether batch analysis is being performed.
         # If not (i.e. normal mode/single file), pull parameters from GUI
@@ -206,6 +209,9 @@ electrode_config, batch_data):
  
         # Establish "fields" as dataframes for subsequent operations.
         cm_beats.dist_beats = pd.DataFrame()
+        # cm_beats.prom_beats = pd.DataFrame()
+        # cm_beats.width_beats = pd.DataFrame()
+        # cm_beats.thresh_beats = pd.DataFrame()
 
         # Dataframe for negative amplitudes
         # Applied only for dist_beats as it is the primary detection method
@@ -265,6 +271,35 @@ electrode_config, batch_data):
                 [cm_beats.negative_dist_beats, neg_dist_beats], 
                 axis='columns')
 
+            # prom_beats = pd.Series(find_peaks(
+            #     cm_beats.y_axis.iloc[0:, column], 
+            #     height=input_param.min_peak_height,
+            #     distance=input_param.min_peak_dist, 
+            #     prominence=input_param.parameter_prominence)[0], 
+            #     name=column+1)
+            # cm_beats.prom_beats = pd.concat(
+            #     [cm_beats.prom_beats, prom_beats], 
+            #     axis='columns')
+
+            # width_beats = pd.Series(find_peaks(
+            #     cm_beats.y_axis.iloc[0:, column], 
+            #     height=input_param.min_peak_height,
+            #     distance=input_param.min_peak_dist, 
+            #     width=input_param.parameter_width)[0], 
+            #     name=column+1)
+            # cm_beats.width_beats = pd.concat(
+            #     [cm_beats.width_beats, width_beats], 
+            #     axis='columns')
+
+            # thresh_beats = pd.Series(find_peaks(
+            #     cm_beats.y_axis.iloc[0:, column], 
+            #     height=input_param.min_peak_height,
+            #     distance=input_param.min_peak_dist, 
+            #     threshold=input_param.parameter_thresh)[0], 
+            #     name=column+1)
+            # cm_beats.thresh_beats = pd.concat(
+            #     [cm_beats.thresh_beats, thresh_beats], 
+            #     axis='columns')
 
         # Assign column name identifiers to columns of dist_beats
         cm_beats.dist_beats.columns = electrode_config.electrode_names
@@ -272,6 +307,9 @@ electrode_config, batch_data):
         # Data designation to ensure NaN values are properly handled by 
         # subsequent calculations.
         cm_beats.dist_beats.astype('float64')
+        # cm_beats.prom_beats.astype('float64')
+        # cm_beats.width_beats.astype('float64')
+        # cm_beats.thresh_beats.astype('float64')
         cm_beats.negative_dist_beats.astype('float64')
 
         # Generate beat counts for the different peakfinder methods by finding 
@@ -288,17 +326,49 @@ electrode_config, batch_data):
             cm_beats.neg_beat_count_dist[column] = len(
                 cm_beats.negative_dist_beats.iloc[0:, column].dropna(
                     axis='index'))
- 
+
+        # cm_beats.beat_count_prom = np.zeros(
+        #     len(cm_beats.prom_beats.columns))
+        # for column in range(len(cm_beats.prom_beats.columns)):
+        #     cm_beats.beat_count_prom[column] = len(
+        #         cm_beats.prom_beats.iloc[0:, column].dropna(axis='index'))
+
+        # cm_beats.beat_count_width = np.zeros(
+        #     len(cm_beats.width_beats.columns))
+        # for column in range(len(cm_beats.width_beats.columns)):
+        #     cm_beats.beat_count_width[column] = len(
+        #         cm_beats.width_beats.iloc[0:, column].dropna(axis='index'))
+
+        # cm_beats.beat_count_thresh = np.zeros(
+        #     len(cm_beats.thresh_beats.columns))
+        # for column in range(len(cm_beats.thresh_beats.columns)):
+        #     cm_beats.beat_count_thresh[column] = len(
+        #         cm_beats.thresh_beats.iloc[0:, column].dropna(axis='index'))
+
         # Finds the mode of beats across the dataset for each peakfinder 
         # parameter set.
         cm_beats.beat_count_dist_mode = stats.mode(
             cm_beats.beat_count_dist)
         cm_beats.neg_beat_count_dist_mode = stats.mode(
             cm_beats.neg_beat_count_dist)
+        # cm_beats.beat_count_prom_mode = stats.mode(
+        #     cm_beats.beat_count_prom)
+        # cm_beats.beat_count_width_mode = stats.mode(
+        #     cm_beats.beat_count_width)
+        # cm_beats.beat_count_thresh_mode = stats.mode(
+        #     cm_beats.beat_count_thresh)
 
         # Prints the output from the preceding operations.
         print("Mode of beat count: " + str(
             cm_beats.beat_count_dist_mode[0]))
+        # print("Mode of (negative) beats using distance parameter: " + str(
+        #     cm_beats.neg_beat_count_dist_mode[0]))
+        # print("Mode of beats using prominence parameter: " + str(
+        #     cm_beats.beat_count_prom_mode[0]))
+        # print("Mode of beats using width parameter: " + str(
+        #     cm_beats.beat_count_width_mode[0]))
+        # print("Mode of beats using threshold parameter: " + str(
+        #     cm_beats.beat_count_thresh_mode[0]) + "\n")
 
         dist_beats_size = np.shape(cm_beats.dist_beats)
         print("Shape of cm_beats.dist_beats: " + 
@@ -306,6 +376,15 @@ electrode_config, batch_data):
         neg_dist_beats_size = np.shape(cm_beats.negative_dist_beats)
         print("Shape of cm_beats.negative_dist_beats: " + 
             str(neg_dist_beats_size))
+        # prom_beats_size = np.shape(cm_beats.prom_beats)
+        # print("Shape of cm_beats.prom_beats: " + 
+        #     str(prom_beats_size))
+        # width_beats_size = np.shape(cm_beats.width_beats)
+        # print("Shape of cm_beats.width_beats: " + 
+        #     str(width_beats_size))
+        # thresh_beats_size = np.shape(cm_beats.thresh_beats)
+        # print("Shape of cm_beats.thresh_beats: " + 
+        #     str(thresh_beats_size) + ".\n")
 
         print("Finished.")
         end_time = time.process_time()

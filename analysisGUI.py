@@ -307,7 +307,8 @@ class ElectrodeConfig:
 
 
 # Import data files.  Files must be in .txt or .csv format.  May add toggles or 
-# checks to support more data types.
+# checks to support more data types, particularly if NOT using MEAs from
+# Multichannel Systems or not using MC_Data converted MC_Rack *.mcd file
 def data_import(analysisGUI, raw_data, electrode_config):
     try:
         data_filename_and_path = QFileDialog.getOpenFileName(analysisGUI, 
@@ -369,14 +370,9 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
         saveFile = QFileDialog.getSaveFileName(analysisGUI, "Save File", 
             analysisGUI.file_path, "Excel file (*.xlsx)")
         file_path, file_name = os.path.split(saveFile[0])
-        
-        # file_name = analysisGUI.fileName.text()
-        # file_name = file_name.replace(".txt", "")
-        # file_path = "/home/csdunham/Documents/TempExcel"
 
         with pd.ExcelWriter('{path}/{name}.xlsx'.format(
             path=file_path, name=file_name)) as writer:
-        # with pd.ExcelWriter('%s.xlsx' % file_name) as writer:
             pace_maker.param_dist_normalized.to_excel(writer, 
                 sheet_name='Pacemaker (Normalized)')
             pace_maker.param_dist_raw.to_excel(writer, 
@@ -385,10 +381,6 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
                 sheet_name="Per Beat Max Time Lag")
             pace_maker.transloc_events.to_excel(writer,
                 sheet_name="Translocation Events", index=False)
-            # pace_maker.param_width_normalized.to_excel(writer, 
-                # sheet_name='PM_Param_Width_Normalized')
-            # pace_maker.param_thresh_normalized.to_excel(writer, 
-                # sheet_name='PM_Param_Thresh_Normalized')
             local_act_time.param_dist_normalized.to_excel(writer, 
                 sheet_name='LAT Normalized')
             local_act_time.distance_from_min.to_excel(writer, 
@@ -409,10 +401,6 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
                 sheet_name='Delta Beat Amplitude')
             beat_amp_int.beat_interval.to_excel(writer, 
                 sheet_name='Beat Interval')
-            # cm_beats.dist_beats.to_excel(writer, sheet_name='Beat Distance')
-            # cm_beats.prom_beats.to_excel(writer, sheet_name='Prom_Beats')
-            # cm_beats.width_beats.to_excel(writer, sheet_name='Beat Width')
-            # cm_beats.thresh_beats.to_excel(writer, sheet_name='Beat Thresh')
             cm_stats.pace_maker_filtered_data.to_excel(writer, 
                 sheet_name='PM Stats')
             cm_stats.local_act_time_filtered_data.to_excel(writer, 
@@ -470,7 +458,7 @@ def reload_module():
     print("Reloaded modules.")
 
 
-# Classes for the plots (axes) of GUI.
+# FigureCanvas classes for the plots (figs and axes) used in GUI windows.
 class MainHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi, 
@@ -515,7 +503,7 @@ class PowerlawCanvas (FigureCanvasQTAgg):
         super(PowerlawCanvas, self).__init__(self.fig)
 
 
-# Classes for the actual GUI windows
+# Classes for the GUI windows
 class SoloHeatmapWindows(QWidget):
     def __init__(self, analysisGUI):
         super(SoloHeatmapWindows, self).__init__()
@@ -570,7 +558,8 @@ class BeatSignalPlotWindow(QWidget):
         self.filterTypeEdit.addItem("Low-pass Only")
         self.filterTypeEdit.addItem("High-pass Only")
         self.filterTypeEdit.addItem("Bandpass")
-        self.filterTypeEdit.setStyleSheet('selection-background-color: #483a78;')
+        self.filterTypeEdit.setStyleSheet(
+            'selection-background-color: #483a78;')
 
         # Filter parameters widgets.
         self.butterOrderLabel = QLabel("Butterworth\nOrder")
@@ -618,13 +607,6 @@ class BeatSignalPlotWindow(QWidget):
         plotLayout.addWidget(self.paramSlider1b, 3, 0)
         plotLayout.addWidget(paramToolbar, 1, 0)
         plotLayout.addWidget(paramToolbar2, 1, 1)
-    
-        # self.paramPlot = GenericPlotCanvas(self, width=8, height=7, dpi=100)
-        # self.paramSlider = QSlider(Qt.Horizontal)
-        # paramToolbar = NavigationToolbar2QT(self.paramPlot, self)
-        # plotLayout.addWidget(self.paramPlot, 0, 0)
-        # plotLayout.addWidget(self.paramSlider, 1, 0)
-        # plotLayout.addWidget(paramToolbar, 2, 0)
 
         mainLayout.addWidget(paramWidget, 0, 0)
         mainLayout.addWidget(plotWidget, 1, 0)
@@ -1057,24 +1039,6 @@ class AnalysisGUI(QMainWindow):
         self.pkDistEdit.setText("1000")
         paramLayout.addWidget(self.pkDistLab, 0, 1)
         paramLayout.addWidget(self.pkDistEdit, 1, 1)
-        # self.pkProm = QLabel("Peak" + "\n" + "Prominence")
-        # self.pkPromEdit = QLineEdit()
-        # self.pkPromEdit.setFixedWidth(70)
-        # self.pkPromEdit.setText("100")
-        # paramLayout.addWidget(self.pkProm, 0, 2)
-        # paramLayout.addWidget(self.pkPromEdit, 1, 2)
-        # self.pkWidth = QLabel("Peak" + "\n" + "Width")
-        # self.pkWidthEdit = QLineEdit()
-        # self.pkWidthEdit.setFixedWidth(70)
-        # self.pkWidthEdit.setText("3")
-        # paramLayout.addWidget(self.pkWidth, 0, 3)
-        # paramLayout.addWidget(self.pkWidthEdit, 1, 3)
-        # self.pkThresh = QLabel("Peak" + "\n" + "Threshold")
-        # self.pkThreshEdit = QLineEdit()
-        # self.pkThreshEdit.setFixedWidth(70)
-        # self.pkThreshEdit.setText("50")
-        # paramLayout.addWidget(self.pkThresh, 0, 4)
-        # paramLayout.addWidget(self.pkThreshEdit, 1, 4)
         # Frequency selection widget.
         self.sampleFreq = QLabel("Sample\nFrequency (Hz)")
         self.sampleFreqEdit = QComboBox()
@@ -1085,7 +1049,7 @@ class AnalysisGUI(QMainWindow):
         paramLayout.addWidget(self.sampleFreq, 0, 2)
         paramLayout.addWidget(self.sampleFreqEdit, 1, 2)
         # Truncation widgets.
-        self.truncCheckbox = QCheckBox("Truncate Data")
+        self.truncCheckbox = QCheckBox("Truncate Data\n(minutes)")
         self.truncCheckbox.clicked.connect(lambda: trunc_toggle(self))
         self.truncCheckbox.setFixedWidth(120)
         self.truncStartEdit = QLineEdit()
@@ -1193,8 +1157,8 @@ class AnalysisGUI(QMainWindow):
             self.dvdtWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
             self.dvdtWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_upstroke_vel.graph_upstroke(self, heat_map, upstroke_vel, 
-                input_param)])
+                calculate_upstroke_vel.graph_upstroke(self, heat_map, 
+                upstroke_vel, input_param)])
         except (AttributeError):
             print("")
 
@@ -1209,8 +1173,8 @@ class AnalysisGUI(QMainWindow):
             self.latWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
             self.latWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_lat.graph_local_act_time(self, heat_map, local_act_time, 
-                input_param)])
+                calculate_lat.graph_local_act_time(self, heat_map, 
+                local_act_time, input_param)])
         except (AttributeError):
             print("")
 
@@ -1225,8 +1189,8 @@ class AnalysisGUI(QMainWindow):
             self.cvWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
             self.cvWindow.paramSlider.valueChanged.connect(lambda: [
-                calculate_cv.graph_conduction_vel(self, heat_map, local_act_time, 
-                conduction_vel, input_param)])
+                calculate_cv.graph_conduction_vel(self, heat_map, 
+                local_act_time, conduction_vel, input_param)])
         except (AttributeError):
             print("")
 
@@ -1279,9 +1243,9 @@ class AnalysisGUI(QMainWindow):
             self.pvdWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
             self.pvdWindow.paramSlider.valueChanged.connect(lambda: [
-                param_vs_distance_stats.param_vs_distance_graphing(self, cm_beats, 
-                pace_maker, upstroke_vel, local_act_time, conduction_vel, 
-                input_param, cm_stats)])
+                param_vs_distance_stats.param_vs_distance_graphing(self, 
+                cm_beats, pace_maker, upstroke_vel, local_act_time, 
+                conduction_vel, input_param, cm_stats)])
         except AttributeError:
             print("")
 
