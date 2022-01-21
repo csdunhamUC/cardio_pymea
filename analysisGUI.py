@@ -537,9 +537,14 @@ class BeatSignalPlotWindow(QWidget):
         # Establish grid layout.
         mainLayout = QGridLayout()
         paramLayout = QGridLayout()
+        buttonLayout = QGridLayout()
+        signalLayout = QGridLayout()
         plotLayout = QGridLayout()
 
         # Set up container widgets
+        buttonWidget = QWidget()
+        buttonWidget.setLayout(buttonLayout)
+        buttonWidget.setFixedWidth(100)
         paramWidget = QWidget()
         paramWidget.setLayout(paramLayout)
         paramWidget.setFixedWidth(500)
@@ -549,6 +554,7 @@ class BeatSignalPlotWindow(QWidget):
         # Plot button
         self.plotButton = QPushButton("Find\nBeats")
         self.plotButton.setFixedSize(70, 70)
+        buttonLayout.addWidget(self.plotButton, 0, 0)
 
         # Filter selection widgets.
         self.filterType = QLabel("Signal Filter\n(Butterworth)")
@@ -576,15 +582,26 @@ class BeatSignalPlotWindow(QWidget):
         self.highPassFreqEdit.setFixedWidth(70)
 
         # Set widget layouts
-        paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
-        paramLayout.addWidget(self.filterType, 0, 1)
-        paramLayout.addWidget(self.filterTypeEdit, 1, 1)
-        paramLayout.addWidget(self.butterOrderLabel, 0, 2)
-        paramLayout.addWidget(self.butterOrderEdit, 1, 2)
-        paramLayout.addWidget(self.lowPassFreqLabel, 0, 3)
-        paramLayout.addWidget(self.lowPassFreqEdit, 1, 3)
-        paramLayout.addWidget(self.highPassFreqLabel, 0, 4)
-        paramLayout.addWidget(self.highPassFreqEdit, 1, 4)
+        # paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
+        signalWidget = QWidget()
+        signalWidget.setLayout(signalLayout)
+        signalWidget.setFixedWidth(400)
+        signalLayout.addWidget(self.filterType, 0, 0, 
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.filterTypeEdit, 1, 0, 
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.butterOrderLabel, 0, 1, 
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.butterOrderEdit, 1, 1,
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.lowPassFreqLabel, 0, 2,
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.lowPassFreqEdit, 1, 2,
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.highPassFreqLabel, 0, 3,
+            alignment=Qt.AlignLeft)
+        signalLayout.addWidget(self.highPassFreqEdit, 1, 3,
+            alignment=Qt.AlignLeft)
         self.butterOrderLabel.hide()
         self.butterOrderEdit.hide()
         self.lowPassFreqLabel.hide()
@@ -593,6 +610,9 @@ class BeatSignalPlotWindow(QWidget):
         self.highPassFreqEdit.hide()
         self.filterTypeEdit.activated.connect(self.check_filter)
  
+        paramLayout.addWidget(buttonWidget, 0, 0)
+        paramLayout.addWidget(signalWidget, 0, 1)
+
         # From FPDWindow
         self.paramPlot1 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
         self.paramPlot2 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
