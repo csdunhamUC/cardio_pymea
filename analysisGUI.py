@@ -496,10 +496,11 @@ class PSDPlotCanvas(FigureCanvasQTAgg):
 
 
 class PowerlawCanvas (FigureCanvasQTAgg):
-    def __init__(self, parent=None, width=7, height=7, dpi=100):
+    def __init__(self, parent=None, width=8, height=5, dpi=100):
         self.fig=plt.Figure(figsize=(width, height), dpi=dpi)
-        self.axis1 = self.fig.add_subplot(1,2,1)
-        self.axis2 = self.fig.add_subplot(1,2,2)
+        self.axis1 = self.fig.add_subplot(1,3,1)
+        self.axis2 = self.fig.add_subplot(1,3,2)
+        self.axis3 = self.fig.add_subplot(1,3,3)
         super(PowerlawCanvas, self).__init__(self.fig)
 
 
@@ -815,15 +816,15 @@ class PowerlawWindow(QWidget):
     def setupUI(self, analysisGUI):
         mainLayout = QGridLayout()
         plotLayout = QGridLayout()
-        rpvalueLayout = QGridLayout()
+        LLRvalueLayout = QGridLayout()
 
         plotWidget = QWidget()
         plotWidget.setLayout(plotLayout)
-        rpvalueWidget = QWidget()
-        rpvalueWidget.setFixedSize(760, 250)
-        rpvalueWidget.setLayout(rpvalueLayout)
+        LLRvalueWidget = QWidget()
+        LLRvalueWidget.setFixedSize(760, 250)
+        LLRvalueWidget.setLayout(LLRvalueLayout)
 
-        self.powerlawPlot = PowerlawCanvas(self, width=11, height=6, dpi=120)
+        self.powerlawPlot = PowerlawCanvas(self, width=10, height=6, dpi=150)
         plToolbar = NavigationToolbar2QT(self.powerlawPlot, self)
         plotLayout.addWidget(self.powerlawPlot, 0, 0)
         plotLayout.addWidget(plToolbar, 1, 0)
@@ -832,10 +833,10 @@ class PowerlawWindow(QWidget):
             "powerlaw distribution_compare prinout (awaiting results)")
         self.statsPrintout.setFixedWidth(750)
         self.statsPrintout.setReadOnly(True)
-        rpvalueLayout.addWidget(self.statsPrintout, 1, 0)
+        LLRvalueLayout.addWidget(self.statsPrintout, 1, 0)
 
         mainLayout.addWidget(plotWidget, 0, 0)
-        mainLayout.addWidget(rpvalueWidget, 1, 0, 1, 1)
+        mainLayout.addWidget(LLRvalueWidget, 1, 0, 1, 1)
         self.setLayout(mainLayout)
 
 

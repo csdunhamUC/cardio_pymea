@@ -23,16 +23,16 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
     try:
         # Check whether using translocation data from individual dataset or 
         # batch.
-        if hasattr(pace_maker, "transloc_events"):
-            transloc_data = pace_maker.transloc_events
-            print("Using dataset translocations.")
-        elif hasattr(batch_data, "batch_translocs"):
+        if hasattr(batch_data, "batch_translocs"):
             transloc_data = batch_data.batch_translocs
+            print("Using dataset translocations.")
+        elif hasattr(pace_maker, "transloc_events"):
+            transloc_data = pace_maker.transloc_events
             # size_event = batch_data.batch_translocs
             print("Using batch translocations.")
 
-        multi_events = True # bool(analysisGUI.multiEventsEdit.currentText())
-        bin_method = "none"
+        multi_events = True # bool(analysisGUI.plWindow.multiEventsEdit.currentText())
+        bin_method = "SR"
 
         # Check for sufficient data.
         # Only conduct analysis if there's at least 5 translocations
@@ -54,7 +54,7 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
                 del temp_data
             # Check method from drop-down menu for bin method selection
             if bin_method == "manual" or bin_method == "none":
-                nbins = analysisGUI.numBinsEdit.text()
+                nbins = 50 # analysisGUI.numBinsEdit.text()
             # Use Sturge's Rule to determine nbins
             elif bin_method == "SR":
                 nbins = int(np.ceil(1 + 3.322*np.log(len(transloc_data))))
@@ -71,32 +71,35 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
             ###################################################################
             # Model Distributions for Comparison
             # Exponential distribution
-            exp_dist_batch2 = sp.stats.expon
-            args_exp_batch2 = exp_dist_batch2.fit(sorted_transloc_data)
+            exp_dist_batch = sp.stats.expon
+            args_exp_batch = exp_dist_batch.fit(sorted_transloc_data)
 
             # Power-law distribution
-            pl_dist_batch2 = sp.stats.powerlaw
-            args_pl_batch2 = pl_dist_batch2.fit(sorted_transloc_data)
+            pl_dist_batch = sp.stats.powerlaw
+            args_pl_batch = pl_dist_batch.fit(sorted_transloc_data)
 
             # Weibull distribution
-            weib_dist_batch2 = sp.stats.weibull_min
-            args_weib_batch2 = weib_dist_batch2.fit(sorted_transloc_data)
+            weib_dist_batch = sp.stats.weibull_min
+            args_weib_batch = weib_dist_batch.fit(sorted_transloc_data)
 
             # Log-normal distribution
-            lognorm_dist_batch2 = sp.stats.lognorm
-            args_lognorm_batch2 = lognorm_dist_batch2.fit(sorted_transloc_data)
+            lognorm_dist_batch = sp.stats.lognorm
+            args_lognorm_batch = lognorm_dist_batch.fit(sorted_transloc_data)
 
-            temp_events_batch_2 = np.linspace(
-                0, sorted_transloc_data.max(), len(sorted_transloc_data))
+            # Placeholder for x-axis for PDF plots.
+            temp_events = np.linspace(
+                0, 
+                sorted_transloc_data.max(), 
+                len(sorted_transloc_data))
 
-            exp_dist_vals2 = exp_dist_batch2.pdf(
-                temp_events_batch_2, *args_exp_batch2)
-            pl_dist_vals2 = pl_dist_batch2.pdf(
-                temp_events_batch_2, *args_pl_batch2)
-            weib_dist_vals2 = weib_dist_batch2.pdf(t
-                emp_events_batch_2, *args_weib_batch2)
-            lognorm_dist_vals2 = lognorm_dist_batch2.pdf(
-                temp_events_batch_2, *args_lognorm_batch2)
+            exp_dist_vals = exp_dist_batch.pdf(
+                temp_events, *args_exp_batch)
+            pl_dist_vals = pl_dist_batch.pdf(
+                temp_events, *args_pl_batch)
+            weib_dist_vals = weib_dist_batch.pdf(
+                temp_events, *args_weib_batch)
+            lognorm_dist_vals = lognorm_dist_batch.pdf(
+                temp_events, *args_lognorm_batch)
 
             ###################################################################
             # Plotting.
@@ -106,7 +109,7 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
             
             # Plot histogram.
             analysisGUI.plWindow.powerlawPlot.axis1.hist(
-                sorted_size_event, 
+                sorted_transloc_data, 
                 nbins, 
                 color="gray", 
                 ec="black", 
@@ -123,29 +126,33 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
 
             # Plot distributions.
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
-                beats, 
-                dist_lognormal * len(sorted_transloc_data) * bmax / nbins,
+                temp_events, 
+                (lognorm_dist_vals * len(sorted_transloc_data) 
+                    * sorted_transloc_data.max()) / nbins,
                 '--',
                 color="yellow",
                 lw=1, 
                 label='Log-Normal')
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
-                beats, 
-                dist_exponweib * len(sorted_transloc_data) * bmax / nbins,
+                temp_events, 
+                (weib_dist_vals * len(sorted_transloc_data) 
+                    * sorted_transloc_data.max()) / nbins,
                 '--',
                 color="green",
                 lw=1, 
                 label='Weibull')
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
-                beats, 
-                dist_expon * len(sorted_transloc_data) * bmax / nbins,
+                temp_events, 
+                (exp_dist_vals * len(sorted_transloc_data) 
+                    * sorted_transloc_data.max()) / nbins,
                 '--', 
                 color="red",
                 lw=1, 
                 label='Exponential')
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
-                beats, 
-                dist_powerlaw * len(sorted_transloc_data) * bmax / nbins,
+                temp_events, 
+                (pl_dist_vals * len(sorted_transloc_data) 
+                    * sorted_transloc_data.max()) / nbins,
                 '--',
                 color="blue",
                 lw=1, 
@@ -171,15 +178,100 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
 
 
 def pdf_plotting(analysisGUI, sorted_transloc_data):
-    print()
+    # check_discrete = analysisGUI.plWindow.setDiscreteEdit.currentText()
+    set_discrete = True # str2bool(check_discrete)
+    ax_pdf = analysisGUI.plWindow.powerlawPlot.axis2
+
+    PL_results = pl.Fit(sorted_transloc_data, discrete=set_discrete)
+    pdf_alpha = PL_results.alpha
+
+    PL_results.plot_pdf(
+        color = 'black',
+        linewidth = 2,
+        label=f"Empirical Data\nx$_{{min}}$ = {PL_results.xmin}",
+        ax=ax_pdf,
+        alpha=0.8)
+    PL_results.power_law.plot_pdf(
+        color = 'blue',
+        linestyle = '--',
+        label=f"Power Law\n" + r"$\alpha$ = " + f"{-1*pdf_alpha:.2f}",
+        ax=ax_pdf)
+    PL_results.lognormal.plot_pdf(
+        color = 'yellow',
+        linestyle = '--',
+        label=f"Log-Normal",
+        ax=ax_pdf)
+    PL_results.exponential.plot_pdf(
+        color = 'r',
+        linestyle = '--',
+        label=f"Exponential",
+        ax=ax_pdf)
+    PL_results.stretched_exponential.plot_pdf(
+        color = 'green',
+        linestyle = '--',
+        label=f"Weibull",
+        ax=ax_pdf)
+
+    ax_pdf.set(
+        xlabel="Quiescent Period (beats)",
+        ylabel="p(X)",
+        xlim=(10**0, 10**2),
+        ylim=(10**-4, 10**0.5))
+
+    # ax_ccdf.set_ylabel(r"p(X$\geq$x)")
+
+    analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
+    analysisGUI.plWindow.powerlawPlot.draw()
 
 
 def ccdf_plotting(analysisGUI, sorted_transloc_data):
-    print()
+    # check_discrete = analysisGUI.plWindow.setDiscreteEdit.currentText()
+    set_discrete = True # str2bool(check_discrete)
+    ax_ccdf = analysisGUI.plWindow.powerlawPlot.axis3
+
+    PL_results = pl.Fit(sorted_transloc_data, discrete=set_discrete)
+    ccdf_alpha = PL_results.alpha
+
+    # CCDF
+    PL_results.plot_ccdf(
+        color = 'black',
+        linewidth = 2,
+        label=f"Empirical Data\nx$_{{min}}$ = {PL_results.xmin}",
+        ax=ax_ccdf,
+        alpha=0.8)
+    PL_results.power_law.plot_ccdf(
+        color = 'blue',
+        linestyle = '--',
+        label=f"Power Law\n" + r"$\alpha$ = " + f"{-1*ccdf_alpha:.2f}",
+        ax=ax_ccdf)
+    PL_results.lognormal.plot_ccdf(
+        color = 'yellow',
+        linestyle = '--',
+        label=f"Log-Normal",
+        ax=ax_ccdf)
+    PL_results.exponential.plot_ccdf(
+        color = 'r',
+        linestyle = '--',
+        label=f"Exponential",
+        ax=ax_ccdf)
+    PL_results.stretched_exponential.plot_ccdf(
+        color = 'green',
+        linestyle = '--',
+        label=f"Weibull",
+        ax=ax_ccdf)
+    
+    ax_ccdf.set(
+        xlabel="Quiescent Period (beats)",
+        ylabel=r"p(X$\geq$x)",
+        xlim=(10**0, 10**2),
+        ylim=(10**-4, 10**0.5))
+
+    analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
+    analysisGUI.plWindow.powerlawPlot.draw()
 
 
 #R/p analysis
-def compare_via_LLR(analysisGUI, pace_maker, batch_data):
+def compare_via_LLR(analysisGUI, sorted_transloc_data):
     try: 
         # Check whether using translocation data from individual dataset or batch.
         if hasattr(pace_maker, "transloc_events"):
@@ -264,6 +356,10 @@ def compare_via_LLR(analysisGUI, pace_maker, batch_data):
         print()
     except TypeError:
         print("Cannot Calculate Statistics: No Translocations Detected")
+
+
+def str2bool(check_string):
+    return str(check_string).lower() in ("true")
 
 
 #def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data): 
