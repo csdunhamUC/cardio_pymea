@@ -11,209 +11,184 @@ from numpy.lib.histograms import histogram
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import pandas as pd
 import scipy as sp
+import scipy.stats as spstats
 import statsmodels as sm
 import powerlaw as pl
 import detect_transloc
 import re
 
 
-def pl_histogram_plotting(analysisGUI, pace_maker, batch_data): 
+# data: list, nbins: int = 50, multi_events: bool = False, bin_method: str = "none"
+def compare_distribs(analysisGUI, pace_maker, batch_data): 
     try:
-        # Check whether using translocation data from individual dataset or batch.
+        # Check whether using translocation data from individual dataset or 
+        # batch.
         if hasattr(pace_maker, "transloc_events"):
-            size_event = pace_maker.transloc_events
+            transloc_data = pace_maker.transloc_events
             print("Using dataset translocations.")
         elif hasattr(batch_data, "batch_translocs"):
-            size_event = normalize_batch(batch_data.beat_event_dict)
+            transloc_data = batch_data.batch_translocs
             # size_event = batch_data.batch_translocs
-            print("Using normalized batch translocations.")
+            print("Using batch translocations.")
 
-        if len(size_event) > 5: 
-            sorted_size_event = sorted(size_event)
+        multi_events = True # bool(analysisGUI.multiEventsEdit.currentText())
+        bin_method = "none"
+
+        # Check for sufficient data.
+        # Only conduct analysis if there's at least 5 translocations
+        if len(transloc_data) > 5: 
+            # If toggled, filter for multiple events only.
+            if multi_events == True:
+                # Find unique values, counts in translocation data
+                unique_vals, unique_counts = np.unique(transloc_data, 
+                    return_counts=True)
+                # Find repeating values only (i.e. count greater than 1)
+                repeat_vals_only = unique_vals[np.where(unique_counts > 1)]
+                repeat_counts_only = unique_counts[np.where(unique_counts > 1)]
+                # Filter data for those events that occur multiple times.
+                temp_data = [
+                    val for val in transloc_data if val in repeat_vals_only]
+                # Re-assign transloc_data to the filtered data
+                transloc_data = temp_data
+                # Delete the temporary variable
+                del temp_data
+            # Check method from drop-down menu for bin method selection
+            if bin_method == "manual" or bin_method == "none":
+                nbins = analysisGUI.numBinsEdit.text()
+            # Use Sturge's Rule to determine nbins
+            elif bin_method == "SR":
+                nbins = int(np.ceil(1 + 3.322*np.log(len(transloc_data))))
+            # Use Freedman-Diaconis Rule to determine nbins.
+            elif bin_method == "FD":
+                bin_width - 2 * (
+                    spstats.iqr(transloc_data) / (len(transloc_data)**(1/3)))
+                nbins = int(
+                    np.ceil((max(transloc_data) - 
+                        min(transloc_data)) / bin_width))
+
+            sorted_transloc_data = np.sort(transloc_data)
             
-            #Model Distributions for Comparison
-            #Power Law
-            pldist = sp.stats.powerlaw
-            args_powerlaw = pldist.fit(sorted_size_event)
+            ###################################################################
+            # Model Distributions for Comparison
+            # Exponential distribution
+            exp_dist_batch2 = sp.stats.expon
+            args_exp_batch2 = exp_dist_batch2.fit(sorted_transloc_data)
 
-            #Exponential
-            expondist = sp.stats.expon
-            args_expon = expondist.fit(sorted_size_event)
+            # Power-law distribution
+            pl_dist_batch2 = sp.stats.powerlaw
+            args_pl_batch2 = pl_dist_batch2.fit(sorted_transloc_data)
 
-            #Stretched Exponential - Weibull
-            weibulldist = sp.stats.exponweib
-            args_exponweib = weibulldist.fit(sorted_size_event)
+            # Weibull distribution
+            weib_dist_batch2 = sp.stats.weibull_min
+            args_weib_batch2 = weib_dist_batch2.fit(sorted_transloc_data)
 
-            #Log Normal
-            lognormdist = sp.stats.lognorm
-            args_lognorm = lognormdist.fit(sorted_size_event)
+            # Log-normal distribution
+            lognorm_dist_batch2 = sp.stats.lognorm
+            args_lognorm_batch2 = lognorm_dist_batch2.fit(sorted_transloc_data)
 
-            #Finding the max x value and linerizing the model data
-            bmax = max(sorted_size_event)
-            beats = np.linspace(0., bmax, 100)
+            temp_events_batch_2 = np.linspace(
+                0, sorted_transloc_data.max(), len(sorted_transloc_data))
 
-            #Fitting Distributions to Data
-            dist_powerlaw = pldist.pdf(beats, *args_powerlaw)
-            dist_lognormal = lognormdist.pdf(beats, *args_lognorm)
-            dist_exponweib = weibulldist.pdf(beats, *args_exponweib)
-            dist_expon = expondist.pdf(beats, *args_expon)
+            exp_dist_vals2 = exp_dist_batch2.pdf(
+                temp_events_batch_2, *args_exp_batch2)
+            pl_dist_vals2 = pl_dist_batch2.pdf(
+                temp_events_batch_2, *args_pl_batch2)
+            weib_dist_vals2 = weib_dist_batch2.pdf(t
+                emp_events_batch_2, *args_weib_batch2)
+            lognorm_dist_vals2 = lognorm_dist_batch2.pdf(
+                temp_events_batch_2, *args_lognorm_batch2)
 
-            #Plotting Distributions
+            ###################################################################
+            # Plotting.
+
             # Clear axis if previously plotted.
             analysisGUI.plWindow.powerlawPlot.axis1.cla()
             
-            nbins = 50
-            length = len(sorted_size_event)
+            # Plot histogram.
+            analysisGUI.plWindow.powerlawPlot.axis1.hist(
+                sorted_size_event, 
+                nbins, 
+                color="gray", 
+                ec="black", 
+                lw=0.5, 
+                alpha=0.2)
+            
+            analysisGUI.plWindow.powerlawPlot.axis1.set(
+                title=f"Histogram Assessment of PDF Fits\n" + 
+                f"Bin method: {bin_method}. n-bins: {nbins}\n" + 
+                    f"Multi-only: {multi_events}",
+                xlabel="Quiescent Period (beats)",
+                ylabel="Number of Events",
+                ylim=(0, 60)) # need to refine this to dynamically change
 
-            analysisGUI.plWindow.powerlawPlot.axis1.hist(sorted_size_event, nbins)
-            # plt.title("Number of Events vs Event Size")
+            # Plot distributions.
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
                 beats, 
-                dist_lognormal * len(sorted_size_event) * bmax / nbins,
-                '--y', 
+                dist_lognormal * len(sorted_transloc_data) * bmax / nbins,
+                '--',
+                color="yellow",
                 lw=1, 
-                label='Log Normal')
+                label='Log-Normal')
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
                 beats, 
-                dist_exponweib * len(sorted_size_event) * bmax / nbins,
-                '--g', 
+                dist_exponweib * len(sorted_transloc_data) * bmax / nbins,
+                '--',
+                color="green",
                 lw=1, 
                 label='Weibull')
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
                 beats, 
-                dist_expon * len(sorted_size_event) * bmax / nbins,
-                '--r', 
+                dist_expon * len(sorted_transloc_data) * bmax / nbins,
+                '--', 
+                color="red",
                 lw=1, 
                 label='Exponential')
             analysisGUI.plWindow.powerlawPlot.axis1.plot(
                 beats, 
-                dist_powerlaw * len(sorted_size_event) * bmax / nbins,
-                '-b', 
+                dist_powerlaw * len(sorted_transloc_data) * bmax / nbins,
+                '--',
+                color="blue",
                 lw=1, 
-                label='Powerlaw')
-            analysisGUI.plWindow.powerlawPlot.axis1.set(
-                title =f"Distribution Fit Comparision\nn-bins = {nbins}", 
-                xlabel="Event Size (beats)", 
-                ylabel="Number of Events" )
+                label='Power Law')
+
+            # Generate legend, clean up plot, display.
             analysisGUI.plWindow.powerlawPlot.axis1.legend()
-            analysisGUI.plWindow.powerlawPlot.axis1.set_ylim(0,60)
             analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
             analysisGUI.plWindow.powerlawPlot.draw()
+
+            # Call remaining functions to plot PDF, CCDF, and 
+            # generate LLR report.
+            pdf_plotting(analysisGUI, sorted_transloc_data)
+            ccdf_plotting(analysisGUI, sorted_transloc_data)
+            # compare_via_LLR(analysisGUI, sorted_transloc_data)
+
         else: 
-            print("Insufficient Data")
+            print("Insufficient data.")
     except UnboundLocalError:
         print("No data.")
     except TypeError:
-        print("Cannot Plot Histogram: No Translocations Detected")
+        print("Cannot plot histogram: no translocations detected.")
 
 
-def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data): 
-    try:
-        # Check whether using translocation data from individual data or batch.
-        if hasattr(pace_maker, "transloc_events"):
-            size_event = pace_maker.transloc_events
-            print("Using dataset translocations.")
-        elif hasattr(batch_data, "batch_translocs"):
-            size_event = normalize_batch(batch_data.beat_event_dict) 
-            # size_event = batch_data.batch_translocs
-            print("Using normalized batch translocations.")
+def pdf_plotting(analysisGUI, sorted_transloc_data):
+    print()
 
-        if len(size_event) > 5:
-            
-            sorted_size_event = sorted(size_event)
-            
-            #Removing data below x_min
-            PL_results = pl.Fit(sorted_size_event, discrete=True)
-            truncated_sorted_size_event = [
-                x for x in sorted_size_event if x >= PL_results.power_law.xmin]
-            
-            #Model Distributions for Comparison
-            pldist = sp.stats.powerlaw
-            args_powerlaw = pldist.fit(truncated_sorted_size_event)
 
-            expondist = sp.stats.expon
-            args_expon = expondist.fit(truncated_sorted_size_event)
-
-            weibulldist = sp.stats.exponweib
-            args_exponweib = weibulldist.fit(truncated_sorted_size_event)
-
-            lognormdist = sp.stats.lognorm
-            args_lognorm = lognormdist.fit(truncated_sorted_size_event)
-
-            #Finding the max x value and linerizing the model data
-            bmax = max(truncated_sorted_size_event)
-            beats = np.linspace(0., bmax, 100)
-
-            #Fitting Distributions to Data
-            dist_powerlaw = pldist.pdf(beats, *args_powerlaw)
-            dist_lognormal = lognormdist.pdf(beats, *args_lognorm)
-            dist_exponweib = weibulldist.pdf(beats, *args_exponweib)
-            dist_expon = expondist.pdf(beats, *args_expon)
-
-            #Plotting Distributions
-            analysisGUI.plWindow.powerlawPlot.axis2.cla()
-
-            x_min = PL_results.power_law.xmin
-            print(f"x_min: {x_min}")
-
-            nbins = 50
-            length = len(sorted_size_event)
-
-            analysisGUI.plWindow.powerlawPlot.axis2.hist(
-                truncated_sorted_size_event, 
-                nbins)
-
-            analysisGUI.plWindow.powerlawPlot.axis2.plot(
-                beats, 
-                dist_lognormal * len(truncated_sorted_size_event) * bmax / nbins,
-                '--y', 
-                lw=1, 
-                label='Log Normal')
-            analysisGUI.plWindow.powerlawPlot.axis2.plot(
-                beats, 
-                dist_exponweib * len(truncated_sorted_size_event) * bmax / nbins,
-                '--g', 
-                lw=1, 
-                label='Weibull')
-            analysisGUI.plWindow.powerlawPlot.axis2.plot(
-                beats, 
-                dist_expon * len(truncated_sorted_size_event) * bmax / nbins,
-                '--r', 
-                lw=1, 
-                label='Exponential')
-            analysisGUI.plWindow.powerlawPlot.axis2.plot(
-                beats, 
-                dist_powerlaw * len(truncated_sorted_size_event) * bmax / nbins,
-                '-b',
-                lw=1, 
-                label='Powerlaw')
-            analysisGUI.plWindow.powerlawPlot.axis2.set(
-                title = "X values below {0:.2f} removed".format(x_min),
-                xlabel="Event Size (beats)", 
-                ylabel="Number of Events" )
-            analysisGUI.plWindow.powerlawPlot.axis2.legend()
-            analysisGUI.plWindow.powerlawPlot.axis2.set_ylim(0,60)
-            analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
-            analysisGUI.plWindow.powerlawPlot.draw()
-        else: 
-            print("Insufficient Data")
-    except UnboundLocalError:
-        print()
-    except TypeError:
-        print("Cannot Plot Truncated Histogram: No Translocations Detected")
+def ccdf_plotting(analysisGUI, sorted_transloc_data):
+    print()
 
 
 #R/p analysis
-def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
+def compare_via_LLR(analysisGUI, pace_maker, batch_data):
     try: 
         # Check whether using translocation data from individual dataset or batch.
         if hasattr(pace_maker, "transloc_events"):
             size_event = pace_maker.transloc_events
             print("Using dataset translocations.")
         elif hasattr(batch_data, "batch_translocs"):
-            size_event = normalize_batch(batch_data.beat_event_dict)
+            size_event = batch_data.batch_translocs
             # size_event = batch_data.batch_translocs
-            print("Using normalized batch translocations.")
+            print("Using batch translocations.")
         
         if len(size_event) > 5:
             sorted_size_event = sorted(size_event)
@@ -291,47 +266,97 @@ def likelihood_and_significance(analysisGUI, pace_maker, batch_data):
         print("Cannot Calculate Statistics: No Translocations Detected")
 
 
-# Normalize batch, using dictionary form, by global median of beats in batch.
-def normalize_batch(batch_dict: dict) -> list:
-    # Copy the original data to a new variable in order to delete invalid keys.
-    revised_batch = batch_dict.copy()
+#def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data): 
+#    try:
+#        # Check whether using translocation data from individual data or batch.
+#        if hasattr(pace_maker, "transloc_events"):
+#            size_event = pace_maker.transloc_events
+#            print("Using dataset translocations.")
+#        elif hasattr(batch_data, "batch_translocs"):
+#            size_event = batch_data.batch_translocs
+#            # size_event = batch_data.batch_translocs
+#            print("Using batch translocations.")
 
-    # Check for invalid values in dict (e.g. None, empty lists) and remove
-    # keys containing such values.
-    for key, val in batch_dict.items():
-        if None in val:
-            del revised_batch[key]
-        if not val:
-            del revised_batch[key]
+#        if len(size_event) > 5:
+            
+#            sorted_size_event = sorted(size_event)
+            
+#            #Removing data below x_min
+#            PL_results = pl.Fit(sorted_size_event, discrete=True)
+#            truncated_sorted_size_event = [
+#                x for x in sorted_size_event if x >= PL_results.power_law.xmin]
+            
+#            #Model Distributions for Comparison
+#            pldist = sp.stats.powerlaw
+#            args_powerlaw = pldist.fit(truncated_sorted_size_event)
 
-    # Empty list, used to store scaling factors
-    dataset_beats = []
-    # Empty list, used to store normalized (scaled) event sizes
-    dataset_events = []
+#            expondist = sp.stats.expon
+#            args_expon = expondist.fit(truncated_sorted_size_event)
 
-    for key, val in revised_batch.items():
-        temp_key = key
-        exp_key = re.split(r"\d_", temp_key)[1]
-        if exp_key != "None":
-            dataset_beats.append(int(exp_key))
-            dataset_events.append(val)
-    
-    batch_median = np.median(dataset_beats)
+#            weibulldist = sp.stats.exponweib
+#            args_exponweib = weibulldist.fit(truncated_sorted_size_event)
 
-    scaling_factors = [beat / batch_median for beat in dataset_beats]
+#            lognormdist = sp.stats.lognorm
+#            args_lognorm = lognormdist.fit(truncated_sorted_size_event)
 
-    scaled_events = []
-    for data, scaler in zip(dataset_events, scaling_factors):
-        temp_events = [size * scaler for size in data]
-        scaled_events.append(temp_events)
+#            #Finding the max x value and linerizing the model data
+#            bmax = max(truncated_sorted_size_event)
+#            beats = np.linspace(0., bmax, 100)
 
-    scaled_events_flat = [
-        event for sublist in scaled_events for event in sublist]
+#            #Fitting Distributions to Data
+#            dist_powerlaw = pldist.pdf(beats, *args_powerlaw)
+#            dist_lognormal = lognormdist.pdf(beats, *args_lognorm)
+#            dist_exponweib = weibulldist.pdf(beats, *args_exponweib)
+#            dist_expon = expondist.pdf(beats, *args_expon)
 
-    # print("Removing values above 300")
+#            #Plotting Distributions
+#            analysisGUI.plWindow.powerlawPlot.axis2.cla()
 
-    # scaled_events_flat = [event for event in scaled_events_flat if event < 300]
+#            x_min = PL_results.power_law.xmin
+#            print(f"x_min: {x_min}")
 
-    return scaled_events_flat
+#            nbins = 50
+#            length = len(sorted_size_event)
 
-# End
+#            analysisGUI.plWindow.powerlawPlot.axis2.hist(
+#                truncated_sorted_size_event, 
+#                nbins)
+
+#            analysisGUI.plWindow.powerlawPlot.axis2.plot(
+#                beats, 
+#                dist_lognormal * len(truncated_sorted_size_event) * bmax / nbins,
+#                '--y', 
+#                lw=1, 
+#                label='Log Normal')
+#            analysisGUI.plWindow.powerlawPlot.axis2.plot(
+#                beats, 
+#                dist_exponweib * len(truncated_sorted_size_event) * bmax / nbins,
+#                '--g', 
+#                lw=1, 
+#                label='Weibull')
+#            analysisGUI.plWindow.powerlawPlot.axis2.plot(
+#                beats, 
+#                dist_expon * len(truncated_sorted_size_event) * bmax / nbins,
+#                '--r', 
+#                lw=1, 
+#                label='Exponential')
+#            analysisGUI.plWindow.powerlawPlot.axis2.plot(
+#                beats, 
+#                dist_powerlaw * len(truncated_sorted_size_event) * bmax / nbins,
+#                '-b',
+#                lw=1, 
+#                label='Powerlaw')
+#            analysisGUI.plWindow.powerlawPlot.axis2.set(
+#                title = "X values below {0:.2f} removed".format(x_min),
+#                xlabel="Event Size (beats)", 
+#                ylabel="Number of Events" )
+#            analysisGUI.plWindow.powerlawPlot.axis2.legend()
+#            analysisGUI.plWindow.powerlawPlot.axis2.set_ylim(0,60)
+#            analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
+#            analysisGUI.plWindow.powerlawPlot.draw()
+#        else: 
+#            print("Insufficient Data")
+#    except UnboundLocalError:
+#        print()
+#    except TypeError:
+#        print("Cannot Plot Truncated Histogram: No Translocations Detected")

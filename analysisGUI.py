@@ -980,16 +980,11 @@ class AnalysisGUI(QMainWindow):
         self.statMenu.addAction("&Power Law Distribution Comparison", 
             lambda: [self.powerlaw_window(), 
                 detect_transloc.pm_translocations(
-                self, pace_maker, electrode_config, beat_amp_int),
-                powerlaw_analysis.pl_histogram_plotting(self, 
-                    pace_maker, batch_data), 
-                powerlaw_analysis.pl_truncated_histogram_plotting(self, 
-                    pace_maker, batch_data), 
-                powerlaw_analysis.likelihood_and_significance(self, 
+                    self, pace_maker, electrode_config, beat_amp_int),
+                powerlaw_analysis.compare_distribs(self, 
                     pace_maker, batch_data)])
 
-
-        # Tools Menu; To be filled later
+        # Tools Menu
         self.toolsMenu = self.menuBar().addMenu("&Tools")
         self.toolsMenu.addAction("&Detect translocations", 
             lambda: [detect_transloc.pm_translocations(
