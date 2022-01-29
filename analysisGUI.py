@@ -440,6 +440,14 @@ def silence_toggle(analysisGUI):
         analysisGUI.elecCombobox.hide()
 
 
+def nbins_toggle(analysisGUI):
+    if analysisGUI.plWindow.binMethodSelect.currentText() == "Manual Entry":
+        analysisGUI.plWindow.nbinsLabel.show()
+        analysisGUI.plWindow.nbinsEdit.show()
+    else:
+        analysisGUI.plWindow.nbinsLabel.hide()
+        analysisGUI.plWindow.nbinsEdit.hide()
+
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
 def reload_module():
@@ -815,8 +823,132 @@ class PowerlawWindow(QWidget):
     
     def setupUI(self, analysisGUI):
         mainLayout = QGridLayout()
+        paramLayout = QGridLayout()
         plotLayout = QGridLayout()
         LLRvalueLayout = QGridLayout()
+
+        #######################################################################
+        # Components of paramLayout
+        # Widgets
+        paramWidget = QWidget()
+        paramWidget.setFixedSize(670, 90)
+        paramWidget.setLayout(paramLayout)
+        # Drop-down box for enabling set_discrete setting
+        discreteLabel = QLabel("Set Discrete\n(Data)")
+        discreteLabel.setAlignment(Qt.AlignLeft)
+        self.discreteSelect = QComboBox()
+        self.discreteSelect.setFixedWidth(70)
+        self.discreteSelect.addItem("True")
+        self.discreteSelect.addItem("False")
+        self.discreteSelect.setStyleSheet(
+            'selection-background-color: #483a78;')
+        paramLayout.addWidget(
+            discreteLabel, 0, 0, 
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.discreteSelect, 1, 0,
+            alignment=Qt.AlignLeft)
+
+        # Drop-down box for enabling multi_events setting   
+        multiLabel = QLabel("Filter for\nMultiple Events")
+        multiLabel.setAlignment(Qt.AlignLeft)
+        self.multiSelect = QComboBox()
+        self.multiSelect.setFixedWidth(70)
+        self.multiSelect.addItem("True")
+        self.multiSelect.addItem("False")
+        self.multiSelect.setStyleSheet(
+            'selection-background-color: #483a78;')
+        paramLayout.addWidget(
+            multiLabel, 0, 1, 
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.multiSelect, 1, 1,
+            alignment=Qt.AlignLeft)
+
+        # Drop-down box for choosing bin_method
+        binMethodLabel = QLabel("Histogram\nBin Method")
+        binMethodLabel.setAlignment(Qt.AlignLeft)
+        self.binMethodSelect = QComboBox()
+        self.binMethodSelect.setFixedWidth(120)
+        self.binMethodSelect.addItem("Sturge's Rule")
+        self.binMethodSelect.addItem("Freedman-Diaconis")
+        self.binMethodSelect.addItem("Manual Entry")
+        self.binMethodSelect.setStyleSheet(
+            'selection-background-color: #483a78;')
+        paramLayout.addWidget(
+            binMethodLabel, 0, 2, 
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.binMethodSelect, 1, 2,
+            alignment=Qt.AlignLeft)
+
+        # Edit field for entering nbins
+        self.nbinsLabel = QLabel("n_bins")
+        self.nbinsLabel.setFixedWidth(50)
+        self.nbinsEdit = QLineEdit()
+        self.nbinsEdit.setText("15")
+        self.nbinsEdit.setFixedWidth(50)
+        paramLayout.addWidget(
+            self.nbinsLabel, 0, 3, 
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.nbinsEdit, 1, 3,
+            alignment=Qt.AlignLeft)
+        self.nbinsLabel.setVisible(False)
+        self.nbinsEdit.setVisible(False)
+
+        # Check whether to display nbins
+        self.binMethodSelect.currentIndexChanged.connect(
+            lambda: nbins_toggle(analysisGUI))
+
+        # Drop-down box for choosing first_distrib
+        distribLabel = QLabel("Distribution 1")
+        distribLabel.setAlignment(Qt.AlignLeft)
+        self.distribSelect = QComboBox()
+        self.distribSelect.setFixedWidth(100)
+        self.distribSelect.addItem("power_law")
+        self.distribSelect.addItem("lognormal")
+        self.distribSelect.addItem("exponential")
+        self.distribSelect.addItem("truncated_power_law")
+        self.distribSelect.addItem("stretched_exponential")
+        self.distribSelect.setStyleSheet(
+            'selection-background-color: #483a78;')
+        paramLayout.addWidget(
+            distribLabel, 0, 4, 
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.distribSelect, 1, 4,
+            alignment=Qt.AlignLeft)
+
+
+        # Edit field for xmin
+        xminLabel = QLabel("Power Law\nx_min")
+        xminLabel.setFixedWidth(85)
+        self.xminEdit = QLineEdit()
+        self.xminEdit.setText("1")
+        self.xminEdit.setFixedWidth(70)
+        paramLayout.addWidget(
+            xminLabel, 0, 5,
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.xminEdit, 1, 5,
+            alignment=Qt.AlignLeft)
+
+        # Edit field for xmax
+        xmaxLabel = QLabel("Trunc. PL\nx_max")
+        xmaxLabel.setFixedWidth(85)
+        self.xmaxEdit = QLineEdit()
+        self.xmaxEdit.setText("150")
+        self.xmaxEdit.setFixedWidth(70)
+        paramLayout.addWidget(
+            xmaxLabel, 0, 6,
+            alignment=Qt.AlignLeft)
+        paramLayout.addWidget(
+            self.xmaxEdit, 1, 6,
+            alignment=Qt.AlignLeft)
+
+        # End components of paramLayout
+        #######################################################################
 
         plotWidget = QWidget()
         plotWidget.setLayout(plotLayout)
@@ -824,7 +956,7 @@ class PowerlawWindow(QWidget):
         LLRvalueWidget.setFixedSize(760, 250)
         LLRvalueWidget.setLayout(LLRvalueLayout)
 
-        self.powerlawPlot = PowerlawCanvas(self, width=10, height=6, dpi=150)
+        self.powerlawPlot = PowerlawCanvas(self, width=9, height=6, dpi=150)
         plToolbar = NavigationToolbar2QT(self.powerlawPlot, self)
         plotLayout.addWidget(self.powerlawPlot, 0, 0)
         plotLayout.addWidget(plToolbar, 1, 0)
@@ -835,10 +967,11 @@ class PowerlawWindow(QWidget):
         self.statsPrintout.setReadOnly(True)
         LLRvalueLayout.addWidget(self.statsPrintout, 1, 0)
 
-        mainLayout.addWidget(plotWidget, 0, 0)
-        mainLayout.addWidget(LLRvalueWidget, 1, 0, 1, 1)
+        mainLayout.addWidget(paramWidget, 0, 0, 1, 2)
+        mainLayout.addWidget(plotWidget, 1, 0)
+        mainLayout.addWidget(LLRvalueWidget, 2, 0, 1, 1)
         self.setLayout(mainLayout)
-
+ 
 
 # Primary GUI class.
 class AnalysisGUI(QMainWindow):
