@@ -68,7 +68,8 @@ beat_amp_int):
                     spstats.iqr(transloc_data) / (len(transloc_data)**(1/3)))
                 # Check if bin_width = 0 to avoid infinity (div by 0) error
                 if bin_width == 0:
-                    nbins = 1
+                    bin_width = 1
+                    print("F-D calculated bin_width = 0; using bin_width = 1")
                 else:
                     nbins = int(
                         np.ceil((max(transloc_data) - 
