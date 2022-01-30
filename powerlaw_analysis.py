@@ -182,6 +182,7 @@ def pdf_plotting(analysisGUI, sorted_transloc_data):
     check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
     set_discrete = str2bool(check_discrete)
     ax_pdf = analysisGUI.plWindow.powerlawPlot.axis2
+    ax_pdf.cla()
 
     xmin = analysisGUI.plWindow.xminEdit.text()
     if xmin == "":
@@ -195,7 +196,7 @@ def pdf_plotting(analysisGUI, sorted_transloc_data):
     if xmax == "":
         xmax = None
         print("No xmax chosen.")
-    elif xmin != "" and float(xmax) < float(xmin):
+    elif xmin != None and float(xmax) < float(xmin):
         print("xmax must be larger than xmin. Defaulting to xmin + 150")
         xmax = xmin + 100
     elif float(xmax) < 1.0:
@@ -251,7 +252,7 @@ def ccdf_plotting(analysisGUI, sorted_transloc_data):
     check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
     set_discrete = str2bool(check_discrete)
     ax_ccdf = analysisGUI.plWindow.powerlawPlot.axis3
-
+    ax_ccdf.cla()
 
 
     PL_results = pl.Fit(sorted_transloc_data, discrete=set_discrete)
@@ -295,27 +296,24 @@ def ccdf_plotting(analysisGUI, sorted_transloc_data):
     analysisGUI.plWindow.powerlawPlot.draw()
 
 
-#R/p analysis
+# Compare distributions using log-likelihood ratios.
 def compare_via_LLR(analysisGUI, sorted_transloc_data):
-    try: 
-        # Check whether using translocation data from individual dataset or batch.
-        if hasattr(pace_maker, "transloc_events"):
-            size_event = pace_maker.transloc_events
-            print("Using dataset translocations.")
-        elif hasattr(batch_data, "batch_translocs"):
-            size_event = batch_data.batch_translocs
-            # size_event = batch_data.batch_translocs
-            print("Using batch translocations.")
-        
+    try:  
         if len(size_event) > 5:
             sorted_size_event = sorted(size_event)
+            
+            check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
+            set_discrete = str2bool(check_discrete)
 
-            #Fitting Power Law to Data
+            first_distrib = analysisGUI.plWindow.distribSelect.currentText()
+            print(f"First distribution: {first_distrib}")
+
+            # Fitting Power Law to Data
             PL_results = pl.Fit(
-                sorted_size_event, 
+                sorted_transloc_data, 
                 discrete=True)
 
-            #Comparing Distributions
+            # Comparing Distributions
             R_ln, p_ln = PL_results.distribution_compare(
                 'power_law', 'lognormal',
                 normalized_ratio=True)
@@ -325,8 +323,11 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
             R_weib, p_weib = PL_results.distribution_compare(
                 'power_law', 'stretched_exponential',
                 normalized_ratio=True)
+            R_dtpl, p_dtpl = PL_results.distribution_compare(
+                "power_law", "truncated_power_law",
+                normalized_ratio=True)
 
-            #Result Text for R/p Readout
+            # Result Text for R/p Readout
             if p_ln <= 0.05:
                 if R_ln >= 0:
                     ln_results = "YES, Power law is more likely than a log normal distribution"
@@ -351,7 +352,7 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
             else:
                 weib_results = "Sign of R is not statistically significant."
 
-            #R/p readout
+            # R/p readout
             complete_rp_readout = [
                 "Power Law vs Log Normal:" + "\n",
                 " - R value = {}".format(R_ln) + "\n",
@@ -371,7 +372,7 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
                 "P-value: if below 0.05, we can conclude the sign of R is significant."
             ]
 
-            #Display Readout 
+            # Display Readout 
             analysisGUI.plWindow.statsPrintout.setPlainText(
                 "".join(map(str, complete_rp_readout)))
         else:
@@ -380,9 +381,10 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
     except UnboundLocalError:
         print()
     except TypeError:
-        print("Cannot Calculate Statistics: No Translocations Detected")
+        print("Cannot calculate statistics: no translocations detected")
 
 
+# Function to compare true/false strings from drop-down boxes for True condition
 def str2bool(check_string):
     return str(check_string).lower() in ("true")
 
