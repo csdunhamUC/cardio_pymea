@@ -31,8 +31,9 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
             # size_event = batch_data.batch_translocs
             print("Using batch translocations.")
 
-        multi_events = True # bool(analysisGUI.plWindow.multiEventsEdit.currentText())
-        bin_method = "SR"
+        check_multi = analysisGUI.plWindow.multiSelect.currentText()
+        multi_events = str2bool(check_multi)
+        bin_method = analysisGUI.plWindow.binMethodSelect.currentText()
 
         # Check for sufficient data.
         # Only conduct analysis if there's at least 5 translocations
@@ -53,13 +54,13 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
                 # Delete the temporary variable
                 del temp_data
             # Check method from drop-down menu for bin method selection
-            if bin_method == "manual" or bin_method == "none":
-                nbins = 50 # analysisGUI.numBinsEdit.text()
+            if bin_method == "Manual Entry" or bin_method == "none":
+                nbins = int(analysisGUI.nbinsEdit.text())
             # Use Sturge's Rule to determine nbins
-            elif bin_method == "SR":
+            elif bin_method == "Sturge's Rule":
                 nbins = int(np.ceil(1 + 3.322*np.log(len(transloc_data))))
             # Use Freedman-Diaconis Rule to determine nbins.
-            elif bin_method == "FD":
+            elif bin_method == "Freedman-Diaconis":
                 bin_width - 2 * (
                     spstats.iqr(transloc_data) / (len(transloc_data)**(1/3)))
                 nbins = int(
@@ -178,11 +179,35 @@ def compare_distribs(analysisGUI, pace_maker, batch_data):
 
 
 def pdf_plotting(analysisGUI, sorted_transloc_data):
-    # check_discrete = analysisGUI.plWindow.setDiscreteEdit.currentText()
-    set_discrete = True # str2bool(check_discrete)
+    check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
+    set_discrete = str2bool(check_discrete)
     ax_pdf = analysisGUI.plWindow.powerlawPlot.axis2
 
-    PL_results = pl.Fit(sorted_transloc_data, discrete=set_discrete)
+    xmin = analysisGUI.plWindow.xminEdit.text()
+    if xmin == "":
+        xmin = None
+        print("No xmin given. Letting powerlaw determine xmin.")
+    elif float(xmin) < 1.0:
+        print("xmin must be greater than or equal to 1. Defaulting to 1")
+        xmin = 1
+
+    xmax = analysisGUI.plWindow.xmaxEdit.text()
+    if xmax == "":
+        xmax = None
+        print("No xmax chosen.")
+    elif xmin != "" and float(xmax) < float(xmin):
+        print("xmax must be larger than xmin. Defaulting to xmin + 150")
+        xmax = xmin + 100
+    elif float(xmax) < 1.0:
+        print("xmax must be positive and greater than or equal to 1." + 
+            "Taking absolute value.")
+        xmax = abs(xmax)
+    
+    PL_results = pl.Fit(
+        sorted_transloc_data, 
+        discrete=set_discrete,
+        xmin=xmin, 
+        xmax=xmax)
     pdf_alpha = PL_results.alpha
 
     PL_results.plot_pdf(
@@ -223,9 +248,11 @@ def pdf_plotting(analysisGUI, sorted_transloc_data):
 
 
 def ccdf_plotting(analysisGUI, sorted_transloc_data):
-    # check_discrete = analysisGUI.plWindow.setDiscreteEdit.currentText()
-    set_discrete = True # str2bool(check_discrete)
+    check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
+    set_discrete = str2bool(check_discrete)
     ax_ccdf = analysisGUI.plWindow.powerlawPlot.axis3
+
+
 
     PL_results = pl.Fit(sorted_transloc_data, discrete=set_discrete)
     ccdf_alpha = PL_results.alpha

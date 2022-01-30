@@ -831,7 +831,7 @@ class PowerlawWindow(QWidget):
         # Components of paramLayout
         # Widgets
         paramWidget = QWidget()
-        paramWidget.setFixedSize(670, 90)
+        paramWidget.setFixedSize(710, 90)
         paramWidget.setLayout(paramLayout)
         # Drop-down box for enabling set_discrete setting
         discreteLabel = QLabel("Set Discrete\n(Data)")
@@ -920,7 +920,6 @@ class PowerlawWindow(QWidget):
             self.distribSelect, 1, 4,
             alignment=Qt.AlignLeft)
 
-
         # Edit field for xmin
         xminLabel = QLabel("Power Law\nx_min")
         xminLabel.setFixedWidth(85)
@@ -945,6 +944,12 @@ class PowerlawWindow(QWidget):
             alignment=Qt.AlignLeft)
         paramLayout.addWidget(
             self.xmaxEdit, 1, 6,
+            alignment=Qt.AlignLeft)
+
+        self.plotPL = QPushButton("Plot")
+        self.plotPL.setFixedSize(40, 70)
+        paramLayout.addWidget(
+            self.plotPL, 0, 7, 2, 1,
             alignment=Qt.AlignLeft)
 
         # End components of paramLayout
@@ -1112,7 +1117,7 @@ class AnalysisGUI(QMainWindow):
                 pace_maker, local_act_time, heat_map, input_param, 
                 electrode_config)])
         self.statMenu.addAction("&Power Law Distribution Comparison", 
-            lambda: [self.powerlaw_window(), 
+            lambda: [self.powerlaw_window(pace_maker, batch_data), 
                 detect_transloc.pm_translocations(
                     self, pace_maker, electrode_config, beat_amp_int),
                 powerlaw_analysis.compare_distribs(self, 
@@ -1461,11 +1466,14 @@ class AnalysisGUI(QMainWindow):
         self.pcaWindow.paramSlider.hide()
         self.pcaCheck = False
 
-    def powerlaw_window(self):
+    def powerlaw_window(self, pace_maker, batch_data):
         self.plWindow = PowerlawWindow(self)
         self.plWindow.setWindowTitle(
             "Powerlaw Distribution Comparison")
         self.plWindow.setStyleSheet("background-color: white;")
+        self.plWindow.plotPL.clicked.connect(
+            lambda: powerlaw_analysis.compare_distribs(self, 
+                pace_maker, batch_data))
         self.plWindow.show()
 
 
