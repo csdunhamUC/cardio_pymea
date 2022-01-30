@@ -1117,11 +1117,11 @@ class AnalysisGUI(QMainWindow):
                 pace_maker, local_act_time, heat_map, input_param, 
                 electrode_config)])
         self.statMenu.addAction("&Power Law Distribution Comparison", 
-            lambda: [self.powerlaw_window(pace_maker, batch_data), 
-                detect_transloc.pm_translocations(
-                    self, pace_maker, electrode_config, beat_amp_int),
+            lambda: [
+                self.powerlaw_window(pace_maker, batch_data, 
+                    electrode_config, beat_amp_int),  
                 powerlaw_analysis.compare_distribs(self, 
-                    pace_maker, batch_data)])
+                    pace_maker, batch_data, electrode_config, beat_amp_int)])
 
         # Tools Menu
         self.toolsMenu = self.menuBar().addMenu("&Tools")
@@ -1466,14 +1466,15 @@ class AnalysisGUI(QMainWindow):
         self.pcaWindow.paramSlider.hide()
         self.pcaCheck = False
 
-    def powerlaw_window(self, pace_maker, batch_data):
+    def powerlaw_window(self, pace_maker, batch_data, electrode_config, 
+    beat_amp_int):
         self.plWindow = PowerlawWindow(self)
         self.plWindow.setWindowTitle(
             "Powerlaw Distribution Comparison")
         self.plWindow.setStyleSheet("background-color: white;")
         self.plWindow.plotPL.clicked.connect(
             lambda: powerlaw_analysis.compare_distribs(self, 
-                pace_maker, batch_data))
+                pace_maker, batch_data, electrode_config, beat_amp_int))
         self.plWindow.show()
 
 
