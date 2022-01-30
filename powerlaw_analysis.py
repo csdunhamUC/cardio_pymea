@@ -217,9 +217,7 @@ def pdf_plotting(analysisGUI, sorted_transloc_data):
         ylabel="p(X)",
         xlim=(10**0, 10**2),
         ylim=(10**-4, 10**0.5))
-
-    # ax_ccdf.set_ylabel(r"p(X$\geq$x)")
-
+ 
     analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
     analysisGUI.plWindow.powerlawPlot.draw()
 
