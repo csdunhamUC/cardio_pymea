@@ -1,11 +1,13 @@
 # Author: Madelynn Mackenzie
 # Contact email: madelynnmack@gmail.com
-# Mentor: Christopher S. Dunham
+# Mentor & Co-author: Christopher S. Dunham
 # Email: csdunham@chem.ucla.edu, csdunham@protomail.com
 # This is an original work unless otherwise noted.
 
 # Function to perform power-law analysis of cardiomyocyte pacemaker 
 # translocations.
+
+# Import modules
 import numpy as np
 from numpy.lib.histograms import histogram
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -16,9 +18,10 @@ import statsmodels as sm
 import powerlaw as pl
 import detect_transloc
 import re
+# End import
 
 
-# data: list, nbins: int = 50, multi_events: bool = False, bin_method: str = "none"
+# Begin distribution comparisons between power law, other distributions.
 def compare_distribs(analysisGUI, pace_maker, batch_data, electrode_config, 
 beat_amp_int): 
     try:
@@ -184,149 +187,118 @@ beat_amp_int):
         print("No data.")
     except TypeError:
         print("Cannot plot histogram: no translocations detected.")
+# End function.
 
 
+# Generate probability distribution function (PDF) plots.
 def pdf_plotting(analysisGUI, sorted_transloc_data):
-    try:
-        check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
-        set_discrete = str2bool(check_discrete)
-        ax_pdf = analysisGUI.plWindow.powerlawPlot.axis2
-        ax_pdf.cla()
+    check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
+    set_discrete = str2bool(check_discrete)
+    ax_pdf = analysisGUI.plWindow.powerlawPlot.axis2
+    ax_pdf.cla()
 
-        xmin = analysisGUI.plWindow.xminEdit.text()
-        if xmin == "":
-            xmin = None
-            print("No xmin given. Letting powerlaw determine xmin.")
-        elif float(xmin) < 1.0:
-            print("xmin must be greater than or equal to 1. Defaulting to 1")
-            xmin = 1
+    # Call get_xmin_xmax function to obtain valid values for xmin, xmax
+    xmin, xmax = get_xmin_xmax(analysisGUI)
+    
+    PL_results = pl.Fit(
+        sorted_transloc_data, 
+        discrete=set_discrete,
+        xmin=xmin, 
+        xmax=xmax)
+    pdf_alpha = PL_results.alpha
 
-        xmax = analysisGUI.plWindow.xmaxEdit.text()
-        if xmax == "":
-            xmax = None
-            print("No xmax chosen. Defaulting to 'None'.")
-        elif xmin != None and float(xmax) < float(xmin):
-            print(f"xmax must be larger than xmin. Defaulting to {xmin + 150}")
-            xmax = xmin + 100
-        elif float(xmax) < 1.0:
-            print("xmax must be positive and greater than or equal to 1." + 
-                "Taking absolute value.")
-            xmax = abs(xmax)
-        
-        PL_results = pl.Fit(
-            sorted_transloc_data, 
-            discrete=set_discrete,
-            xmin=xmin, 
-            xmax=xmax)
-        pdf_alpha = PL_results.alpha
+    PL_results.plot_pdf(
+        color = 'black',
+        linewidth = 2,
+        label=f"Empirical Data\nx$_{{min}}$ = {PL_results.xmin}",
+        ax=ax_pdf,
+        alpha=0.8)
+    PL_results.power_law.plot_pdf(
+        color = 'blue',
+        linestyle = '--',
+        label=f"Power Law\n" + r"$\alpha$ = " + f"{-1*pdf_alpha:.2f}",
+        ax=ax_pdf)
+    PL_results.lognormal.plot_pdf(
+        color = 'yellow',
+        linestyle = '--',
+        label=f"Log-Normal",
+        ax=ax_pdf)
+    PL_results.exponential.plot_pdf(
+        color = 'r',
+        linestyle = '--',
+        label=f"Exponential",
+        ax=ax_pdf)
+    PL_results.stretched_exponential.plot_pdf(
+        color = 'green',
+        linestyle = '--',
+        label=f"Weibull",
+        ax=ax_pdf)
 
-        PL_results.plot_pdf(
-            color = 'black',
-            linewidth = 2,
-            label=f"Empirical Data\nx$_{{min}}$ = {PL_results.xmin}",
-            ax=ax_pdf,
-            alpha=0.8)
-        PL_results.power_law.plot_pdf(
-            color = 'blue',
-            linestyle = '--',
-            label=f"Power Law\n" + r"$\alpha$ = " + f"{-1*pdf_alpha:.2f}",
-            ax=ax_pdf)
-        PL_results.lognormal.plot_pdf(
-            color = 'yellow',
-            linestyle = '--',
-            label=f"Log-Normal",
-            ax=ax_pdf)
-        PL_results.exponential.plot_pdf(
-            color = 'r',
-            linestyle = '--',
-            label=f"Exponential",
-            ax=ax_pdf)
-        PL_results.stretched_exponential.plot_pdf(
-            color = 'green',
-            linestyle = '--',
-            label=f"Weibull",
-            ax=ax_pdf)
-
-        ax_pdf.set(
-            xlabel="Quiescent Period (beats)",
-            ylabel="p(X)",
-            xlim=(10**0, 10**2),
-            ylim=(10**-4, 10**0.5))
-     
-        analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
-        analysisGUI.plWindow.powerlawPlot.draw()
-    except ValueError:
-        print("Letter (character) inputs are not permitted for xmin, xmax.")
+    ax_pdf.set(
+        xlabel="Quiescent Period (beats)",
+        ylabel="p(X)",
+        xlim=(10**0, 10**2),
+        ylim=(10**-4, 10**0.5))
+ 
+    analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
+    analysisGUI.plWindow.powerlawPlot.draw()
+# End pdf_plotting
 
 
+# Generate complementary cumulative distribution function (CCDF) plots
 def ccdf_plotting(analysisGUI, sorted_transloc_data):
-    try:
-        check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
-        set_discrete = str2bool(check_discrete)
-        ax_ccdf = analysisGUI.plWindow.powerlawPlot.axis3
-        ax_ccdf.cla()
+    check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
+    set_discrete = str2bool(check_discrete)
+    ax_ccdf = analysisGUI.plWindow.powerlawPlot.axis3
+    ax_ccdf.cla()
 
-        xmin = analysisGUI.plWindow.xminEdit.text()
-        if xmin == "":
-            xmin = None
-            print("No xmin given. Letting powerlaw determine xmin.")
-        elif float(xmin) < 1.0:
-            print("xmin must be greater than or equal to 1. Defaulting to 1")
-            xmin = 1
+    # Call get_xmin_xmax function to obtain valid values for xmin, xmax
+    xmin, xmax = get_xmin_xmax(analysisGUI)
+    
+    PL_results = pl.Fit(
+        sorted_transloc_data, 
+        discrete=set_discrete,
+        xmin=xmin, 
+        xmax=xmax)
+    ccdf_alpha = PL_results.alpha
 
-        xmax = analysisGUI.plWindow.xmaxEdit.text()
-        if xmax == "":
-            xmax = None
-            print("No xmax chosen. Defaulting to 'None'.")
-        elif xmin != None and float(xmax) < float(xmin):
-            print(f"xmax must be larger than xmin. Defaulting to {xmin + 150}")
-            xmax = xmin + 100
-        elif float(xmax) < 1.0:
-            print("xmax must be positive and greater than or equal to 1." + 
-                "Taking absolute value.")
-            xmax = abs(xmax)
+    # CCDF
+    PL_results.plot_ccdf(
+        color = 'black',
+        linewidth = 2,
+        label=f"Empirical Data\nx$_{{min}}$ = {PL_results.xmin}",
+        ax=ax_ccdf,
+        alpha=0.8)
+    PL_results.power_law.plot_ccdf(
+        color = 'blue',
+        linestyle = '--',
+        label=f"Power Law\n" + r"$\alpha$ = " + f"{-1*ccdf_alpha:.2f}",
+        ax=ax_ccdf)
+    PL_results.lognormal.plot_ccdf(
+        color = 'yellow',
+        linestyle = '--',
+        label=f"Log-Normal",
+        ax=ax_ccdf)
+    PL_results.exponential.plot_ccdf(
+        color = 'r',
+        linestyle = '--',
+        label=f"Exponential",
+        ax=ax_ccdf)
+    PL_results.stretched_exponential.plot_ccdf(
+        color = 'green',
+        linestyle = '--',
+        label=f"Weibull",
+        ax=ax_ccdf)
+    
+    ax_ccdf.set(
+        xlabel="Quiescent Period (beats)",
+        ylabel=r"p(X$\geq$x)",
+        xlim=(10**0, 10**2),
+        ylim=(10**-4, 10**0.5))
 
-        PL_results = pl.Fit(sorted_transloc_data, discrete=set_discrete)
-        ccdf_alpha = PL_results.alpha
-
-        # CCDF
-        PL_results.plot_ccdf(
-            color = 'black',
-            linewidth = 2,
-            label=f"Empirical Data\nx$_{{min}}$ = {PL_results.xmin}",
-            ax=ax_ccdf,
-            alpha=0.8)
-        PL_results.power_law.plot_ccdf(
-            color = 'blue',
-            linestyle = '--',
-            label=f"Power Law\n" + r"$\alpha$ = " + f"{-1*ccdf_alpha:.2f}",
-            ax=ax_ccdf)
-        PL_results.lognormal.plot_ccdf(
-            color = 'yellow',
-            linestyle = '--',
-            label=f"Log-Normal",
-            ax=ax_ccdf)
-        PL_results.exponential.plot_ccdf(
-            color = 'r',
-            linestyle = '--',
-            label=f"Exponential",
-            ax=ax_ccdf)
-        PL_results.stretched_exponential.plot_ccdf(
-            color = 'green',
-            linestyle = '--',
-            label=f"Weibull",
-            ax=ax_ccdf)
-        
-        ax_ccdf.set(
-            xlabel="Quiescent Period (beats)",
-            ylabel=r"p(X$\geq$x)",
-            xlim=(10**0, 10**2),
-            ylim=(10**-4, 10**0.5))
-
-        analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
-        analysisGUI.plWindow.powerlawPlot.draw()
-    except ValueError:
-        print("Letter (character) inputs are not permitted for xmin, xmax.")
+    analysisGUI.plWindow.powerlawPlot.fig.tight_layout()
+    analysisGUI.plWindow.powerlawPlot.draw()
+# End ccdf_plotting
 
 
 # Compare distributions using log-likelihood ratios.
@@ -412,14 +384,47 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
             print("Insufficient Data")
 
     except UnboundLocalError:
-        print()
+        print("Unbound error occurred.")
     except TypeError:
         print("Cannot calculate statistics: no translocations detected")
+# End compare_via_LLR
 
 
 # Function to compare true/false strings from drop-down boxes for True condition
 def str2bool(check_string):
     return str(check_string).lower() in ("true")
+# End str2bool function
+
+
+# Function to run checks for values of xmin, xmax
+def get_xmin_xmax(analysisGUI):
+    try:
+        # Get xmin user input
+        xmin = analysisGUI.plWindow.xminEdit.text()
+        if xmin == "":
+            xmin = None
+            print("No xmin given. Letting powerlaw determine xmin.")
+        elif float(xmin) < 1.0:
+            print("xmin must be greater than or equal to 1. Defaulting to 1")
+            xmin = 1
+
+        # Get xmax user input
+        xmax = analysisGUI.plWindow.xmaxEdit.text()
+        if xmax == "":
+            xmax = None
+            print("No xmax chosen. Defaulting to 'None'.")
+        elif xmin != None and float(xmax) < float(xmin):
+            print(f"xmax must be larger than xmin. Defaulting to {xmin + 150}")
+            xmax = xmin + 100
+        elif float(xmax) < 1.0:
+            print("xmax must be positive and greater than or equal to 1." + 
+                "Taking absolute value.")
+            xmax = abs(xmax)
+        # Return xmin, xmax values after input checks
+        return xmin, xmax
+    except ValueError: 
+        print("Letter (character) inputs are not permitted for xmin, xmax.")
+# End get_xmin_xmax function.
 
 
 #def pl_truncated_histogram_plotting(analysisGUI, pace_maker, batch_data): 
