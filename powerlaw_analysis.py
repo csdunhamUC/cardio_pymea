@@ -344,7 +344,20 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
         distributions = [
             distrib for distrib in distributions if distrib != first_distrib]
         
-        summary_of_LLRs = []
+        summary_of_LLRs = [
+            "---------------Parameter Summary---------------\n",
+            f"xmin: {PL_xmin}\n",
+            f"xmax: {xmax}\n",
+            "Power law \u03b1: " + f"{PL_alpha}\n",
+            "Power law error (\u03c3): " + f"{PL_sigma}\n",
+            "Exponential \u03bb: " + f"{exp_lamda}\n",
+            "Log-normal \u03bc: " + f"{lognorm_mu}\n",
+            "Log-normal \u03c3: " + f"{lognorm_sigma}\n",
+            "Weibull \u03bb: " + f"{weibull_lamda}\n",
+            "Weibull \u03b2: " + f"{weibull_beta}\n",
+            "Trunc. power law \u03b1: " + f"{trunc_alpha}\n",
+            "Trunc. power law \u03bb: " + f"{trunc_lamda}\n\n",
+            "-----Log-likelihood Ratio (LLR) Evaluation-----\n"]
 
         for distrib in distributions:
             # R = loglikelihood ratio between the two candidate distributions
