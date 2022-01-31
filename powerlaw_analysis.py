@@ -129,9 +129,9 @@ beat_amp_int):
                 alpha=0.2)
             
             analysisGUI.plWindow.powerlawPlot.axis1.set(
-                title=f"Histogram Assessment of PDF Fits\n" + 
-                f"Bin method: {bin_method}. n-bins: {nbins}\n" + 
-                    f"Multi-only: {multi_events}",
+                title=f"bin method: {bin_method}.\n" + 
+                    f"n-bins: {nbins}\n" + 
+                    f"multi-only: {multi_events}",
                 xlabel="Quiescent Period (beats)",
                 ylabel="Number of Events",
                 ylim=(0, 60)) # need to refine this to dynamically change
@@ -179,7 +179,7 @@ beat_amp_int):
             # generate LLR report.
             pdf_plotting(analysisGUI, sorted_transloc_data)
             ccdf_plotting(analysisGUI, sorted_transloc_data)
-            # compare_via_LLR(analysisGUI, sorted_transloc_data)
+            compare_via_LLR(analysisGUI, sorted_transloc_data)
 
         else: 
             print("Insufficient data.")
@@ -304,129 +304,71 @@ def ccdf_plotting(analysisGUI, sorted_transloc_data):
 # Compare distributions using log-likelihood ratios.
 def compare_via_LLR(analysisGUI, sorted_transloc_data):
     try:  
-        if len(size_event) > 5:
-            sorted_size_event = sorted(size_event)
-            
-            check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
-            set_discrete = str2bool(check_discrete)
+        check_discrete = analysisGUI.plWindow.discreteSelect.currentText()
+        set_discrete = str2bool(check_discrete)
 
-            first_distrib = analysisGUI.plWindow.distribSelect.currentText()
-            print(f"First distribution: {first_distrib}")
+        first_distrib = analysisGUI.plWindow.distribSelect.currentText()
+        print(f"First distribution: {first_distrib}")
 
-            # Call get_xmin_xmax function to obtain valid values for xmin, xmax
-            xmin, xmax = get_xmin_xmax(analysisGUI)
-            
-            # Fitting Power Law to Data
-            PL_results = pl.Fit(
-                sorted_transloc_data, 
-                discrete=set_discrete,
-                xmin=xmin, 
-                xmax=xmax)
+        # Call get_xmin_xmax function to obtain valid values for xmin, xmax
+        xmin, xmax = get_xmin_xmax(analysisGUI)
+        
+        # Fitting Power Law to Data
+        PL_results = pl.Fit(
+            sorted_transloc_data, 
+            discrete=set_discrete,
+            xmin=xmin, 
+            xmax=xmax)
 
-            # Parameters calculated from powerlaw module:
-            # Power law
-            PL_alpha = PL_results.power_law.alpha
-            PL_sigma = PL_results.power_law.sigma
-            PL_xmin = PL_results.power_law.xmin
-            # Exponential
-            exp_lamda = PL_results.exponential.Lambda
-            # Lognormal
-            lognorm_mu = PL_results.lognormal.mu
-            lognorm_sigma = PL_results.lognormal.sigma
-            # Weibull
-            weibull_lamda = PL_results.stretched_exponential.Lambda
-            weibull_beta = PL_results.stretched_exponential.beta
-            # Truncated power law
-            trunc_alpha = PL_results.truncated_power_law.alpha
-            trunc_lamda = PL_results.truncated_power_law.Lambda
-            trunc_xmin = PL_results.truncated_power_law.xmin
+        # Parameters calculated from powerlaw module:
+        # Power law
+        PL_alpha = PL_results.power_law.alpha
+        PL_sigma = PL_results.power_law.sigma
+        PL_xmin = PL_results.power_law.xmin
+        # Exponential
+        exp_lamda = PL_results.exponential.Lambda
+        # Lognormal
+        lognorm_mu = PL_results.lognormal.mu
+        lognorm_sigma = PL_results.lognormal.sigma
+        # Weibull
+        weibull_lamda = PL_results.stretched_exponential.Lambda
+        weibull_beta = PL_results.stretched_exponential.beta
+        # Truncated power law
+        trunc_alpha = PL_results.truncated_power_law.alpha
+        trunc_lamda = PL_results.truncated_power_law.Lambda
+        trunc_xmin = PL_results.truncated_power_law.xmin
 
-            #use to see what names to use for comparisons to other distributions
-            distributions = list(
-                PL_results.supported_distributions.keys())
-            distributions = [
-                distrib for distrib in distributions if distrib != first_distrib]
-            print(distributions_batch)
-            print("")
+        #use to see what names to use for comparisons to other distributions
+        distributions = list(
+            PL_results.supported_distributions.keys())
+        distributions = [
+            distrib for distrib in distributions if distrib != first_distrib]
+        
+        summary_of_LLRs = []
 
-            for distrib in distributions_batch:
-                #R =  loglikelihood ratio between the two candidate distributions
-                #positive if the data is more likely in the first distribution 
-                #negative if the data is more likely in the second distribution
-                #p = significance value for that direction
-                #normalized ratio option: normalizes R by standard deviation 
-                # (used to calc p)
-                R, p = PL_results_batch.distribution_compare(
-                    first_distrib, distrib, normalized_ratio=True)
-                print(f"Ratio test of {first_distrib}:{distrib} = {R}")
-                print(f"P-value of {first_distrib}:{distrib} = {p}")
-                print("")
-
-
-            # Comparing Distributions
-            R_ln, p_ln = PL_results.distribution_compare(
-                'power_law', 'lognormal',
-                normalized_ratio=True)
-            R_exp, p_exp = PL_results.distribution_compare(
-                'power_law', 'exponential', 
-                normalized_ratio=True)
-            R_weib, p_weib = PL_results.distribution_compare(
-                'power_law', 'stretched_exponential',
-                normalized_ratio=True)
-            R_dtpl, p_dtpl = PL_results.distribution_compare(
-                "power_law", "truncated_power_law",
+        for distrib in distributions:
+            # R = loglikelihood ratio between the two candidate distributions
+            # positive if the data is more likely in the first distribution 
+            # negative if the data is more likely in the second distribution
+            # p = significance value for that direction
+            # normalized ratio option: normalizes R by standard deviation 
+            # (used to calc p)
+            LLR, pval = PL_results.distribution_compare(
+                first_distrib, 
+                distrib, 
                 normalized_ratio=True)
 
-            # Result Text for R/p Readout
-            if p_ln <= 0.05:
-                if R_ln >= 0:
-                    ln_results = "YES, Power law is more likely than a log normal distribution"
-                elif R_ln < 0:
-                    ln_results = "NO, Log normal is more likely than a power law distribution"
-            else:
-                ln_results = "Sign of R is not statistically significant."
+            temp_LLR = f"LLR of {first_distrib}:{distrib} = {LLR}\n"
+            temp_pval = f"p-value of {first_distrib}:{distrib} = {pval}\n\n"
+            summary_of_LLRs.append(temp_LLR)
+            summary_of_LLRs.append(temp_pval)
 
-            if p_exp <= 0.05:
-                if R_exp >= 0:
-                    exp_results = "YES, Power law is more likely than an exponential distribution"
-                elif R_exp < 0:
-                    exp_results = "NO, Exponential is more likely than a power law distribution"
-            else:
-                exp_results = "Sign of R is not statistically significant."
-
-            if p_weib <= 0.05:
-                if R_weib >= 0:
-                    weib_results = "YES, Power law is more likely than a Weibull distribution"
-                elif R_weib < 0:
-                    weib_results = "NO, Weibull is more likely than a power law distribution"
-            else:
-                weib_results = "Sign of R is not statistically significant."
-
-            # R/p readout
-            complete_rp_readout = [
-                "Power Law vs Log Normal:" + "\n",
-                " - R value = {}".format(R_ln) + "\n",
-                " - p value = {}".format(p_ln) + "\n" + "\n",
-                "Results: {}".format(ln_results) + "\n" + "\n" + "\n",
-                "Power Law vs Exponential:" + "\n",
-                " - R value = {}".format(R_exp) + "\n",
-                " - p value = {}".format(p_exp) + "\n" + "\n",
-                "Results: {}".format(exp_results) + "\n" + "\n" + "\n",
-                "Power Law vs Stretched Exponential:" + "\n",
-                " - R value = {}".format(R_weib) + "\n",
-                " - p value = {}".format(p_weib) + "\n" + "\n",
-                "Results: {}".format(weib_results) + "\n" + "\n" + "\n" + "\n",
-                "Parameters:" + "\n",
-                "R is the log likelihood ratio between the two distributions tested." + "\n",
-                "A positive R value indicates a power law distribution is a more likely fit for the distribution" + "\n" + "\n",
-                "P-value: if below 0.05, we can conclude the sign of R is significant."
-            ]
-
-            # Display Readout 
-            analysisGUI.plWindow.statsPrintout.setPlainText(
-                "".join(map(str, complete_rp_readout)))
-        else:
-            print("Insufficient Data")
+            print(f"Ratio test of {first_distrib}:{distrib} = {LLR}")
+            print(f"P-value of {first_distrib}:{distrib} = {pval}\n\n")
+        
+        # Display Readout 
+        analysisGUI.plWindow.statsPrintout.setPlainText(
+            "".join(map(str, summary_of_LLRs)))
 
     except UnboundLocalError:
         print("Unbound error occurred.")
