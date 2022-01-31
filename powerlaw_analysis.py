@@ -313,10 +313,55 @@ def compare_via_LLR(analysisGUI, sorted_transloc_data):
             first_distrib = analysisGUI.plWindow.distribSelect.currentText()
             print(f"First distribution: {first_distrib}")
 
+            # Call get_xmin_xmax function to obtain valid values for xmin, xmax
+            xmin, xmax = get_xmin_xmax(analysisGUI)
+            
             # Fitting Power Law to Data
             PL_results = pl.Fit(
                 sorted_transloc_data, 
-                discrete=True)
+                discrete=set_discrete,
+                xmin=xmin, 
+                xmax=xmax)
+
+            # Parameters calculated from powerlaw module:
+            # Power law
+            PL_alpha = PL_results.power_law.alpha
+            PL_sigma = PL_results.power_law.sigma
+            PL_xmin = PL_results.power_law.xmin
+            # Exponential
+            exp_lamda = PL_results.exponential.Lambda
+            # Lognormal
+            lognorm_mu = PL_results.lognormal.mu
+            lognorm_sigma = PL_results.lognormal.sigma
+            # Weibull
+            weibull_lamda = PL_results.stretched_exponential.Lambda
+            weibull_beta = PL_results.stretched_exponential.beta
+            # Truncated power law
+            trunc_alpha = PL_results.truncated_power_law.alpha
+            trunc_lamda = PL_results.truncated_power_law.Lambda
+            trunc_xmin = PL_results.truncated_power_law.xmin
+
+            #use to see what names to use for comparisons to other distributions
+            distributions = list(
+                PL_results.supported_distributions.keys())
+            distributions = [
+                distrib for distrib in distributions if distrib != first_distrib]
+            print(distributions_batch)
+            print("")
+
+            for distrib in distributions_batch:
+                #R =  loglikelihood ratio between the two candidate distributions
+                #positive if the data is more likely in the first distribution 
+                #negative if the data is more likely in the second distribution
+                #p = significance value for that direction
+                #normalized ratio option: normalizes R by standard deviation 
+                # (used to calc p)
+                R, p = PL_results_batch.distribution_compare(
+                    first_distrib, distrib, normalized_ratio=True)
+                print(f"Ratio test of {first_distrib}:{distrib} = {R}")
+                print(f"P-value of {first_distrib}:{distrib} = {p}")
+                print("")
+
 
             # Comparing Distributions
             R_ln, p_ln = PL_results.distribution_compare(
