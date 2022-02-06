@@ -1106,7 +1106,7 @@ class AnalysisGUI(QMainWindow):
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
-        self.statMenu.addAction("&Param vs Distance w/ R-value",
+        self.statMenu.addAction("&Parameter vs Distance w/ R-value",
             lambda: [self.paramVsDistStatsWindow(cm_beats, pace_maker, 
                 upstroke_vel, local_act_time, conduction_vel, input_param, 
                 cm_stats)])
