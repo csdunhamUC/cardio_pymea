@@ -379,8 +379,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
                 sheet_name='Pacemaker (Raw)')
             pace_maker.param_dist_normalized_per_beat_max.to_excel(writer, 
                 sheet_name="Per Beat Max Time Lag")
-            pace_maker.transloc_events.to_excel(writer,
-                sheet_name="Translocation Events", index=False)
+            # pace_maker.transloc_events.to_excel(writer,
+            #     sheet_name="Translocation Events", index=False)
             local_act_time.param_dist_normalized.to_excel(writer, 
                 sheet_name='LAT Normalized')
             local_act_time.distance_from_min.to_excel(writer, 
@@ -412,8 +412,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
         
         print("Data saved in path: {}".format(file_path))
     except AttributeError:
-        print("Parameters missing.  Please be sure to complete calculations \
-            (e.g. statistics)")
+        print("Parameters missing. Please be sure to complete calculations " + 
+            "(e.g. statistics)")
     except ValueError:
         print("Operation cancelled.")
     except FileNotFoundError:
