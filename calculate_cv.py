@@ -258,9 +258,9 @@ input_param):
         analysisGUI.cvWindow.paramPlot.axis1.cla()
         input_param.cv_solo_beat_choice = analysisGUI.cvWindow.paramSlider.value()
 
-        electrode_names_4 = conduction_vel.vector_mag.pivot(index='Y', 
+        electrode_names_4 = conduction_vel.param_dist_raw.pivot(index='Y', 
             columns='X', values='Electrode')
-        heatmap_pivot_table_4 = conduction_vel.vector_mag.pivot(index='Y', 
+        heatmap_pivot_table_4 = conduction_vel.param_dist_raw.pivot(index='Y', 
             columns='X', values=local_act_time.final_dist_beat_count[
                 input_param.cv_solo_beat_choice])
 
