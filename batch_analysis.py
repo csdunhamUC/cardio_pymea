@@ -183,4 +183,6 @@ conduction_vel, beat_amp_int):
         batch_data.batch_config = False
     except (KeyError):
         print("Unsupported File Type.")
+    except FileNotFoundError:
+        print("No file selected.")
 

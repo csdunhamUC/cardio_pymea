@@ -625,15 +625,28 @@ class BeatSignalPlotWindow(QWidget):
         # From FPDWindow
         self.paramPlot1 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
         self.paramPlot2 = MinorHeatmapCanvas(self, width=9, height=7, dpi=100)
-        self.paramSlider1a = QSlider(Qt.Horizontal)
-        self.paramSlider1b = QSlider(Qt.Horizontal)
         paramToolbar = NavigationToolbar2QT(self.paramPlot1, self)
         paramToolbar2 = NavigationToolbar2QT(self.paramPlot2, self)
 
+        # Slider widget containing labels and (beat, electrode) sliders
+        sliderWidget = QWidget()
+        sliderLayout = QGridLayout()
+        sliderWidget.setLayout(sliderLayout)
+        paramSlider1aLabel = QLabel("Beat")
+        paramSlider1bLabel = QLabel("Electrode")
+        paramSlider1aLabel.setFixedWidth(60)
+        paramSlider1bLabel.setFixedWidth(60)
+        self.paramSlider1a = QSlider(Qt.Horizontal)
+        self.paramSlider1b = QSlider(Qt.Horizontal)
+        sliderLayout.addWidget(paramSlider1aLabel, 0, 0)
+        sliderLayout.addWidget(paramSlider1bLabel, 1, 0)
+        sliderLayout.addWidget(self.paramSlider1a, 0, 1)
+        sliderLayout.addWidget(self.paramSlider1b, 1, 1)
+        
         plotLayout.addWidget(self.paramPlot1, 0, 0)
         plotLayout.addWidget(self.paramPlot2, 0, 1)
-        plotLayout.addWidget(self.paramSlider1a, 2, 0)
-        plotLayout.addWidget(self.paramSlider1b, 3, 0)
+        plotLayout.addWidget(sliderWidget, 2, 0)
+        # plotLayout.addWidget(self.paramSlider1b, 3, 0)
         plotLayout.addWidget(paramToolbar, 1, 0)
         plotLayout.addWidget(paramToolbar2, 1, 1)
 

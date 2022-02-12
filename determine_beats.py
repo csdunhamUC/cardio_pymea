@@ -200,6 +200,8 @@ electrode_config, batch_data):
                     filtered_bp[:, col] = sosfilt(sos_bp, 
                         cm_beats.y_axis[column])
                 cm_beats.y_axis = pd.DataFrame(filtered_bp)
+            
+            print(f"y_axis dataframe: {cm_beats.y_axis}")
 
         print("Number of columns in cm_beats.y_axis: " + 
             str(len(cm_beats.y_axis.columns)))
@@ -335,15 +337,15 @@ def graph_beats(analysisGUI, cm_beats, electrode_config):
     try:
         analysisGUI.beatsWindow.paramPlot1.axis1.cla()
         analysisGUI.beatsWindow.paramPlot2.axis1.cla()
+        
+        # Get beat choice from slider 1, use to get beat occurrence time.
+        beat_choice = analysisGUI.beatsWindow.paramSlider1a.value()
 
-        # Get electrode choice from slider 1, use to get electrode name
+        # Get electrode choice from slider 2, use to get electrode name
         elec_choice = analysisGUI.beatsWindow.paramSlider1b.value()
         all_elecs = cm_beats.dist_beats.columns
         curr_elec = all_elecs[elec_choice]
         
-        # Get beat choice from slider 2, use to get beat occurrence time.
-        beat_choice = analysisGUI.beatsWindow.paramSlider1a.value()
-
         if np.isnan(cm_beats.dist_beats.loc[beat_choice, curr_elec]):
             x_low_lim = np.nanmedian(cm_beats.dist_beats.loc[
                 beat_choice, :]) - 500
@@ -376,17 +378,23 @@ def graph_beats(analysisGUI, cm_beats, electrode_config):
             cm_beats.x_axis, 
             cm_beats.y_axis.iloc[0:, elec_choice].values)
         
-        analysisGUI.beatsWindow.paramPlot1.axis1.legend(
-            ['R-wave Peak'], 
-            loc='lower left')
+        # analysisGUI.beatsWindow.paramPlot1.axis1.legend(
+        #     ['R-wave Peak'], 
+        #     loc='lower left')
         analysisGUI.beatsWindow.paramPlot1.axis1.set(
-            xlim=(x_low_lim, x_high_lim))
+            xlim=(x_low_lim, x_high_lim),
+            xlabel="Time (ms)",
+            ylabel="Voltage (μV)")
 
         analysisGUI.beatsWindow.paramPlot1.draw()
         # End left-panel plot
 
     except AttributeError:
         print("Please use Find Peaks first.")
+    except KeyError:
+        print("Minimum peak height value is too high. Check beat count mode. " + 
+            "If beat count mode = 0, lower minimum peak height parameter " + 
+            "and try again.")
 
 
 def full_mea_plot(analysisGUI, cm_beats, electrode_config):
@@ -410,11 +418,15 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         L_max = 12
         L_min = 0
 
-        # Get beat choice from slider 2, use to get beat occurrence time.
+        # Get beat choice from slider 1, use to get beat occurrence time.
         beat_choice = analysisGUI.beatsWindow.paramSlider1a.value()
         
         x_low_lim = np.nanmedian(cm_beats.dist_beats.loc[
             beat_choice, :]) - 500
+        # Check for negative x_low_lim
+        # If x_low_lim is negative, reset to 0 to avoid plotting error
+        if x_low_lim < 0:
+            x_low_lim = 0
         x_high_lim = np.nanmedian(cm_beats.dist_beats.loc[
             beat_choice, :]) + 500
 
