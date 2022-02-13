@@ -1009,7 +1009,7 @@ class AnalysisGUI(QMainWindow):
     def setup_UI(self, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
     electrode_config, psd_data, beat_amp_int, batch_data, field_potential):
-        self.setWindowTitle("Cardio PyMEA1 v1.0")
+        self.setWindowTitle("Cardio PyMEA v1.0")
         self.mainWidget = QWidget()
         self.setCentralWidget(self.mainWidget)
         self.setUnifiedTitleAndToolBarOnMac(True)
