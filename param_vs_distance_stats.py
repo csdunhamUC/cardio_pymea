@@ -155,23 +155,31 @@ local_act_time, conduction_vel, input_param, cm_stats):
 
         average_pm_r_value = np.mean(cm_stats.r_value_pm)
         top_10_indices_pm = np.argpartition(cm_stats.r_value_pm, -10)[-10:]
-        top_10_indices_pm = list(top_10_indices_pm[np.argsort(-cm_stats.r_value_pm[top_10_indices_pm])])
-        top_10_r_value_pm = list(cm_stats.r_value_pm[top_10_indices_pm])
+        top_10_indices_pm = list(
+            top_10_indices_pm[np.argsort(-cm_stats.r_value_pm[top_10_indices_pm])])
+        top_10_r_value_pm = list(
+            cm_stats.r_value_pm[top_10_indices_pm])
         
         average_cv_r_value = np.mean(cm_stats.r_value_cv)
         top_10_indices_cv = np.argpartition(cm_stats.r_value_cv, -10)[-10:]
-        top_10_indices_cv = list(top_10_indices_cv[np.argsort(-cm_stats.r_value_cv[top_10_indices_cv])])
-        top_10_r_value_cv = list(cm_stats.r_value_cv[top_10_indices_cv])
+        top_10_indices_cv = list(
+            top_10_indices_cv[np.argsort(-cm_stats.r_value_cv[top_10_indices_cv])])
+        top_10_r_value_cv = list(
+            cm_stats.r_value_cv[top_10_indices_cv])
 
         average_lat_r_value = np.mean(cm_stats.r_value_lat)
         top_10_indices_lat = np.argpartition(cm_stats.r_value_lat, -10)[-10:]
-        top_10_indices_lat = list(top_10_indices_lat[np.argsort(-cm_stats.r_value_lat[top_10_indices_lat])])
-        top_10_r_value_lat = list(cm_stats.r_value_lat[top_10_indices_lat])
+        top_10_indices_lat = list(
+            top_10_indices_lat[np.argsort(-cm_stats.r_value_lat[top_10_indices_lat])])
+        top_10_r_value_lat = list(
+            cm_stats.r_value_lat[top_10_indices_lat])
 
         average_dvdt_r_value = np.mean(cm_stats.r_value_dvdt)
         top_10_indices_dvdt = np.argpartition(cm_stats.r_value_dvdt, -10)[-10:]
-        top_10_indices_dvdt = list(top_10_indices_dvdt[np.argsort(-cm_stats.r_value_dvdt[top_10_indices_dvdt])])
-        top_10_r_value_dvdt = list(cm_stats.r_value_dvdt[top_10_indices_dvdt])
+        top_10_indices_dvdt = list(
+            top_10_indices_dvdt[np.argsort(-cm_stats.r_value_dvdt[top_10_indices_dvdt])])
+        top_10_r_value_dvdt = list(
+            cm_stats.r_value_dvdt[top_10_indices_dvdt])
 
         # Assemble all the values for the stats readout text in GUI.
         cm_stats.complete_stats_readout = [
@@ -179,32 +187,32 @@ local_act_time, conduction_vel, input_param, cm_stats):
             "Mean Time Lag: {0:.2f}".format(pace_maker.param_dist_normalized_mean) 
             + "\n",
             "Std Dev: {0:.2f}".format(temp_pacemaker_stddev) + "\n",
-            "Avg R-value: {0:.3f}".format(average_pm_r_value) + "\n" + "\n",
+            "Avg R\u00b2: {0:.3f}".format(average_pm_r_value) + "\n" + "\n",
             "Mean CV: {0:.2f}".format(conduction_vel.param_dist_raw_mean) + "\n",
             "Std Dev: {0:.2f}".format(temp_cv_stddev) + "\n",
-            "Avg R-value: {0:.3f}".format(average_cv_r_value) + "\n" + "\n",
+            "Avg R\u00b2: {0:.3f}".format(average_cv_r_value) + "\n" + "\n",
             "Mean LAT: {0:.2f}".format(local_act_time.param_dist_normalized_mean) 
             + "\n",
             "Std Dev: {0:.2f}".format(temp_lat_stddev) + "\n",
-            "Avg R-value: {0:.3f}".format(average_lat_r_value) + "\n" + "\n",
+            "Avg R\u00b2: {0:.3f}".format(average_lat_r_value) + "\n" + "\n",
             "Mean dV/dt: {0:.2f}".format(upstroke_vel.param_dist_normalized_mean) 
             + "\n",
             "Std Dev: {0:.2f}".format(temp_dvdt_stddev) + "\n",
-            "Avg R-value: {0:.3f}".format(average_dvdt_r_value) + "\n" + "\n",
-            "Top 10 PM R-values:" + "\n" + "\n".join(
-            'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
+            "Avg R\u00b2: {0:.3f}".format(average_dvdt_r_value) + "\n" + "\n",
+            "Top 10 PM R\u00b2:" + "\n" + "\n".join(
+            'Beat {0:.0f}, R\u00b2 = {1:.4f}'.format(beat+1, r_value) 
                 for beat, r_value in zip(top_10_indices_pm, top_10_r_value_pm)) 
                 + "\n" + "\n",
-            "Top 10 CV R-values:" + "\n" + "\n".join(
-            'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
+            "Top 10 CV R\u00b2:" + "\n" + "\n".join(
+            'Beat {0:.0f}, R\u00b2 = {1:.4f}'.format(beat+1, r_value) 
                 for beat, r_value in zip(top_10_indices_cv, top_10_r_value_cv))
                 + "\n" + "\n",
-            "Top 10 LAT R-values:" + "\n" + "\n".join(
-            'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
+            "Top 10 LAT R\u00b2:" + "\n" + "\n".join(
+            'Beat {0:.0f}, R\u00b2 = {1:.4f}'.format(beat+1, r_value) 
                 for beat, r_value in zip(top_10_indices_lat, top_10_r_value_lat))
                 + "\n" + "\n",
-            "Top 10 dV/dt R-values:" + "\n" + "\n".join(
-                'Beat {0:.0f}, R-value {1:.4f}'.format(beat+1, r_value) 
+            "Top 10 dV/dt R\u00b2:" + "\n" + "\n".join(
+                'Beat {0:.0f}, R\u00b2 = {1:.4f}'.format(beat+1, r_value) 
                 for beat, r_value in zip(top_10_indices_dvdt, top_10_r_value_dvdt))
         ]
         
@@ -212,14 +220,6 @@ local_act_time, conduction_vel, input_param, cm_stats):
         analysisGUI.pvdWindow.statsPrintout.setPlainText("".join(map(str, 
             cm_stats.complete_stats_readout)))
 
-        # Necessary readouts:
-        # 1) Calculate beat interval between each beat, plot over full dataset.
-        # 2) Find electrodes with elongated beat interval, determine if distance 
-        #   correlation exists
-        # 2a) Calculate and plot beat amplitude vs distance
-        # 3) Mode of PM (LAT) min & max channels.
-        # 4) Mode of CV min and max channels.
-        # 5) Number of unique min channels for PM (LAT)
         param_vs_distance_graphing(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
         local_act_time, conduction_vel, input_param, cm_stats)
     except(TypeError, AttributeError):
@@ -240,7 +240,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
     # Plot for Paarameter vs Distance.  Generates scatterplot, best-fit line 
     # and error bars.
     analysisGUI.pvdWindow.paramPlot.fig.suptitle(
-        "Parameter vs. Distance from Minimum.  Beat " + 
+        "Parameter vs. Distance from Pacemaker.  Beat " + 
         str(input_param.stats_param_dist_slider + 1) + ".") 
     
     # Pacemaker plotting.
@@ -264,7 +264,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.slope_pm[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[pace_maker.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_pm[
+        c='black', label=("R\u00b2: {0:.3f}".format(cm_stats.r_value_pm[
             input_param.stats_param_dist_slider]))
     )
     analysisGUI.pvdWindow.paramPlot.axis1.set(title="Pacemaker", 
@@ -292,7 +292,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.slope_dvdt[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[upstroke_vel.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_dvdt[
+        c='black', label=("R\u00b2: {0:.3f}".format(cm_stats.r_value_dvdt[
             input_param.stats_param_dist_slider])),
     )
     analysisGUI.pvdWindow.paramPlot.axis2.set(title="Upstroke Velocity", 
@@ -321,11 +321,11 @@ local_act_time, conduction_vel, input_param, cm_stats):
         cm_stats.slope_lat[input_param.stats_param_dist_slider] * 
         local_act_time.distance_from_min[local_act_time.final_dist_beat_count[
             input_param.stats_param_dist_slider]].sort_values(ascending=True),
-        c='black', label=("R-value: {0:.3f}".format(cm_stats.r_value_lat[
+        c='black', label=("R\u00b2: {0:.3f}".format(cm_stats.r_value_lat[
             input_param.stats_param_dist_slider]))
     )
     analysisGUI.pvdWindow.paramPlot.axis3.set(title="Local Activation Time", 
-        xlabel="Distance from origin (μm)", ylabel="Activation time (ms)")
+        xlabel="Distance from pacemaker (μm)", ylabel="Activation time (ms)")
     analysisGUI.pvdWindow.paramPlot.axis3.legend(loc='upper left')
 
     # Conduction velocity plotting.
@@ -353,11 +353,11 @@ local_act_time, conduction_vel, input_param, cm_stats):
     
     analysisGUI.pvdWindow.paramPlot.axis4.plot(
         x_sorted, y_fit, linestyle='-', c='black',
-        label=("R-value: {0:.3f}".format(cm_stats.r_value_cv[
+        label=("R\u00b2: {0:.3f}".format(cm_stats.r_value_cv[
             input_param.stats_param_dist_slider]))
     )
     analysisGUI.pvdWindow.paramPlot.axis4.set(title="Conduction Velocity", 
-        xlabel="Distance from origin (μm)", ylabel="μm/ms")
+        xlabel="Distance from pacemaker (μm)", ylabel="μm/ms")
     analysisGUI.pvdWindow.paramPlot.axis4.legend(loc='upper left')
 
     # Draw the plots.
