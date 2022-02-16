@@ -28,7 +28,7 @@ input_param):
     try:
         # Filter signals.
         # preprocess_fpd()
-
+        print("Field potential duration calculation in progress.")
         # Find indices for T-wave peak locations.
         field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
             local_act_time, input_param)
@@ -72,24 +72,35 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                 if np.isnan(temp_idx) == True:
                     temp_idx = None
                 elif np.isnan(temp_idx) == False:
-                    temp_idx = int(temp_idx) + 100
+                    temp_idx = int(temp_idx) + 50
                     idx_end = temp_idx + 400
-                    temp_volt_trace = cm_beats.y_axis.loc[temp_idx:idx_end, elec]
+                    temp_volt_trace = cm_beats.y_axis.loc[
+                        temp_idx:idx_end, elec]
                     temp_pos_T_wave = find_peaks(
                         temp_volt_trace, 
-                        height=15,
+                        height=20,
                         # width=4,
                         # rel_height=0.5,
-                        prominence=1,
-                        distance=50)
+                        prominence=30,
+                        # distance=20
+                        )
                     temp_neg_T_wave = find_peaks(
                         -1*temp_volt_trace,
-                        height=15,
+                        height=20,
                         # width=4,
                         # rel_height=0.5,
-                        prominence=1,
-                        distance=50)
+                        prominence=30,
+                        # distance=20
+                        )
 
+                    # print(f"Temp +Twave:\n{temp_pos_T_wave}\n")
+                    # print(f"[1] only:\n{temp_pos_T_wave[1]['peak_heights']}\n")
+
+                    # print(f"Temp -Twave:\n{temp_neg_T_wave}\n")
+                    # print(f"[1] only:\n{temp_neg_T_wave[1]['peak_heights']}\n")
+
+                    # break
+ 
                     check_pos = np.any(temp_pos_T_wave[0])
                     if check_pos == True:
                         max_pos_T_wave = max(temp_pos_T_wave[1]["peak_heights"])
@@ -157,8 +168,8 @@ def calc_Tend(cm_beats, field_potential):
             print(f"Currently processing {beat}, {elec}.")
             x_m = int(field_potential.x_m[row, col])
             y_m = field_potential.y_m[row, col]
-            x_r = x_m + 150
-            y_r = y_m + 150
+            x_r = x_m + 100
+            y_r = y_m + 100
             x_i = cm_beats.x_axis[x_m:x_r].values.astype("int64")
             y_i = cm_beats.y_axis[elec].values[x_i]
             y_i_min = min(y_i)
@@ -218,7 +229,8 @@ def calc_Xm_Ym(cm_beats, field_potential):
             else:
                 Twave_idx = int(field_potential.T_wave_indices.loc[elec, beat])
 
-                Twave_idx_end = Twave_idx + 200
+                # Twave window is set by this value.
+                Twave_idx_end = Twave_idx + 100
 
                 # print(f"Row: {row}, Column: {col}")
                 x_vals = cm_beats.x_axis[

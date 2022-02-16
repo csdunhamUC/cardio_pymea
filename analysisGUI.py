@@ -1062,33 +1062,36 @@ class AnalysisGUI(QMainWindow):
                 calculate_pacemaker.graph_pacemaker(self, heat_map, pace_maker, 
                 input_param)])
         self.calcMenu.addAction("&Local Activation Time",
-            lambda: [self.localActTimeWindow(cm_beats, local_act_time, heat_map, 
-                input_param),
+            lambda: [
+                self.localActTimeWindow(cm_beats, local_act_time, heat_map, 
+                    input_param),
                 calculate_lat.calculate_lat(self, cm_beats, local_act_time,
-                heat_map, input_param, electrode_config),
+                    heat_map, input_param, electrode_config),
                 calculate_lat.graph_local_act_time(self, heat_map, 
-                local_act_time, input_param)])
+                    local_act_time, input_param)])
         self.calcMenu.addAction("&Upstroke Velocity (dV/dt)",
-            lambda: [self.upVelocityWindow(cm_beats, upstroke_vel, heat_map,
-                input_param),
+            lambda: [
+                self.upVelocityWindow(cm_beats, upstroke_vel, heat_map,
+                    input_param),
                 calculate_upstroke_vel.calculate_upstroke_vel(self, cm_beats, 
-                upstroke_vel, heat_map, input_param, electrode_config),
+                    upstroke_vel, heat_map, input_param, electrode_config),
                 calculate_upstroke_vel.graph_upstroke(self, heat_map, 
-                upstroke_vel, input_param)])
+                    upstroke_vel, input_param)])
         self.calcMenu.addAction("Conduction &Velocity",
-            lambda: [self.condVelocityWindow(cm_beats, local_act_time, 
-                conduction_vel, heat_map, input_param),
+            lambda: [
+                self.condVelocityWindow(cm_beats, local_act_time, 
+                    conduction_vel, heat_map, input_param),
                 calculate_cv.calculate_conduction_velocity(self, cm_beats, 
-                conduction_vel, local_act_time, heat_map, input_param, 
-                electrode_config),
+                    conduction_vel, local_act_time, heat_map, input_param, 
+                    electrode_config),
                 calculate_cv.graph_conduction_vel(self, heat_map, 
-                local_act_time, conduction_vel, input_param)])
+                    local_act_time, conduction_vel, input_param)])
         self.calcMenu.addAction("&Field Potential Duration",
             lambda: [
                 self.fieldPotDurWindow(cm_beats, local_act_time,
                     field_potential, heat_map, input_param),
                 calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
-                local_act_time, heat_map, input_param)])
+                    local_act_time, heat_map, input_param)])
        
 
         # Plot Menu

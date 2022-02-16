@@ -200,8 +200,6 @@ electrode_config, batch_data):
                     filtered_bp[:, col] = sosfilt(sos_bp, 
                         cm_beats.y_axis[column])
                 cm_beats.y_axis = pd.DataFrame(filtered_bp)
-            
-            print(f"y_axis dataframe: {cm_beats.y_axis}")
 
         print("Number of columns in cm_beats.y_axis: " + 
             str(len(cm_beats.y_axis.columns)))
@@ -390,8 +388,9 @@ def graph_beats(analysisGUI, cm_beats, electrode_config):
         # End left-panel plot
 
     except AttributeError:
-        print("Please use Find Peaks first.")
+        print("Please use Find Peaks first.") 
     except KeyError:
+        # See next occurrence of KeyError exception in full_mea_plot.
         print("Minimum peak height value is too high. Check beat count mode. " + 
             "If beat count mode = 0, lower minimum peak height parameter " + 
             "and try again.")
@@ -496,3 +495,8 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         # End right-panel plot
     except AttributeError:
         print("Please use Find Peaks first.")
+    except KeyError:
+        print("Minimum peak height value is too high. Check beat count mode. " + 
+            "If beat count mode = 0, lower minimum peak height parameter " + 
+            "and try again.")
+
