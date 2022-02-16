@@ -124,7 +124,7 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                     # Check if positive and negative amplitudes detected
                     if check_pos and check_neg == True:
                         # Check whether T-wave might be biphasic
-                        if (max_pos_T_wave - max_neg_T_wave) <= 10:
+                        if (max_pos_T_wave - max_neg_T_wave) <= 20:
                             if real_pos_T_idx > real_neg_T_idx:
                                 temp_dict[elec] = real_pos_T_idx
                             elif real_pos_T_idx < real_neg_T_idx:
@@ -168,8 +168,8 @@ def calc_Tend(cm_beats, field_potential):
             print(f"Currently processing {beat}, {elec}.")
             x_m = int(field_potential.x_m[row, col])
             y_m = field_potential.y_m[row, col]
-            x_r = x_m + 100
-            y_r = y_m + 100
+            x_r = x_m + 100 # this should not use x_m but rather Twave_idx
+            y_r = y_m + 100 # this should not use y_m but rather Twave_amp
             x_i = cm_beats.x_axis[x_m:x_r].values.astype("int64")
             y_i = cm_beats.y_axis[elec].values[x_i]
             y_i_min = min(y_i)
@@ -177,7 +177,7 @@ def calc_Tend(cm_beats, field_potential):
 
             Tend_guess = [x_m + 30, y_m - 10]
 
-            Tend_bounds = ((x_m, x_r), (y_i_min, y_i_max))
+            Tend_bounds = ((x_m + 10, x_r), (y_i_min, y_i_max))
 
             min_trap_area = minimize(
                 fun=trapezium_area, 
@@ -230,7 +230,9 @@ def calc_Xm_Ym(cm_beats, field_potential):
                 Twave_idx = int(field_potential.T_wave_indices.loc[elec, beat])
 
                 # Twave window is set by this value.
-                Twave_idx_end = Twave_idx + 100
+                # Choosing to look up to 200 ms after the Twave peak.
+                # This value is in line with Vasquez et al 2011.
+                Twave_idx_end = Twave_idx + 200
 
                 # print(f"Row: {row}, Column: {col}")
                 x_vals = cm_beats.x_axis[
