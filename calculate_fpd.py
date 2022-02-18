@@ -168,8 +168,8 @@ def calc_Tend(cm_beats, field_potential):
             print(f"Currently processing {beat}, {elec}.")
             x_m = int(field_potential.x_m[row, col])
             y_m = field_potential.y_m[row, col]
-            x_r = x_m + 100 # this should not use x_m but rather Twave_idx
-            y_r = y_m + 100 # this should not use y_m but rather Twave_amp
+            x_r = x_m + 100
+            y_r = y_m + 100
             x_i = cm_beats.x_axis[x_m:x_r].values.astype("int64")
             y_i = cm_beats.y_axis[elec].values[x_i]
             y_i_min = min(y_i)
