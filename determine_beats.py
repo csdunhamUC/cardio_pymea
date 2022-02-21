@@ -467,7 +467,7 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
                     # print(f"NaN: {val}")
                 else:
                     # Placeholder variable, get y values for electrode
-                    temp_y = cm_beats.y_axis.loc[0:, val]
+                    temp_y = -1*cm_beats.y_axis.loc[0:, val]
                     # Limit y values (amplitudes) shown to the provided x lim
                     y_axis_vals = temp_y[int_xlow_lim:int_xhigh_lim]
                     ax.plot(
