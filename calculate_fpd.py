@@ -37,26 +37,27 @@ input_param):
         analysisGUI.fpdWindow.paramSlider1b.setMaximum(
             len(field_potential.T_wave_indices.index) - 1)
         
-        # field_potential.T_wave_indices.to_excel("Twave_output3.xlsx")
+        field_potential.T_wave_indices.to_excel("Twave_output_2_21_22.xlsx")
 
-        # Calculate x_m, y_m
-        field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
-            field_potential)
-        # print(f"x_m: {field_potential.x_m}")
-        # print(f"y_m: {field_potential.y_m}")
+        # # Calculate x_m, y_m
+        # field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
+        #     field_potential)
+        # # print(f"x_m: {field_potential.x_m}")
+        # # print(f"y_m: {field_potential.y_m}")
 
-        field_potential.Tend = calc_Tend(cm_beats, field_potential)
-        print(f"Tend df:\n{field_potential.Tend}")
+        # field_potential.Tend = calc_Tend(cm_beats, field_potential)
+        # print(f"Tend df:\n{field_potential.Tend}")
 
-        # Plot T-wave calculation results.
-        graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
-            input_param)
+        # # Plot T-wave calculation results.
+        # graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
+        #     input_param)
     except (AttributeError):
         print("Please use Find Beats first.")
     
 
 def preprocess_fpd(cm_beats, field_potential):
     return 5
+
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
     try:
@@ -78,18 +79,18 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                         temp_idx:idx_end, elec]
                     temp_pos_T_wave = find_peaks(
                         temp_volt_trace, 
-                        height=20,
-                        # width=4,
+                        height=12,
+                        width=10,
                         # rel_height=0.5,
-                        prominence=30,
+                        # prominence=30,
                         # distance=20
                         )
                     temp_neg_T_wave = find_peaks(
                         -1*temp_volt_trace,
-                        height=20,
-                        # width=4,
+                        height=12,
+                        width=10,
                         # rel_height=0.5,
-                        prominence=30,
+                        # prominence=30,
                         # distance=20
                         )
 
@@ -124,7 +125,7 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                     # Check if positive and negative amplitudes detected
                     if check_pos and check_neg == True:
                         # Check whether T-wave might be biphasic
-                        if (max_pos_T_wave - max_neg_T_wave) <= 20:
+                        if (max_pos_T_wave - max_neg_T_wave) <= 10:
                             if real_pos_T_idx > real_neg_T_idx:
                                 temp_dict[elec] = real_pos_T_idx
                             elif real_pos_T_idx < real_neg_T_idx:
@@ -163,26 +164,35 @@ def calc_Tend(cm_beats, field_potential):
     for col, beat in enumerate(all_beats):
         temp_dict = {}
         for row, elec in enumerate(all_elecs):
+            # Get Twave peak location
+            Twave_idx = int(field_potential.T_wave_indices.loc[elec, beat])
+
             # x_m, x_r, y_m, y_r are immobile points for a given beat, 
             # elec combo
             print(f"Currently processing {beat}, {elec}.")
             x_m = int(field_potential.x_m[row, col])
             y_m = field_potential.y_m[row, col]
-            x_r = x_m + 100
+            x_r = Twave_idx + 400
+            y_r = cm_beats.y_axis[elec].values[x_r]
             y_r = y_m + 100
             x_i = cm_beats.x_axis[x_m:x_r].values.astype("int64")
-            y_i = cm_beats.y_axis[elec].values[x_i]
-            y_i_min = min(y_i)
-            y_i_max = max(y_i)
+            # y_i = cm_beats.y_axis[elec].values[x_i]
+            y_i_min = -50 # min(y_i)
+            y_i_max = 50 # max(y_i)
 
-            Tend_guess = [x_m + 30, y_m - 10]
+            x_i_guess = x_m + 30
+            y_i_guess = cm_beats.y_axis[elec].values[x_i_guess]
 
+            Tend_guess = [x_i_guess, y_i_guess]
+
+            print(f"x_m: {x_m}\nx_r: {x_r}")
             Tend_bounds = ((x_m + 10, x_r), (y_i_min, y_i_max))
 
             min_trap_area = minimize(
                 fun=trapezium_area, 
                 x0=Tend_guess,
                 args=(x_m, y_m, x_r, y_r),
+                method="Nelder-Mead",
                 bounds=Tend_bounds)
 
             real_x_i, real_y_i = min_trap_area.x
@@ -209,9 +219,12 @@ def calc_Tend(cm_beats, field_potential):
 
 def trapezium_area(Tend: tuple, x_m, y_m, x_r, y_r):
     x_i, y_i = Tend
-    # Need the maximum through minimization, so minimize the negative function.
+    # Need the maximum area. 
+    # We're finding the maximum through minimization
+    # Therefore, we must minimize the negative function.
     A_trap = -1*(0.5 * (y_m - y_i) * (2*x_r - x_i - x_m))
     return A_trap
+
 
 # Find x_m, y_m by first locating either the positive or negative T-wave peak
 # Determine whether T-wave is positive or negative
@@ -229,48 +242,41 @@ def calc_Xm_Ym(cm_beats, field_potential):
             else:
                 Twave_idx = int(field_potential.T_wave_indices.loc[elec, beat])
 
-                # Twave window is set by this value.
-                # Choosing to look up to 200 ms after the Twave peak.
-                # This value is in line with Vasquez et al 2011.
+                # Twave window is the interval between:
+                # (Twave_idx, Twave_idx_end)
+                # This value (200 ms)  is in line with Vasquez et al 2011.
                 Twave_idx_end = Twave_idx + 200
 
-                # print(f"Row: {row}, Column: {col}")
+                # Get x, y values for use in derivative 
+                # (change in y / change in x)
                 x_vals = cm_beats.x_axis[
                     Twave_idx:Twave_idx_end].values.astype('int64')
                 y_vals = cm_beats.y_axis[elec].values[x_vals]
 
+                # Calculative derivatives along T-waves over the window
+                # specified by Twave_idx and Twave_idx_end
                 derivs = np.diff(y_vals)/np.diff(x_vals)
+                
+                # Find the maximum absolute derivative in the T-wave
                 abs_derivs = abs(derivs)
                 max_deriv = max(abs_derivs)
+                # Obtain the point in time, corresponding to x_m,
+                # of the maximum absolute derivative.
                 max_deriv_loc = np.argmax(abs_derivs)
 
-                # 10/16/21 @ 19:29
-                # Performance is still spotty... both in T-wave detect and
-                # subsequent derivative mark. Likely related. Need to consider
-                # applying various pre-processing steps before going forward...
-                # May also just try to finish implementing the algorithm to
-                # see how it performs under existent circumstances.
 
                 # Once we find the index of the maximum abs(deriv), we need
                 # the x-value and y-value from cm_beats that corresponds to
-                # this (derivative) point.
-                real_x = x_vals[max_deriv_loc+1]
+                # this (maximum absolute derivative) point.
+                real_x = x_vals[max_deriv_loc]
                 real_y = cm_beats.y_axis[elec].values[real_x]
 
                 x_m[row, col] = real_x
-                # print(f"Derivs: {derivs}")
-                # print(f"Max derivative: {max_deriv}")
-                # print(f"Deriv loc: {max_deriv_loc}")
-                # print(f"Where: {np.where(abs(derivs) == max_deriv)}")
                 y_m[row, col] = real_y
 
+    # Return (x_m, y_m) coordinate pair.
     return (x_m, y_m)
-
-
-def calc_Xr_Yr(cm_beats, field_potential):
-    x_m = field_potential.x_m
-    y_m = field_potential.y_m
-    return (x_r, y_r)
+# End of calc_Xm_Ym function
 
 
 # Function that graphs T-wave data on left-side plot (paramPlot1)
