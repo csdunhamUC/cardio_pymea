@@ -24,7 +24,7 @@ from scipy.optimize import minimize
 
 
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
-input_param):
+input_param, electrode_config):
     try:
         # Filter signals.
         # preprocess_fpd()
@@ -37,7 +37,18 @@ input_param):
         analysisGUI.fpdWindow.paramSlider1b.setMaximum(
             len(field_potential.T_wave_indices.index) - 1)
         
-        field_potential.T_wave_indices.to_excel("Twave_output_2_21_22.xlsx")
+        inserted_x_coords = [0]*len(field_potential.T_wave_indices.index)
+        inserted_y_coords = [0]*len(field_potential.T_wave_indices.index)
+        for num, elec in enumerate(field_potential.T_wave_indices.index):
+            if elec in electrode_config.electrode_names:
+                temp_x = electrode_config.electrode_coords_x[num]
+                temp_y = electrode_config.electrode_coords_y[num]
+                inserted_x_coords[num] = temp_x
+                inserted_y_coords[num] = temp_y
+
+        field_potential.T_wave_indices.insert(0, "X", inserted_x_coords)
+        field_potential.T_wave_indices.insert(1, "Y", inserted_y_coords)
+        field_potential.T_wave_indices.to_excel("Twave_output_2_28_22.xlsx")
 
         # # Calculate x_m, y_m
         # field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
@@ -51,6 +62,7 @@ input_param):
         # # Plot T-wave calculation results.
         # graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
         #     input_param)
+        print("Finished.")
     except (AttributeError):
         print("Please use Find Beats first.")
     

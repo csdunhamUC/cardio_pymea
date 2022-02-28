@@ -1095,7 +1095,7 @@ class AnalysisGUI(QMainWindow):
                 self.fieldPotDurWindow(cm_beats, local_act_time,
                     field_potential, heat_map, input_param),
                 calculate_fpd.calc_fpd(self, cm_beats, field_potential, 
-                    local_act_time, heat_map, input_param)])
+                    local_act_time, heat_map, input_param, electrode_config)])
        
 
         # Plot Menu
