@@ -40,15 +40,21 @@ input_param, electrode_config):
         inserted_x_coords = [0]*len(field_potential.T_wave_indices.index)
         inserted_y_coords = [0]*len(field_potential.T_wave_indices.index)
         for num, elec in enumerate(field_potential.T_wave_indices.index):
-            if elec in electrode_config.electrode_names:
-                temp_x = electrode_config.electrode_coords_x[num]
-                temp_y = electrode_config.electrode_coords_y[num]
+            if elec in electrode_config.mea_120_coordinates:
+                temp_x = electrode_config.mea_120_coordinates[elec][0]
+                temp_y = electrode_config.mea_120_coordinates[elec][1]
                 inserted_x_coords[num] = temp_x
                 inserted_y_coords[num] = temp_y
+            elif elec in electrode_config.mea_60_coordinates:
+                print()
 
+        # Insert x and y coordinates for 'interpolation' of missing FPD values
         field_potential.T_wave_indices.insert(0, "X", inserted_x_coords)
         field_potential.T_wave_indices.insert(1, "Y", inserted_y_coords)
-        field_potential.T_wave_indices.to_excel("Twave_output_2_28_22.xlsx")
+        # field_potential.T_wave_indices.to_excel("Twave_output_2_28_22.xlsx")
+
+        field_potential.T_wave_interp = interpolate_Twave_idx(
+            field_potential.T_wave_indices)
 
         # # Calculate x_m, y_m
         # field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
@@ -165,6 +171,60 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
         return pd.DataFrame(fpd_full_dict)
     except (AttributeError):
         print("")
+
+
+def interpolate_Twave_idx(data: pd.DataFrame):
+    nan_idx = {}
+    nan_elecs = {}
+
+    # For each beat,
+    # Find and store the location of each NaN electrode
+    for beat in data.columns[2:10]:
+        if data[beat].isna().any():
+            idx = np.where(data[beat].isna())[0]
+            nan_idx[beat] = idx
+            nan_elecs[beat] = (data.index[idx].values)
+
+    nan_elec_neighbors = {}
+    # For each NaN electrode,
+    # Get the coordinates of the NaN electrode
+    # Compare these coordinates to all other coordinates
+    # Find the coordinates within 230 micrometers in x and y directions 
+    # (ignores diagonal)
+    for elecs, (beat, idx) in zip(nan_elecs.values(), nan_idx.items()):
+        temp_df = data[[beat, "X", "Y"]]
+
+        temp_neighbors = []
+        if len(elecs) > 1:
+            for elec in elecs:
+                nan_x = temp_df.loc[elec, "X"]
+                nan_y = temp_df.loc[elec, "Y"]
+                for elec, x, y in zip(temp_df.index, data["X"], data["Y"]):
+                    coord_dist = np.sqrt( (x - nan_x)**2 + (y - nan_y)**2 )
+                    if (coord_dist <= 230) & (elec not in nan_elecs[beat]):
+                        temp_neighbors.append(elec)
+        else:
+            nan_x = temp_df.iloc[idx, 1].values[0]
+            nan_y = temp_df.iloc[idx, 2].values[0]
+            for elec, x, y in zip(temp_df.index, data["X"], data["Y"]):
+                coord_dist = np.sqrt( (x - nan_x)**2 + (y - nan_y)**2 )
+                if (coord_dist <= 230) & (elec not in nan_elecs[beat]):
+                    temp_neighbors.append(elec)
+        nan_elec_neighbors[beat] = temp_neighbors
+
+
+    # New dataframe to return values for missing FPD T-waves.
+    new_df = data.copy()
+
+    # For each beat, get the FPD value of each neighbor electrode
+    # Average these values
+    # Sub in for the nan electrode.
+    for (beat, nan_neighbor), nan_elec in zip(
+    nan_elec_neighbors.items(), nan_elecs.values()):
+        mean_of_neighbors = np.floor(np.mean(data.loc[nan_neighbor, beat]))
+        new_df.loc[nan_elec, beat] = mean_of_neighbors
+    
+    return new_df
 
 
 def calc_Tend(cm_beats, field_potential):
