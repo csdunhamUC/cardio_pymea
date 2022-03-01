@@ -30,16 +30,16 @@ input_param, electrode_config):
         # preprocess_fpd()
         print("Field potential duration calculation in progress.")
         # Find indices for T-wave peak locations.
-        field_potential.T_wave_indices = find_T_wave(cm_beats, field_potential, 
+        field_potential.T_wave_pre = find_T_wave(cm_beats, field_potential, 
             local_act_time, input_param)
 
         # Adjust second slider (electrode slider) to maximum number of elecs.
         analysisGUI.fpdWindow.paramSlider1b.setMaximum(
-            len(field_potential.T_wave_indices.index) - 1)
+            len(field_potential.T_wave_pre.index) - 1)
         
-        inserted_x_coords = [0]*len(field_potential.T_wave_indices.index)
-        inserted_y_coords = [0]*len(field_potential.T_wave_indices.index)
-        for num, elec in enumerate(field_potential.T_wave_indices.index):
+        inserted_x_coords = [0]*len(field_potential.T_wave_pre.index)
+        inserted_y_coords = [0]*len(field_potential.T_wave_pre.index)
+        for num, elec in enumerate(field_potential.T_wave_pre.index):
             if elec in electrode_config.mea_120_coordinates:
                 temp_x = electrode_config.mea_120_coordinates[elec][0]
                 temp_y = electrode_config.mea_120_coordinates[elec][1]
@@ -49,25 +49,25 @@ input_param, electrode_config):
                 print()
 
         # Insert x and y coordinates for 'interpolation' of missing FPD values
-        field_potential.T_wave_indices.insert(0, "X", inserted_x_coords)
-        field_potential.T_wave_indices.insert(1, "Y", inserted_y_coords)
-        # field_potential.T_wave_indices.to_excel("Twave_output_2_28_22.xlsx")
+        field_potential.T_wave_pre.insert(0, "X", inserted_x_coords)
+        field_potential.T_wave_pre.insert(1, "Y", inserted_y_coords)
+        # field_potential.T_wave_pre.to_excel("Twave_output_2_28_22.xlsx")
 
-        field_potential.T_wave_interp = interpolate_Twave_idx(
-            field_potential.T_wave_indices)
+        field_potential.T_wave_indices = interpolate_Twave_idx(
+            field_potential.T_wave_pre)
 
         # # Calculate x_m, y_m
-        # field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
-        #     field_potential)
+        field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
+            field_potential)
         # # print(f"x_m: {field_potential.x_m}")
         # # print(f"y_m: {field_potential.y_m}")
 
-        # field_potential.Tend = calc_Tend(cm_beats, field_potential)
+        field_potential.Tend = calc_Tend(cm_beats, field_potential)
         # print(f"Tend df:\n{field_potential.Tend}")
 
         # # Plot T-wave calculation results.
-        # graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
-        #     input_param)
+        graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
+            input_param)
         print("Finished.")
     except (AttributeError):
         print("Please use Find Beats first.")
@@ -179,7 +179,7 @@ def interpolate_Twave_idx(data: pd.DataFrame):
 
     # For each beat,
     # Find and store the location of each NaN electrode
-    for beat in data.columns[2:10]:
+    for beat in data.columns[2:]:
         if data[beat].isna().any():
             idx = np.where(data[beat].isna())[0]
             nan_idx[beat] = idx
@@ -223,13 +223,17 @@ def interpolate_Twave_idx(data: pd.DataFrame):
     nan_elec_neighbors.items(), nan_elecs.values()):
         mean_of_neighbors = np.floor(np.mean(data.loc[nan_neighbor, beat]))
         new_df.loc[nan_elec, beat] = mean_of_neighbors
-    
+
+    new_df.drop(columns=["X", "Y"], inplace=True)
+    print("Finished nearest-neighbor estimation of NaN FPD T-wave indices.")
     return new_df
 
 
 def calc_Tend(cm_beats, field_potential):
     all_beats = field_potential.T_wave_indices.columns
     all_elecs = field_potential.T_wave_indices.index
+
+    max_x = max(cm_beats.x_axis)
 
     Tend_dict = {}
 
@@ -244,7 +248,17 @@ def calc_Tend(cm_beats, field_potential):
             print(f"Currently processing {beat}, {elec}.")
             x_m = int(field_potential.x_m[row, col])
             y_m = field_potential.y_m[row, col]
-            x_r = Twave_idx + 400
+            
+            # Check whether x_r is being chosen outside of the bounds of the
+            # recorded data.
+            if (Twave_idx + 400) < max_x:
+                x_r = Twave_idx + 400
+                x_i_guess = x_m + 30
+            elif (Twave_idx + 400) > max_x:
+                x_r = int(max_x)
+                x_i_guess = int(max_x - 1)
+                print(f"Xi Guess: {x_i_guess}")
+
             y_r = cm_beats.y_axis[elec].values[x_r]
             y_r = y_m + 100
             x_i = cm_beats.x_axis[x_m:x_r].values.astype("int64")
@@ -252,13 +266,16 @@ def calc_Tend(cm_beats, field_potential):
             y_i_min = -50 # min(y_i)
             y_i_max = 50 # max(y_i)
 
-            x_i_guess = x_m + 30
+            # x_i_guess = x_m + 30
             y_i_guess = cm_beats.y_axis[elec].values[x_i_guess]
 
             Tend_guess = [x_i_guess, y_i_guess]
+            print(f"Tend Guess: {Tend_guess}")
 
             print(f"x_m: {x_m}\nx_r: {x_r}")
-            Tend_bounds = ((x_m + 10, x_r), (y_i_min, y_i_max))
+            Tend_bounds = ((x_m, x_r), (y_i_min, y_i_max))
+
+            print(f"Tend bounds: {Tend_bounds}")
 
             min_trap_area = minimize(
                 fun=trapezium_area, 
