@@ -1404,12 +1404,18 @@ class AnalysisGUI(QMainWindow):
             # Set slider value to maximum number of beats
             self.fpdWindow.paramSlider1a.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
-            self.fpdWindow.paramSlider1a.valueChanged.connect(lambda: [
-                calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
-                    field_potential, input_param)])
-            self.fpdWindow.paramSlider1b.valueChanged.connect(lambda: [
-                calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
-                    field_potential, input_param)])
+            self.fpdWindow.paramSlider1a.valueChanged.connect(
+                lambda: [
+                    calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
+                        field_potential, input_param),
+                    calculate_fpd.heatmap_fpd(self, cm_beats, field_potential,
+                        heat_map, input_param)
+                ])
+            self.fpdWindow.paramSlider1b.valueChanged.connect(
+                lambda: [
+                    calculate_fpd.graph_T_wave(self, cm_beats, local_act_time,
+                        field_potential, input_param)
+                ])
         except (AttributeError):
             print("")
 

@@ -39,6 +39,10 @@ input_param, electrode_config):
         
         inserted_x_coords = [0]*len(field_potential.T_wave_pre.index)
         inserted_y_coords = [0]*len(field_potential.T_wave_pre.index)
+        
+        # Define electrode coordinates for either MEA120 or MEA60 systems.
+        # Note: this logic will need revision if you add a different
+        # MEA configuration (i.e. not 120 or 60 electrodes).
         for num, elec in enumerate(field_potential.T_wave_pre.index):
             if elec in electrode_config.mea_120_coordinates:
                 temp_x = electrode_config.mea_120_coordinates[elec][0]
@@ -46,26 +50,45 @@ input_param, electrode_config):
                 inserted_x_coords[num] = temp_x
                 inserted_y_coords[num] = temp_y
             elif elec in electrode_config.mea_60_coordinates:
-                print()
+                temp_x = electrode_config.mea_60_coordinates[elec][0]
+                temp_y = electrode_config.mea_60_coordinates[elec][1]
+                inserted_x_coords[num] = temp_x
+                inserted_y_coords[num] = temp_y
 
         # Insert x and y coordinates for 'interpolation' of missing FPD values
         field_potential.T_wave_pre.insert(0, "X", inserted_x_coords)
         field_potential.T_wave_pre.insert(1, "Y", inserted_y_coords)
-        # field_potential.T_wave_pre.to_excel("Twave_output_2_28_22.xlsx")
 
         field_potential.T_wave_indices = interpolate_Twave_idx(
             field_potential.T_wave_pre)
 
-        # # Calculate x_m, y_m
-        field_potential.x_m, field_potential.y_m = calc_Xm_Ym(cm_beats, 
+        # Calculate x_m, y_m
+        field_potential.x_m, field_potential.y_m = calc_Xm_Ym(
+            cm_beats, 
             field_potential)
-        # # print(f"x_m: {field_potential.x_m}")
-        # # print(f"y_m: {field_potential.y_m}")
 
-        field_potential.Tend = calc_Tend(cm_beats, field_potential)
-        # print(f"Tend df:\n{field_potential.Tend}")
+        # Calculate T-wave endpoint
+        field_potential.Tend = calc_Tend(
+            cm_beats, 
+            field_potential)
 
-        # # Plot T-wave calculation results.
+        # For brevity, assign local_act_time and field_potential to
+        # shorter variable names, for use in calculating FPD.
+        lat_data = local_act_time.param_dist_raw
+        fpd_data = field_potential.Tend
+
+        # FPD = delta in time between R-wave peak and T-wave endpoint
+        # FPD is positive value, so take absolute value here.
+        difference = abs(lat_data[lat_data.columns[3:]] - fpd_data)
+        # Restore index to retain electrode coordinate information
+        # This is necessary for the heatmap.
+        reidx_difference = difference.reindex_like(lat_data)
+        reidx_difference[["Electrode", "X", "Y"]] = lat_data[
+            ["Electrode", "X", "Y"]]
+        # Assign FPD to struc using the correctly reindexed values.
+        field_potential.FPD = reidx_difference
+
+        # Plot T-wave calculation results.
         graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
             input_param)
         print("Finished.")
@@ -257,7 +280,7 @@ def calc_Tend(cm_beats, field_potential):
             elif (Twave_idx + 400) > max_x:
                 x_r = int(max_x)
                 x_i_guess = int(max_x - 1)
-                print(f"Xi Guess: {x_i_guess}")
+                # print(f"Xi Guess: {x_i_guess}")
 
             y_r = cm_beats.y_axis[elec].values[x_r]
             y_r = y_m + 100
@@ -270,12 +293,12 @@ def calc_Tend(cm_beats, field_potential):
             y_i_guess = cm_beats.y_axis[elec].values[x_i_guess]
 
             Tend_guess = [x_i_guess, y_i_guess]
-            print(f"Tend Guess: {Tend_guess}")
+            # print(f"Tend Guess: {Tend_guess}")
 
-            print(f"x_m: {x_m}\nx_r: {x_r}")
+            # print(f"x_m: {x_m}\nx_r: {x_r}")
             Tend_bounds = ((x_m, x_r), (y_i_min, y_i_max))
 
-            print(f"Tend bounds: {Tend_bounds}")
+            # print(f"Tend bounds: {Tend_bounds}")
 
             min_trap_area = minimize(
                 fun=trapezium_area, 
@@ -427,7 +450,7 @@ input_param):
 
     # Mark T-wave endpoint
     analysisGUI.fpdWindow.paramPlot1.axis1.plot(
-            field_potential.Tend.loc[curr_elec, all_beats[:-1]],
+        field_potential.Tend.loc[curr_elec, all_beats[:-1]],
         cm_beats.y_axis[curr_elec].values[
             field_potential.Tend.loc[curr_elec, all_beats[:-1]]],
         "Py",
@@ -441,9 +464,8 @@ input_param):
     # print(local_act_time.param_dist_raw.loc[curr_elec, curr_beat])
     x_low_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] - 500
     x_high_lim = local_act_time.param_dist_raw.loc[curr_elec, curr_beat] + 500
-    rwave_time = local_act_time.param_dist_normalized.loc[curr_elec, curr_beat]
-    print(f"R-wave Time (ms): {rwave_time}")
-
+    rwave_time = local_act_time.param_dist_raw.loc[curr_elec, curr_beat]
+    
     # Set axis units.
     analysisGUI.fpdWindow.paramPlot1.axis1.set(
         xlabel="Time (ms)",
@@ -463,34 +485,61 @@ input_param):
 
 def heatmap_fpd(analysisGUI, cm_beats, field_potential, heat_map, input_param):
     
-    if hasattr(heat_map, 'fpd_solo_cbar') is True:
-        heat_map.fpd_solo_cbar.remove()
-        delattr(heat_map, 'fpd_solo_cbar')
+    if hasattr(heat_map, 'fpd_cbar') is True:
+        heat_map.fpd_cbar.remove()
+        delattr(heat_map, 'fpd_cbar')
 
-    analysisGUI.fpdWindow.paramPlot.axis1.cla()
-    selected_beat = analysisGUI.fpdWindow.paramSlider.value()
+    analysisGUI.fpdWindow.paramPlot2.axis1.cla()
+    beat_choice = analysisGUI.fpdWindow.paramSlider1a.value()
 
-    electrode_names = to_plot.bp_filt_y.pivot(index='Y', columns='X',
-        values='Electrode')
-    heatmap_pivot_table = to_plot.bp_filt_y.pivot(index='Y', columns='X',
-        values=field_potential.final_beat_count[selected_beat])
+    # Get beats from data.
+    all_beats = field_potential.T_wave_indices.columns
 
-    fpd_solo_temp = sns.heatmap(heatmap_pivot_table, cmap="jet",
-        annot=electrode_names, fmt="",
-        ax=analysisGUI.fpdWindow.paramPlot.axis1, vmin=0,
-        vmax=field_potential.fpd_max, cbar=False)
-    mappable = fpd_solo_temp.get_children()[0]
-    heat_map.fpd_solo_cbar = (
-        analysisGUI.fpdWindow.paramPlot.axis1.figure.colorbar(mappable, 
-            ax=analysisGUI.fpdWindow.paramPlot.axis1))
-    heat_map.fpd_solo_cbar.ax.set_title("FPD (ms)", fontsize=10)
+    # Use slider value as index for available beats to yield current beat.
+    curr_beat = all_beats[beat_choice]
 
-    analysisGUI.fpdWindow.paramPlot.axis1.set(
-        title=f"Field Potential Duration, Beat {selected_beat+1}",
+    fpd_max = field_potential.FPD[field_potential.FPD.columns[3:]].max().max()
+    fpd_min = field_potential.FPD[field_potential.FPD.columns[3:]].min().min()
+
+    electrode_names = field_potential.FPD.pivot(
+        index='Y', 
+        columns='X',
+        values='Electrode'
+        )
+    
+    heatmap_pivot_table = field_potential.FPD.pivot(
+        index='Y', 
+        columns='X',
+        values=curr_beat
+        )
+
+    fpd_temp = sns.heatmap(
+        heatmap_pivot_table, 
+        cmap="jet",
+        annot=electrode_names, 
+        fmt="",
+        ax=analysisGUI.fpdWindow.paramPlot2.axis1, 
+        vmin=fpd_min,
+        vmax=fpd_max,
+        cbar=False
+        )
+
+    mappable = fpd_temp.get_children()[0]
+    heat_map.fpd_cbar = (
+        analysisGUI.fpdWindow.paramPlot2.axis1.figure.colorbar(
+            mappable, 
+            ax=analysisGUI.fpdWindow.paramPlot2.axis1))
+    heat_map.fpd_cbar.ax.set_title(
+        "FPD (ms)", 
+        fontsize=10
+        )
+
+    analysisGUI.fpdWindow.paramPlot2.axis1.set(
+        title=f"Field Potential Duration, {curr_beat}",
         xlabel="X coordinate (μm)",
         ylabel="Y coordinate (μm)")
-    analysisGUI.fpdWindow.paramPlot.fig.tight_layout()
-    analysisGUI.fpdWindow.paramPlot.draw()
+    analysisGUI.fpdWindow.paramPlot2.fig.tight_layout()
+    analysisGUI.fpdWindow.paramPlot2.draw()
 
 
 def bandpass_filter(cm_beats, input_param, bworth_ord=4, low_cutoff_freq=0.5, 
