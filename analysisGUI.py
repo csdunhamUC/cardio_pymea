@@ -362,7 +362,7 @@ def data_import(analysisGUI, raw_data, electrode_config):
 # dataframe of PM data: pace_maker.param_dist_normalized
 # Modifications to original code by CSD.
 def export_excel(analysisGUI, pace_maker, local_act_time, upstroke_vel, 
-conduction_vel, beat_amp_int, cm_beats, cm_stats):
+conduction_vel, beat_amp_int, cm_beats, cm_stats, field_potential):
     try:
         print("Saving processed data...")
 
@@ -372,7 +372,7 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
         file_path, file_name = os.path.split(saveFile[0])
 
         with pd.ExcelWriter('{path}/{name}.xlsx'.format(
-            path=file_path, name=file_name)) as writer:
+        path=file_path, name=file_name)) as writer:
             pace_maker.param_dist_normalized.to_excel(writer, 
                 sheet_name='Pacemaker (Normalized)')
             pace_maker.param_dist_raw.to_excel(writer, 
@@ -401,6 +401,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats):
                 sheet_name='Delta Beat Amplitude')
             beat_amp_int.beat_interval.to_excel(writer, 
                 sheet_name='Beat Interval')
+            field_potential.FPD.to_excel(writer,
+                sheet_name='Field Potential Duration')
             cm_stats.pace_maker_filtered_data.to_excel(writer, 
                 sheet_name='PM Stats')
             cm_stats.local_act_time_filtered_data.to_excel(writer, 
@@ -1032,7 +1034,8 @@ class AnalysisGUI(QMainWindow):
                 beat_amp_int)])
         self.fileMenu.addAction("&Save Processed Data",
             lambda: export_excel(self, pace_maker, local_act_time, upstroke_vel, 
-                conduction_vel, beat_amp_int, cm_beats, cm_stats))
+                conduction_vel, beat_amp_int, cm_beats, cm_stats, 
+                field_potential))
         self.fileMenu.addAction("&Print (debug)", print_something)
         self.fileMenu.addAction("&Exit", self.close)
        
