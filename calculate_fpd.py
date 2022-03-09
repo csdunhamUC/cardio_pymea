@@ -91,6 +91,9 @@ input_param, electrode_config):
         # Plot T-wave calculation results.
         graph_T_wave(analysisGUI, cm_beats, local_act_time, field_potential, 
             input_param)
+        heatmap_fpd(analysisGUI, cm_beats, field_potential, heat_map, 
+            input_param)
+
         print("Finished.")
     except (AttributeError):
         print("Please use Find Beats first.")
