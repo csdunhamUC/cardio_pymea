@@ -28,7 +28,7 @@ import calculate_upstroke_vel
 import calculate_lat
 import calculate_cv
 import main_heatmap
-import param_vs_distance_stats
+import property_vs_distance_stats
 import psd_plotting
 import calculate_beat_amp_int
 import pca_plotting
@@ -453,7 +453,7 @@ def nbins_toggle(analysisGUI):
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
 def reload_module():
-    importlib.reload(param_vs_distance_stats)
+    importlib.reload(property_vs_distance_stats)
     importlib.reload(calculate_cv)
     importlib.reload(determine_beats)
     # importlib.reload(calculate_lat)
@@ -688,9 +688,9 @@ class BeatSignalPlotWindow(QWidget):
 
 
 # Used for parameter vs distance statistics window.
-class ParamStatWindows(QWidget):
+class PropertyStatWindows(QWidget):
     def __init__(self):
-        super(ParamStatWindows, self).__init__()
+        super(PropertyStatWindows, self).__init__()
         self.setupUI()
 
     def setupUI(self):
@@ -1129,8 +1129,8 @@ class AnalysisGUI(QMainWindow):
 
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
-        self.statMenu.addAction("&Parameter vs Distance w/ R\u00b2",
-            lambda: [self.paramVsDistStatsWindow(cm_beats, pace_maker, 
+        self.statMenu.addAction("&Property vs Distance w/ R\u00b2",
+            lambda: [self.propertyVsDistStatsWindow(cm_beats, pace_maker, 
                 upstroke_vel, local_act_time, conduction_vel, input_param, 
                 cm_stats)])
         self.statMenu.addAction("Principal Component &Analysis (PCA)",
@@ -1422,22 +1422,22 @@ class AnalysisGUI(QMainWindow):
         except (AttributeError):
             print("")
 
-    def paramVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
+    def propertyVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):
         try:
-            self.pvdWindow = ParamStatWindows()
-            self.pvdWindow.setWindowTitle("Parameter vs Distance w/ R\u00b2")
+            self.pvdWindow = PropertyStatWindows()
+            self.pvdWindow.setWindowTitle("Property vs Distance w/ R\u00b2")
             self.pvdWindow.setStyleSheet(
                 "background-color: white; color: black;")
             self.pvdWindow.show()
             self.pvdWindow.sigmaButton.clicked.connect(lambda: [
-                param_vs_distance_stats.param_vs_distance_analysis(self, 
+                property_vs_distance_stats.property_vs_distance_analysis(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, 
                 conduction_vel, input_param, cm_stats)])
             self.pvdWindow.paramSlider.setMaximum(
                 int(cm_beats.beat_count_dist_mode[0]) - 1)
             self.pvdWindow.paramSlider.valueChanged.connect(lambda: [
-                param_vs_distance_stats.param_vs_distance_graphing(self, 
+                property_vs_distance_stats.property_vs_distance_graphing(self, 
                 cm_beats, pace_maker, upstroke_vel, local_act_time, 
                 conduction_vel, input_param, cm_stats)])
         except AttributeError:
