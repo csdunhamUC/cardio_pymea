@@ -1,11 +1,13 @@
+# Cardio PyMEA: A Cardiomyocyte MEA Analaysis Application in Python.
 # Author: Christopher S. Dunham
 # Contact Email: csdunham@chem.ucla.edu, csdunham@protonmail.com
 # Organization: University of California, Los Angeles
 # Department of Chemistry & Biochemistry
 # Laboratory PI: James K. Gimzewski
+# PI email: gimzewski@cnsi.ucla.edu
 # This is an original work, unless otherwise noted in comments, by CSD.
 # Began: 2/23/2021
-# PyQt5 version of MEA analysis software.
+# Version 1.0 completed: 3/23/2022
 
 import sys
 from PyQt5.QtWidgets import (QApplication, QGridLayout, QMainWindow, 
@@ -36,6 +38,7 @@ import detect_transloc
 import batch_analysis
 import powerlaw_analysis
 import calculate_fpd
+
 
 ################################################################################
 # Classes that serve similar to Matlab structures (C "struct") to house data and 
@@ -322,7 +325,6 @@ def data_import(analysisGUI, raw_data, electrode_config):
             print("Raw data is not empty; clearing before reading file.")
             delattr(raw_data, 'imported')
 
-        # print("Importing data...")
         print("Import data began at: ", 
             datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
 
@@ -422,10 +424,8 @@ conduction_vel, beat_amp_int, cm_beats, cm_stats, field_potential):
         print("No such file or directory.")
 
 
-def print_something():
-    print("Something.")
-
-
+# Function used to show or hide truncation range, based on whether
+# truncation check box is checked.
 def trunc_toggle(analysisGUI):
     if analysisGUI.truncCheckbox.isChecked() == True:
         analysisGUI.truncStartEdit.show()
@@ -435,6 +435,8 @@ def trunc_toggle(analysisGUI):
         analysisGUI.truncEndEdit.hide()
 
 
+# Function used to show or hide electrode list for silencing, based on whether
+# silence electrodes check box is checked.
 def silence_toggle(analysisGUI):
     if analysisGUI.toggleSilence.isChecked() == True:
         analysisGUI.elecCombobox.show()
@@ -442,6 +444,8 @@ def silence_toggle(analysisGUI):
         analysisGUI.elecCombobox.hide()
 
 
+# Function used to show or hide entry field for number of bins in power law
+# histogram, based on whether "Manual Entry" mode is chosen.
 def nbins_toggle(analysisGUI):
     if analysisGUI.plWindow.binMethodSelect.currentText() == "Manual Entry":
         analysisGUI.plWindow.nbinsLabel.show()
@@ -449,6 +453,7 @@ def nbins_toggle(analysisGUI):
     else:
         analysisGUI.plWindow.nbinsLabel.hide()
         analysisGUI.plWindow.nbinsEdit.hide()
+
 
 # Reloads given module.  This is used for testing/developing a module to save 
 # time vs re-running the program over and over.
@@ -468,7 +473,11 @@ def reload_module():
     print("Reloaded modules.")
 
 
+###############################################################################
 # FigureCanvas classes for the plots (figs and axes) used in GUI windows.
+###############################################################################
+
+# Canvas class for the heatmap shown upon starting Cardio PyMEA.
 class MainHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi, 
@@ -480,6 +489,9 @@ class MainHeatmapCanvas(FigureCanvasQTAgg):
         super(MainHeatmapCanvas, self).__init__(self.fig)
 
 
+# Canvas class for individual (single-plot) heatmaps.
+# Used in pacemaker, local activation time, upstroke velocity, and conduction
+# velocity functions.
 class MinorHeatmapCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=5, height=5, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
@@ -487,6 +499,7 @@ class MinorHeatmapCanvas(FigureCanvasQTAgg):
         super(MinorHeatmapCanvas, self).__init__(self.fig)
 
 
+# 2x2 plot used in "Find Beats" window.
 class GenericPlotCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=6, height=6, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
@@ -497,6 +510,7 @@ class GenericPlotCanvas(FigureCanvasQTAgg):
         super(GenericPlotCanvas, self).__init__(self.fig)
 
 
+# 1x2 plot used in power spectral density window.
 class PSDPlotCanvas(FigureCanvasQTAgg):
     def __init__(self, parent=None, width=7, height=7, dpi=100):
         self.fig = plt.Figure(figsize=(width, height), dpi=dpi)
@@ -505,6 +519,7 @@ class PSDPlotCanvas(FigureCanvasQTAgg):
         super(PSDPlotCanvas, self).__init__(self.fig)
 
 
+# 1x3 plot used in power law analysis window.
 class PowerlawCanvas (FigureCanvasQTAgg):
     def __init__(self, parent=None, width=8, height=5, dpi=100):
         self.fig=plt.Figure(figsize=(width, height), dpi=dpi)
@@ -514,7 +529,13 @@ class PowerlawCanvas (FigureCanvasQTAgg):
         super(PowerlawCanvas, self).__init__(self.fig)
 
 
+###############################################################################
 # Classes for the GUI windows
+###############################################################################
+
+# Window for individual plots (e.g. heat map).
+# This class is used for the individual property plots, including:
+# pacemaker, local activation time, upstroke velocity, and conduction velocity.
 class SoloHeatmapWindows(QWidget):
     def __init__(self, analysisGUI):
         super(SoloHeatmapWindows, self).__init__()
@@ -539,6 +560,10 @@ class SoloHeatmapWindows(QWidget):
         self.setLayout(layout)
 
 
+# Generates the window used for "Find Beats".
+# Window contains two plots.
+# Left plot shows voltage trace for the specified electrode, beat.
+# Right plot shows the full MEA voltage trace for the specified beat.
 class BeatSignalPlotWindow(QWidget):
     def __init__(self):
         super(BeatSignalPlotWindow, self).__init__()
@@ -593,7 +618,6 @@ class BeatSignalPlotWindow(QWidget):
         self.highPassFreqEdit.setFixedWidth(70)
 
         # Set widget layouts
-        # paramLayout.addWidget(self.plotButton, 0, 0, 2, 1)
         signalWidget = QWidget()
         signalWidget.setLayout(signalLayout)
         signalWidget.setFixedWidth(400)
@@ -648,7 +672,6 @@ class BeatSignalPlotWindow(QWidget):
         plotLayout.addWidget(self.paramPlot1, 0, 0)
         plotLayout.addWidget(self.paramPlot2, 0, 1)
         plotLayout.addWidget(sliderWidget, 2, 0)
-        # plotLayout.addWidget(self.paramSlider1b, 3, 0)
         plotLayout.addWidget(paramToolbar, 1, 0)
         plotLayout.addWidget(paramToolbar2, 1, 1)
 
@@ -688,6 +711,8 @@ class BeatSignalPlotWindow(QWidget):
 
 
 # Used for parameter vs distance statistics window.
+# Window provides a 2x2 plot and readout panel (right side of window)
+# in addition to user parameter input field for sigma (standard deviation)
 class PropertyStatWindows(QWidget):
     def __init__(self):
         super(PropertyStatWindows, self).__init__()
@@ -742,7 +767,11 @@ class PropertyStatWindows(QWidget):
         self.setLayout(mainLayout)
 
 
+# Window class shared by a few functions.
 # Currently used for beat amplitude, power spectra GUI windows.
+# Produces a window with drop-down boxes to select a range of beats for 
+# analysis. 
+# Only used by the beat amplitude and power spectra functions.
 class PlotBeatSelectWindows(QWidget):
     def __init__(self, analysisGUI):
         super(PlotBeatSelectWindows, self).__init__()
@@ -813,6 +842,9 @@ class PlotBeatSelectWindows(QWidget):
         self.setLayout(mainLayout)
 
 
+# Field potential duration window. Window contains 2 plots
+# Plot 1 (left plot, paramPlot1) shows FPD calculation of the voltage trace
+# Plot 2 (right plot, paramPlot2) shows FPD heatmap for the selected beat.
 class FPDWindow(QWidget):
     def __init__(self, analysisGUI):
         super(FPDWindow, self).__init__()
@@ -835,6 +867,9 @@ class FPDWindow(QWidget):
         self.setLayout(layout)
 
 
+# Power law window. Window contains a tri-panel plot and statistical readout
+# of model parameters (log-normal, exponential, Weibull, power law, 
+# doubly-truncated power law).
 class PowerlawWindow(QWidget):
     def __init__(self, analysisGUI):
         super(PowerlawWindow, self).__init__()
@@ -1009,9 +1044,12 @@ class AnalysisGUI(QMainWindow):
             local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
             electrode_config, psd_data, beat_amp_int, batch_data,
             field_potential)
+
         # Initial file path
         self.file_path = "/"
 
+
+    # Initiate the GUI by setting up widgets.
     def setup_UI(self, raw_data, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, heat_map, cm_stats, 
     electrode_config, psd_data, beat_amp_int, batch_data, field_potential):
@@ -1036,7 +1074,6 @@ class AnalysisGUI(QMainWindow):
             lambda: export_excel(self, pace_maker, local_act_time, upstroke_vel, 
                 conduction_vel, beat_amp_int, cm_beats, cm_stats, 
                 field_potential))
-        self.fileMenu.addAction("&Print (debug)", print_something)
         self.fileMenu.addAction("&Exit", self.close)
        
 
@@ -1127,6 +1164,7 @@ class AnalysisGUI(QMainWindow):
                 calculate_pacemaker.estimate_pm_origin(self, pace_maker, 
                 input_param)])
 
+
         # Statistics Menu
         self.statMenu = self.menuBar().addMenu("&Statistics")
         self.statMenu.addAction("&Property vs Distance w/ R\u00b2",
@@ -1146,16 +1184,20 @@ class AnalysisGUI(QMainWindow):
                 powerlaw_analysis.compare_distribs(self, 
                     pace_maker, batch_data, electrode_config, beat_amp_int)])
 
+
         # Tools Menu
         self.toolsMenu = self.menuBar().addMenu("&Tools")
         self.toolsMenu.addAction("&Detect translocations", 
             lambda: [detect_transloc.pm_translocations(
                 self, pace_maker, electrode_config, beat_amp_int)])
+
+
         # Advanced Tools Menu (ML, etc); To be filled later
         self.advToolsMenu = self.menuBar().addMenu("Advanced T&ools")
 
         self.testingMenu = self.menuBar().addMenu("Testin&g")
         self.testingMenu.addAction("&Reload modules (debug)", reload_module)
+
 
         # Set menubar color scheme, #ccbcc8
         # Credit to this Stack Overflow post for the style sheet config
@@ -1279,6 +1321,7 @@ class AnalysisGUI(QMainWindow):
         mainLayout.addWidget(self.plotWidget, 1, 0)
         self.mainWidget.setLayout(mainLayout)
     
+    # Generates the beat finder ("Find Beats") window.
     def determineBeatsWindow(self, raw_data, cm_beats, input_param, 
     electrode_config, batch_data):
         self.beatsWindow = BeatSignalPlotWindow()
@@ -1298,6 +1341,7 @@ class AnalysisGUI(QMainWindow):
             determine_beats.determine_beats(self, raw_data, cm_beats, 
                 input_param, electrode_config, batch_data)])
 
+    # Generates the time lag (pacemaker) (single property) window.
     def pacemakerWindow(self, cm_beats, pace_maker, heat_map, input_param):
         try:
             self.pmWindow = SoloHeatmapWindows(self)
@@ -1314,6 +1358,7 @@ class AnalysisGUI(QMainWindow):
         except AttributeError:
             print("")
 
+    # Generates the pacemaker origin estimation window.
     def pmOriginWindow(self, cm_beats, pace_maker, heat_map, input_param):
         try:
             self.circFitWindow = SoloHeatmapWindows(self)
@@ -1329,6 +1374,7 @@ class AnalysisGUI(QMainWindow):
         except AttributeError:
             print("")
 
+    # Generates the upstroke velocity (dV/dt) (single property) window.
     def upVelocityWindow(self, cm_beats, upstroke_vel, heat_map, input_param):
         try:
             self.dvdtWindow = SoloHeatmapWindows(self)
@@ -1345,6 +1391,7 @@ class AnalysisGUI(QMainWindow):
         except (AttributeError):
             print("")
 
+    # Generates the local activation time (single property) window.
     def localActTimeWindow(self, cm_beats, local_act_time, heat_map, 
     input_param):
         try:
@@ -1362,6 +1409,7 @@ class AnalysisGUI(QMainWindow):
         except (AttributeError):
             print("")
 
+    # Generates the conduction velocity (single property) window.
     def condVelocityWindow(self, cm_beats, local_act_time, conduction_vel, 
     heat_map, input_param):
         try:
@@ -1379,6 +1427,7 @@ class AnalysisGUI(QMainWindow):
         except (AttributeError):
             print("")
 
+    # Generates the conduction velocity vector-view window.
     def condVelVectorWindow(self, cm_beats, local_act_time, conduction_vel, 
     input_param):
         try:
@@ -1395,6 +1444,7 @@ class AnalysisGUI(QMainWindow):
         except AttributeError:
             print("No data found.")
 
+    # Generates the field potential duration (FPD) window.
     def fieldPotDurWindow(self, cm_beats, local_act_time, field_potential, 
     heat_map, input_param):
         try:
@@ -1422,6 +1472,7 @@ class AnalysisGUI(QMainWindow):
         except (AttributeError):
             print("")
 
+    # Generates the property vs distance analysis window.
     def propertyVsDistStatsWindow(self, cm_beats, pace_maker, upstroke_vel, 
     local_act_time, conduction_vel, input_param, cm_stats):
         try:
@@ -1443,6 +1494,7 @@ class AnalysisGUI(QMainWindow):
         except AttributeError:
             print("")
 
+    # Generates the PSD plotting window.
     def psdPlotWindow(self, cm_beats, electrode_config, pace_maker, 
     upstroke_vel, local_act_time, conduction_vel, input_param, cm_stats, 
     psd_data):
@@ -1467,6 +1519,7 @@ class AnalysisGUI(QMainWindow):
         except AttributeError:
             print("")
 
+    # Generates the beat amplitude and interval window.
     def beatAmpIntWindow(self, cm_beats, pace_maker, local_act_time,
     beat_amp_int, input_param, electrode_config):
         try:
@@ -1494,6 +1547,7 @@ class AnalysisGUI(QMainWindow):
         except AttributeError:
             print("")
 
+    # Generates the principle component analysis window.
     def pcaPlotWindow(self, cm_beats, beat_amp_int, pace_maker, local_act_time, 
     heat_map, input_param, electrode_config):
         self.pcaCheck = True
@@ -1508,6 +1562,7 @@ class AnalysisGUI(QMainWindow):
         self.pcaWindow.paramSlider.hide()
         self.pcaCheck = False
 
+    # Generates the power law analysis window.
     def powerlaw_window(self, pace_maker, batch_data, electrode_config, 
     beat_amp_int):
         self.plWindow = PowerlawWindow(self)
@@ -1521,6 +1576,7 @@ class AnalysisGUI(QMainWindow):
         self.plWindow.show()
 
 
+# Main function. Instantiate data classes, GUI, execute application.
 def main():
     raw_data = ImportedData()
     cm_beats = BeatAmplitudes()
