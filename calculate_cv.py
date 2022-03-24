@@ -73,7 +73,7 @@ local_act_time, heat_map, input_param, electrode_config):
 
         # Calculate derivatives using SymPy diff and lambdify at each electrode
         # for each beat, using the parameters for the two-dimensional polynomial
-        # obtained from curve_fit
+        # obtained from lmfit
         calc_deriv(elec_nan_removed, cm_beats, local_act_time, conduction_vel)
 
         # Assign column and index values for each calculated vector parameter.
@@ -353,56 +353,3 @@ def cv_quiver_plot(analysisGUI, input_param, local_act_time, conduction_vel):
     except AttributeError:
         print("Please calculate LAT and CV first.")
 
-
-# Previous loop structure for evaluating SymPy functions.  Since switched to 
-# numpy vectorized format for performance increase.
-#     x_comp = np.zeros(int(len(elec_nan_removed[0])))
-#     y_comp = np.zeros(int(len(elec_nan_removed[1])))
-# for beat in range(int(cm_beats.beat_count_dist_mode[0])):
-#     for electrode in range(len(elec_nan_removed[0])):
-#         # From Bayly et al, the equation for the x and y velocity components
-#         # of the conduction velocity, Tx and Ty, are:
-#         # Tx / (Tx^2 + Ty^2)
-#         # Ty / (Tx^2 + Ty^2)
-#         # Evaluate partial derivatives for x and y components
-#         T_part_x = t_deriv_expr_x[beat](elec_nan_removed[0][electrode], 
-#             elec_nan_removed[1][electrode])
-#         T_part_y = t_deriv_expr_y[beat](elec_nan_removed[0][electrode], 
-#             elec_nan_removed[1][electrode])
-
-#         # Complete calculation for x and y components.
-#         x_comp[electrode] = T_part_x / (T_part_x**2 + T_part_y**2)
-#         y_comp[electrode] = T_part_y / (T_part_x**2 + T_part_y**2)
-    
-#     # Calculate vector magnitude for all electrodes in the given beat
-#     vector_mag[beat] = np.sqrt(np.square(x_comp) + np.square(y_comp))
-#     # Store vector components for all electrodes for each beat.
-#     vector_x_comp[beat] = x_comp
-#     vector_y_comp[beat] = y_comp
-
-# for var in [x, y]:
-#     print("\\frac{\\partial g}{\\partial " + str(var) + "} =", 
-#         sym.latex(sym.simplify(t_xy.diff(var))))
-
-# # Calculate parameters a, b, c, d, e, f for two-dimensional polynomial
-# # for each beat using curve_fit
-# for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
-# columns=['Electrode', 'X', 'Y'])):
-#     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
-#         two_dim_polynomial, elec_nan_removed, 
-#         local_act_time.param_dist_normalized[beat].dropna(),
-#         method="trf")
-
-# # Alternative to the preceding lines, using sorted values
-# # Gives truly nonsensical results.  Probably needs better sorting.
-# cv_without_nan = conduction_vel.param_dist_raw[beat].dropna()
-# cv_without_nan = cv_without_nan.sort_values(ascending=True)
-# x_sorted = local_act_time.distance_from_min.loc[cv_without_nan.index, 
-#     beat].sort_values(ascending=True)
-# elec_removed_sorted = np.sort(elec_nan_removed)
-# for num, beat in enumerate(local_act_time.param_dist_normalized.drop(
-# columns=['Electrode', 'X', 'Y'])):
-#     lat_sorted = local_act_time.param_dist_normalized[
-#         beat].dropna().sort_values(ascending=True)
-#     conduction_vel.cv_popt[num], conduction_vel.cv_pcov[num] = curve_fit(
-#         two_dim_polynomial, elec_removed_sorted, lat_sorted)
