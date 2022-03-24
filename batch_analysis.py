@@ -1,11 +1,7 @@
-# Author:
-# Christopher S. Dunham
-# Email:
-# csdunham@chem.ucla.edu; csdunham@protonmail.com
-# Principal Investigator:
-# James K. Gimzewski
-# Organization:
-# University of California, Los Angeles
+# Author: Christopher S. Dunham
+# Email: csdunham@chem.ucla.edu; csdunham@protonmail.com
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
 # Department of Chemistry and Biochemistry
 # This is an original work, unless other noted in comments, by CSD
 # Began 9/23/21
@@ -83,10 +79,6 @@ conduction_vel, beat_amp_int):
             raw_data.imported = pd.read_csv(
                 file_path, sep="\s+", lineterminator="\n", skiprows=3,header=0, 
                 encoding='iso-8859-15', skipinitialspace=True, low_memory=False)
-            # temp_data = pd.read_csv(
-                # file_path, sep="\s+\t", lineterminator="\n", skiprows=[0, 1, 3],
-                # header=None, nrows=1, encoding='iso-8859-15', 
-                # skipinitialspace=True)
         
             print(f"Silence toggled?: {tog_silence}")
 
@@ -114,10 +106,8 @@ conduction_vel, beat_amp_int):
                     input_param.silenced_elecs = silenced_elecs
                 else:
                     input_param.silenced_elecs = [silenced_elecs]
-            # print(input_param.silenced_elecs)
-            # print(type(input_param.silenced_elecs))
 
-            # # Perform batch calculations
+            # Perform batch calculations
             determine_beats.determine_beats(analysisGUI, raw_data, cm_beats, 
                 input_param, electrode_config, batch_data)
             calculate_pacemaker.calculate_pacemaker(analysisGUI, cm_beats, 
