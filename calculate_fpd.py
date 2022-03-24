@@ -1,11 +1,7 @@
-# Author:
-# Christopher S. Dunham
-# Date:
-# 9/22/2021
-# Principal Investigator:
-# James K. Gimzewski
-# Organization:
-# University of California, Los Angeles
+# Author: Christopher S. Dunham
+# Date: 9/22/2021
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
 # Department of Chemistry and Biochemistry
 # Original work by CSD unless otherwise noted.
 # Utilizes Trapezium's Area algorithm from Vasquez-Seisdedos et al 2011
@@ -26,7 +22,8 @@ from scipy.optimize import minimize
 def calc_fpd(analysisGUI, cm_beats, field_potential, local_act_time, heat_map, 
 input_param, electrode_config):
     try:
-        # Filter signals.
+        # Filter signals. Currenly not utilized here directly.
+        # Same effect should be achieved by applying filters during Find Beats.
         # preprocess_fpd()
         print("Field potential duration calculation in progress.")
         # Find indices for T-wave peak locations.
@@ -99,8 +96,8 @@ input_param, electrode_config):
         print("Please use Find Beats first.")
     
 
-def preprocess_fpd(cm_beats, field_potential):
-    return 5
+# def preprocess_fpd(cm_beats, field_potential):
+#    return None
 
 
 def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
@@ -108,12 +105,9 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
         fpd_full_dict = {}
 
         for beat in local_act_time.param_dist_raw.columns[3:]:
-            # print(beat)
             temp_dict = {}
             for elec in local_act_time.param_dist_raw.index:
-                # print(elec)
                 temp_idx = local_act_time.param_dist_raw.loc[elec, beat]
-                # print(temp_idx)
                 if np.isnan(temp_idx) == True:
                     temp_idx = None
                 elif np.isnan(temp_idx) == False:
@@ -138,13 +132,6 @@ def find_T_wave(cm_beats, field_potential, local_act_time, input_param):
                         # distance=20
                         )
 
-                    # print(f"Temp +Twave:\n{temp_pos_T_wave}\n")
-                    # print(f"[1] only:\n{temp_pos_T_wave[1]['peak_heights']}\n")
-
-                    # print(f"Temp -Twave:\n{temp_neg_T_wave}\n")
-                    # print(f"[1] only:\n{temp_neg_T_wave[1]['peak_heights']}\n")
-
-                    # break
  
                     check_pos = np.any(temp_pos_T_wave[0])
                     if check_pos == True:
