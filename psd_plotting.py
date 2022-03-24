@@ -1,7 +1,9 @@
 # Author: Christopher S. Dunham
-# 1/23/2021
-# Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
-# Original work
+# Date: 1/23/2021
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
 
 # Log vs Log and PSD (also Log vs Log) plotting functions for operation using 
 # mea-analysis program.
@@ -19,8 +21,6 @@ local_act_time, conduction_vel, input_param, psd_data):
     try:
         # Get slider value.
         input_param.psd_plot_slider = analysisGUI.psdWindow.paramSlider.value()
-        # Set file name.
-        # analysisGUI.psd_file_name.set(analysisGUI.file_name_label.cget("text"))
         
         # Update entry boxes for PSD Plotting window.
         if analysisGUI.psdWindow.startBeat.count() != len(

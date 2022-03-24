@@ -1,8 +1,16 @@
 # Author: Christopher S. Dunham
-# 3/18/2021
-# Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
-# Original work
+# Date: 3/18/2021
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
 # PCA module for cardiomyocyte MEA analysis
+
+###############################################################################
+# Please note:
+# This is unfinished work as of 3/23/2022.
+###############################################################################
+
 
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
