@@ -1,13 +1,14 @@
 # Author: Christopher S. Dunham
-# 12/30/2020
-# Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
-# Original work
+# Date: 12/30/2020
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
 
 import numpy as np
 import pandas as pd
 import scipy as sp
 from scipy.optimize import curve_fit
-# import seaborn as sns
 from matplotlib import pyplot as plt
 
 def param_vs_distance_analysis(analysisGUI, cm_beats, pace_maker, upstroke_vel, 
@@ -22,7 +23,6 @@ local_act_time, conduction_vel, input_param, cm_stats):
         
         input_param.sigma_value = int(analysisGUI.pvdWindow.sigmaEdit.text())
         print("\n" + "Sigma value: " + str(input_param.sigma_value) + "\n")
-        # analysisGUI.stat_file_name.set(analysisGUI.file_name_label.cget("text"))
         
         # Filter outliers for pacemaker.
         temp_pacemaker_pre_filtered = pace_maker.param_dist_normalized.drop(
@@ -368,10 +368,6 @@ local_act_time, conduction_vel, input_param, cm_stats):
 # def fitting_func(x, a, b, c):
 #     return a*x + b*x**2 + c
 
-# Potential saturation equation
+# Saturation equation for CV fitting to reflect eventual plateau of CV property
 def fitting_func(x, a, b, c):
     return a*x / (b + (x/c))
-# Tried to fit data to a logistic equation, e.g. logistic growth, but doesn't
-# fit very well. That is what the function below is for.
-# def fitting_func(x, L, k, x0):
-#     return L/(1 + np.exp(-k * (x-x0)))

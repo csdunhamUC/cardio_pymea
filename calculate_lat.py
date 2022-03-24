@@ -1,11 +1,7 @@
-# Author: 
-# Christopher S. Dunham
-# Date:
-# 12/4/2020
-# Principal Investigator:
-# James K. Gimzewski
-# Organization:
-# University of California, Los Angeles
+# Author: Christopher S. Dunham
+# Date: 12/4/2020
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
 # Department of Chemistry and Biochemistry
 # Original work by CSD
 

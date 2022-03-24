@@ -1,7 +1,9 @@
-# Author: Christopher S. Dunham
-# 1/31/2021
-# Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
-# Original work
+# Author:Christopher S. Dunham
+# Date: 12/4/2020
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
 
 import numpy as np
 import pandas as pd

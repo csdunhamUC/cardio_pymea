@@ -1,7 +1,9 @@
 # Author: Christopher S. Dunham
-# 12/4/2020
-# Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
-# Original work
+# Date: 12/4/2020
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
 
 import time
 import pandas as pd
@@ -376,9 +378,6 @@ def graph_beats(analysisGUI, cm_beats, electrode_config):
             cm_beats.x_axis, 
             cm_beats.y_axis.iloc[0:, elec_choice].values)
         
-        # analysisGUI.beatsWindow.paramPlot1.axis1.legend(
-        #     ['R-wave Peak'], 
-        #     loc='lower left')
         analysisGUI.beatsWindow.paramPlot1.axis1.set(
             xlim=(x_low_lim, x_high_lim),
             xlabel="Time (ms)",
@@ -411,7 +410,6 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
             columns='X', 
             values='Electrode')
         
-        # Still fixing from here down.
         K_max = 12
         K_min = 0
         L_max = 12
@@ -464,7 +462,6 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
                         5+np.random.rand(1000) + col_pos*y_offset, 
                         color='white',
                         alpha=0)
-                    # print(f"NaN: {val}")
                 else:
                     # Placeholder variable, get y values for electrode
                     temp_y = -1*cm_beats.y_axis.loc[0:, val]
@@ -474,7 +471,6 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
                         (cm_beats.x_axis[
                             int_xlow_lim:int_xhigh_lim] + col_pos*x_offset), 
                         (1000 + y_axis_vals + row_pos*y_offset))
-                    # print(f"{val} is NOT NaN!")
                     # Generate MEA electrode labels
                     ax.annotate(
                         f"{val}",
@@ -489,7 +485,6 @@ def full_mea_plot(analysisGUI, cm_beats, electrode_config):
         ax.set_title("All Electrodes View", x=0.425, y=1, pad=20)
 
         # Assign title and tighten up layout before drawing the figure.
-        # analysisGUI.beatsWindow.paramPlot2.fig.suptitle("All Electrodes View")
         analysisGUI.beatsWindow.paramPlot2.fig.tight_layout()
         analysisGUI.beatsWindow.paramPlot2.draw()
         # End right-panel plot

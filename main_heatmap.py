@@ -1,7 +1,10 @@
 # Author: Christopher S. Dunham
-# 11/1/2020
-# Gimzewski Lab @ UCLA, Department of Chemistry & Biochem
-# Original work
+# Date: 11/1/2020
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
+
 # This function is called following the use of "Calculate All" from 
 # the drop-down menu and from the GUI slider on the main window.  It generates 
 # the heat maps observed in the main window of the program.
@@ -13,7 +16,7 @@ from matplotlib import pyplot as plt
 def graph_all(analysisGUI, heat_map, cm_beats, pace_maker, upstroke_vel, 
 local_act_time, conduction_vel, input_param):
     try:
-        # ----------------------------- Pacemaker ----------------------------------
+        # --------------------------- Pacemaker --------------------------------
         if hasattr(heat_map, 'cbar_1') is True:
             heat_map.cbar_1.remove()
             delattr(heat_map, 'cbar_1')
@@ -44,7 +47,7 @@ local_act_time, conduction_vel, input_param):
         analysisGUI.mainHeatmap.axis1.get_shared_y_axes().join(
             analysisGUI.mainHeatmap.axis2)
 
-        # --------------------------- Upstroke velocity ----------------------------
+        # ------------------------- Upstroke velocity --------------------------
         if hasattr(heat_map, 'cbar_2') is True:
             heat_map.cbar_2.remove()
             delattr(heat_map, 'cbar_2')
@@ -71,7 +74,7 @@ local_act_time, conduction_vel, input_param):
             yticks=[])
         analysisGUI.mainHeatmap.axis2.tick_params(axis='x', rotation=45)
 
-        # ------------------------- Local activation time --------------------------
+        # ----------------------- Local activation time ------------------------
         if hasattr(heat_map, 'cbar_3') is True:
             heat_map.cbar_3.remove()
             delattr(heat_map, 'cbar_3')
@@ -102,7 +105,7 @@ local_act_time, conduction_vel, input_param):
             analysisGUI.mainHeatmap.axis4)
 
 
-        # -------------------------- Conduction velocity ---------------------------
+        # ------------------------ Conduction velocity -------------------------
         if hasattr(heat_map, 'cbar_4') is True:
             heat_map.cbar_4.remove()
             delattr(heat_map, 'cbar_4')

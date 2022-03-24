@@ -1,8 +1,9 @@
-# Christopher S. Dunham
-# 9/7/2021
-# Gimzewski Laboratory
-# University of California, Los Angeles
-# Original work
+# Author: Christopher S. Dunham
+# Date: 9/7/2021
+# Principal Investigator: James K. Gimzewski
+# Organization: University of California, Los Angeles
+# Department of Chemistry and Biochemistry
+# Original work by CSD
 
 # Module for calculating pacemaker translocations
 # Uses an algorithm to determine pacemaker electrode (if multiple for a given
