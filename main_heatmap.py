@@ -136,12 +136,12 @@ local_act_time, conduction_vel, input_param):
         
         analysisGUI.mainHeatmap.fig.tight_layout()
         analysisGUI.mainHeatmap.fig.subplots_adjust(top=0.9)
-        analysisGUI.mainHeatmap.fig.suptitle("Parameter Heatmaps. Beat " + 
+        analysisGUI.mainHeatmap.fig.suptitle("Property Heatmaps. Beat " + 
             str(input_param.beat_choice + 1) + " of " + 
             str(int(cm_beats.beat_count_dist_mode[0])) + ".")
         analysisGUI.mainHeatmap.draw()
     except KeyError:
-        print("Could not plot.  Confirm beat mode value is non-zero.")
+        print("Could not plot. Please verify that beat mode value is non-zero.")
     except AttributeError:
         print("")
     except IndexError:
