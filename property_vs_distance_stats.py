@@ -240,7 +240,7 @@ local_act_time, conduction_vel, input_param, cm_stats):
     # Plot for Paarameter vs Distance.  Generates scatterplot, best-fit line 
     # and error bars.
     analysisGUI.pvdWindow.paramPlot.fig.suptitle(
-        "Parameter vs. Distance from Pacemaker.  Beat " + 
+        "Property vs. Distance from Pacemaker.  Beat " + 
         str(input_param.stats_param_dist_slider + 1) + ".") 
     
     # Pacemaker plotting.
