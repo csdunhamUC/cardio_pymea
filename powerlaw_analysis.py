@@ -59,12 +59,16 @@ beat_amp_int):
                 transloc_data = temp_data
                 # Delete the temporary variable
                 del temp_data
+
+            print("Testing")
             # Check method from drop-down menu for bin method selection
-            if bin_method == "Manual Entry" or bin_method == "none":
-                nbins = int(analysisGUI.nbinsEdit.text())
+            if bin_method == "Manual Entry":
+                nbins = int(analysisGUI.plWindow.nbinsEdit.text())
+
             # Use Sturge's Rule to determine nbins
-            elif bin_method == "Sturge's Rule":
-                nbins = int(np.ceil(1 + 3.322*np.log(len(transloc_data))))
+            elif bin_method == "Sturges' Rule":
+                nbins = int(np.ceil(1 + 3.322*np.log10(len(transloc_data))))
+            
             # Use Freedman-Diaconis Rule to determine nbins.
             elif bin_method == "Freedman-Diaconis":
                 bin_width = 2 * (
@@ -78,8 +82,8 @@ beat_amp_int):
                         np.ceil((max(transloc_data) - 
                             min(transloc_data)) / bin_width))
 
-            sorted_transloc_data = np.sort(transloc_data)
-            
+            sorted_transloc_data = np.sort(transloc_data) 
+
             ###################################################################
             # Model Distributions for Comparison
             # Exponential distribution

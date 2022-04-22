@@ -924,7 +924,7 @@ class PowerlawWindow(QWidget):
         binMethodLabel.setAlignment(Qt.AlignLeft)
         self.binMethodSelect = QComboBox()
         self.binMethodSelect.setFixedWidth(120)
-        self.binMethodSelect.addItem("Sturge's Rule")
+        self.binMethodSelect.addItem("Sturges' Rule")
         self.binMethodSelect.addItem("Freedman-Diaconis")
         self.binMethodSelect.addItem("Manual Entry")
         self.binMethodSelect.setStyleSheet(
